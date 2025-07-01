@@ -2,21 +2,21 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 /**
- * 高斯模型选项
+ * Gaussian Model Options
  */
 export interface ModelOptions {
     /**
-     *  模型地址
+     * Model URL
      */
     url: string;
 
     /**
-     *  模型格式（ply | splat | spx | spz | obj），默认自动识别
+     * Model format (ply | splat | spx | spz | obj), auto-detected by default
      */
     format?: 'ply' | 'splat' | 'spx' | 'spz' | 'obj';
 
     /**
-     *  是否重新下载
+     * Whether to force re-download
      */
     fetchReload?: boolean;
 }
