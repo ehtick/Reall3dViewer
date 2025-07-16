@@ -6,79 +6,79 @@ import { Events } from '../../events/Events';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
 /**
- * 高斯网格配置项
+ * Splat mesh configuration options
  */
 export interface SplatMeshOptions {
     /**
-     * 名称
+     * Name
      */
     name?: string;
 
     /**
-     * 指定渲染器对象传入使用
+     * Renderer instance to be used
      */
     renderer: Renderer;
 
     /**
-     * 指定场景对象传入使用
+     * Scene instance to be used
      */
     scene: Scene;
 
     /**
-     * 控制器
+     * Camera controls
      */
     controls?: OrbitControls;
 
     /**
-     * 渲染器事件管理器
+     * Renderer event manager
      */
     viewerEvents?: Events;
 
     /**
-     * 是否调试模式，生产环境默认false
+     * Debug mode flag; defaults to false in production
      */
     debugMode?: boolean;
 
     /**
-     * 是否大场景模式，初始化后不可修改
+     * Large-scene mode flag; cannot be changed after initialization
      */
     bigSceneMode?: boolean;
 
     /**
-     * 是否点云模式渲染，默认为true
-     * 支持通过viewer.options()动态更新
+     * Point-cloud rendering mode; defaults to true,
+     * Can be updated dynamically via viewer.options()
      */
     pointcloudMode?: boolean;
 
     /**
-     * 移动端可渲染的高斯点数量限制
-     * 支持通过viewer.options()动态更新
+     * Maximum number of Gaussians to render on mobile devices,
+     * Can be updated dynamically via viewer.options()
      */
     maxRenderCountOfMobile?: number;
 
     /**
-     * PC端可渲染的高斯点数量限制
-     * 支持通过viewer.options()动态更新
+     * Maximum number of Gaussians to render on PC,
+     * Can be updated dynamically via viewer.options()
      */
     maxRenderCountOfPc?: number;
 
     /**
-     * 颜色亮度系数，默认1.0
+     * Brightness scale factor; defaults to 1.0
      */
     lightFactor?: number;
 
     /**
-     * 是否显示水印，默认true
+     * Whether to display a watermark; defaults to true
      */
     showWatermark?: boolean;
 
     /**
-     * 球谐系数的渲染级别，默认0
+     * Spherical harmonics rendering degree; defaults to 0
      */
     shDegree?: number;
 
     /**
-     * 是否开启深度测试，默认true
+     * Enable depth testing; defaults to true
      */
     depthTest?: boolean;
 }
