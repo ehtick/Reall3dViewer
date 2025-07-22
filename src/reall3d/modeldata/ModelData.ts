@@ -6,7 +6,7 @@ import { CameraInfo } from '../controls/SetupCameraControls';
 import { ModelOptions } from './ModelOptions';
 
 /**
- * spx文件头信息
+ * SPX file header information
  */
 export class SpxHeader {
     public Fixed: string;
@@ -35,70 +35,76 @@ export class SpxHeader {
 }
 
 /**
- * Splat模型
+ * Splat model
  */
 export class SplatModel {
-    /** 模型选项 */
+    /** Model options */
     public readonly opts: ModelOptions;
 
-    /** 模型文件大小 */
+    /** File size (bytes) */
     public fileSize: number = 0;
-    /** 模型已下载大小 */
+    /** Downloaded size (bytes) */
     public downloadSize: number = 0;
 
-    /** 模型状态 */
+    /** Current model status */
     public status: ModelStatus = ModelStatus.FetchReady;
 
-    /** 模型数据 */
+    /** Raw model data */
     public splatData: Uint8Array = null;
-    /** 模型水印数据 */
+    /** Watermark data */
     public watermarkData: Uint8Array = null;
-    /** 模型数据数量 */
+    /** Number of Gaussians in the model */
     public dataSplatCount: number = 0;
-    /** 模型水印数量 */
+    /** Number of watermark Gaussians */
     public watermarkCount: number = 0;
 
-    /** 球谐系数（1级，或1级和2级） */
+    /** Spherical harmonics (level 1 or 1+2) */
     public sh12Data: Uint8Array[] = [];
-    /** 球谐系数（仅3级） */
+    /** Spherical harmonics (level 3 only) */
     public sh3Data: Uint8Array[] = [];
-    /** 已下载的球谐系数（1级，或1级和2级）数量 */
+    /** Downloaded SH (level 1 or 1+2) count */
     public sh12Count: number = 0;
-    /** 已下载的球谐系数（仅3级）数量 */
+    /** Downloaded SH (level 3 only) count */
     public sh3Count: number = 0;
 
-    /** 一个高斯点数据长度 */
+    /** Byte length of a single Gaussian record */
     public rowLength: number = 0;
-    /** 模型的高斯数量 */
+    /** Total Gaussian count in the model */
     public modelSplatCount: number = -1;
-    /** 已下载的高斯数量 */
+    /** Downloaded Gaussian count */
     public downloadSplatCount: number = 0;
-    /** 待渲染的高斯数量（大场景时动态计算需要渲染的数量） */
+    /** Render-ready Gaussian count (dynamic for large scenes) */
     public renderSplatCount: number = 0;
 
-    /** 中断控制器 */
+    /** Abort controller for fetch cancellation */
     public abortController: AbortController;
 
-    /** spx格式模型的头信息 */
+    /** Header info for .spx format */
     public header: SpxHeader = null;
 
     public dataShDegree: number = 0;
 
+    /** Model metadata */
     public meta: MetaData;
+    /** Map of cut data for large scenes */
     public map: Map<string, CutData>;
 
+    /** Bounding box extents */
     public minX: number = Infinity;
     public maxX: number = -Infinity;
     public minY: number = Infinity;
     public maxY: number = -Infinity;
     public minZ: number = Infinity;
     public maxZ: number = -Infinity;
+    /** Highest Y coordinate */
     public topY: number = 0;
     public currentRadius: number = 0;
     public aabbCenter: Vector3;
-    public maxRadius: number = 0; // spx包围球半径
+    /** Bounding sphere radius for .spx */
+    public maxRadius: number = 0;
     public metaMatrix: Matrix4;
 
+    /** Flags */
     public notifyFetchStopDone: boolean;
     public smallSceneUploadDone: boolean;
     public textWatermarkVersion: number = 0;
@@ -106,6 +112,7 @@ export class SplatModel {
 
     public fetchLimit: number = 0;
 
+    /** Active points data */
     public activePoints: any;
 
     constructor(opts: ModelOptions, meta: MetaData = {}) {
@@ -126,7 +133,7 @@ export class SplatModel {
             } else if (opts.url?.endsWith('.spz')) {
                 that.opts.format = 'spz';
             } else {
-                console.error('unknow format!');
+                console.error('unknown format!');
             }
         }
         that.abortController = new AbortController();
@@ -134,101 +141,101 @@ export class SplatModel {
 }
 
 /**
- * 大场景用切割的数据块
+ * Data chunk used in large-scene tiling
  */
 export interface CutData {
-    /** 块中数据的高斯点数 */
+    /** Number of Gaussians in this chunk */
     splatCount?: number;
-    /** 块中数据 */
+    /** Raw data of this chunk */
     splatData?: Uint8Array;
 
-    // 块的包围盒
+    // Bounding box of the chunk
     minX?: number;
     maxX?: number;
     minY?: number;
     maxY?: number;
     minZ?: number;
     maxZ?: number;
-    // 块的包围球
+    // Bounding sphere of the chunk
     center?: Vector3;
     radius?: number;
 
-    /** 当前待渲染点数（动态计算使用） */
+    /** Current renderable points (computed at runtime) */
     currentRenderCnt?: number;
-    /** 离相机距离（动态计算使用） */
+    /** Distance to camera (computed at runtime) */
     distance?: number;
 }
 
 /**
- * 模型状态
+ * Model status
  */
 export enum ModelStatus {
-    /** 就绪 */
+    /** Ready */
     FetchReady = 0,
-    /** 请求中 */
+    /** In progress */
     Fetching,
-    /** 正常完成 */
+    /** Completed successfully */
     FetchDone,
-    /** 请求途中被中断 */
+    /** Interrupted during request */
     FetchAborted,
-    /** 请求失败 */
+    /** Request failed */
     FetchFailed,
-    /** 无效的模型格式或数据 */
+    /** Invalid model format or data */
     Invalid,
 }
 
 /**
- * 元数据
+ * Metadata
  */
 export interface MetaData {
-    /** 名称 */
+    /** Name */
     name?: string;
-    /** 版本 */
+    /** Version */
     version?: string;
-    /** 更新日期（YYYYMMDD） */
+    /** Update date (YYYYMMDD) */
     updateDate?: number;
 
-    /** 是否自动旋转 */
+    /** Enable auto-rotation */
     autoRotate?: boolean;
-    /** 是否调试模式 */
+    /** Enable debug mode */
     debugMode?: boolean;
-    /** 是否点云模式 */
+    /** Enable point-cloud rendering */
     pointcloudMode?: boolean;
-    /** 移动端最大渲染数量 */
+    /** Maximum render count for mobile */
     maxRenderCountOfMobile?: number;
-    /** PC端最大渲染数量 */
+    /** Maximum render count for PC */
     maxRenderCountOfPc?: number;
-    /** 移动端最大下载数量 */
+    /** Maximum download count for mobile splats */
     mobileDownloadLimitSplatCount?: number;
-    /** PC端最大下载数量 */
+    /** Maximum download count for PC splats */
     pcDownloadLimitSplatCount?: number;
 
-    /** 米比例尺 */
+    /** Meter scale factor */
     meterScale?: number;
-    /** 文字水印 */
+    /** Text watermark */
     watermark?: string;
-    /** 是否显示水印 */
+    /** Display watermark */
     showWatermark?: boolean;
-    /** 是否显示包围盒 */
+    /** Display bounding box */
     showBoundBox?: boolean;
-    /** 相机参数 */
+    /** Camera parameters */
     cameraInfo?: CameraInfo;
-    /** 标注 */
+    /** Annotations */
     marks?: any[];
-    /** 飞翔相机位置点 */
+    /** Fly-through camera positions */
     flyPositions?: number[];
-    /** 飞翔相机注视点 */
+    /** Fly-through camera look-at points */
     flyTargets?: number[];
 
-    /** 是否粒子加载效果，小场景用 */
+    /** Enable particle loading effect (small scenes) */
     particleMode?: boolean;
 
-    /** 自动切割数量 */
+    /** Auto-cut count */
     autoCut?: number;
-    /** 变换矩阵 */
+    /** Transformation matrix */
     transform?: number[];
-    /** 定位坐标(EPSG:4326 WGS 84) */
+    /** Geolocation (EPSG:4326 WGS 84) */
     WGS84?: number[];
-    /** 模型地址 */
+    /** Model URL */
     url?: string;
 }
