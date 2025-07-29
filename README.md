@@ -67,6 +67,9 @@ splatMesh.addModel({ url: 'https://reall3d.com/demo-models/yz.spx' });
 scene.add(splatMesh);
 ```
 
+## Docs(By Zread)
+- https://zread.ai/reall3d-com/Reall3dViewer
+
 
 ## TODO
 - Continuously optimize and enhance rendering performance
