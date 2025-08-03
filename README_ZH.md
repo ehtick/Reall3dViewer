@@ -76,6 +76,7 @@ scene.add(splatMesh);
 ## TODO
 - 持续优化增强渲染性能
 - 大场景
+- 支持spz version 3
 
 
 ## 履历
