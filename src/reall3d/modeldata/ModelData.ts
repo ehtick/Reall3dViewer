@@ -82,6 +82,8 @@ export class SplatModel {
     /** Header info for .spx format */
     public header: SpxHeader = null;
 
+    public spzVersion: number;
+
     public dataShDegree: number = 0;
 
     /** Model metadata */

@@ -53,6 +53,7 @@ export async function loadSpz(model: SplatModel) {
         }
 
         const header = parseSpzHeader(ui8s);
+        model.spzVersion = header.version;
         model.modelSplatCount = header.numPoints;
         model.dataShDegree = header.shDegree;
         model.splatData = new Uint8Array(Math.min(model.modelSplatCount, model.fetchLimit) * 32);
