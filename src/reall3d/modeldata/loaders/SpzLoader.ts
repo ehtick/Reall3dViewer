@@ -257,7 +257,7 @@ export async function loadSpz(model: SplatModel) {
         header.reserved = value[15];
 
         if (header.magic !== 1347635022) throw new Error('[SPZ ERROR] header not found');
-        if (header.version !== 2) throw new Error('[SPZ ERROR] ersion not supported:' + header.version);
+        if (header.version !== 2) throw new Error('[SPZ ERROR] version not supported:' + header.version);
         if (header.shDegree > 3) throw new Error('[SPZ ERROR] unsupported SH degree:' + header.shDegree);
         if (header.fractionalBits !== 12) throw new Error('[SPZ ERROR] unsupported FractionalBits:' + header.fractionalBits); // 仅支持这一种编码方式（坐标24位整数编码）
 
