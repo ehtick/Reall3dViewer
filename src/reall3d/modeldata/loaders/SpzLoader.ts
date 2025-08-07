@@ -17,6 +17,7 @@ import { parseSpxBlockData } from '../wasm/WasmParser';
 
 const maxProcessCnt = isMobile ? 20480 : 51200;
 const SpxHeaderLength = 16;
+const CMask = (1 << 9) - 1;
 
 export async function loadSpz(model: SplatModel) {
     try {
@@ -73,7 +74,7 @@ export async function loadSpz(model: SplatModel) {
         const alphaSize = header.numPoints;
         const colorSize = header.numPoints * 3;
         const scaleSize = header.numPoints * 3;
-        const rotationSize = header.numPoints * 3;
+        const rotationSize = header.numPoints * (header.version == 2 ? 3 : 4);
 
         const offsetpositions = SpxHeaderLength;
         const offsetAlphas = offsetpositions + positionSize;
@@ -130,13 +131,49 @@ export async function loadSpz(model: SplatModel) {
             }
 
             const wxyz = [];
-            for (let j = 0, rx = 0, ry = 0, rz = 0; j < splatCnt; j++) {
-                datas[n++] = value[offsetAlphas + (i * maxProcessCnt + j)];
+            if (header.version == 2) {
+                // spz version 2
+                for (let j = 0, rx = 0, ry = 0, rz = 0; j < splatCnt; j++) {
+                    datas[n++] = value[offsetAlphas + (i * maxProcessCnt + j)];
 
-                rx = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 0];
-                ry = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 1];
-                rz = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 2];
-                wxyz.push(decodeSpzRotations(rx, ry, rz));
+                    rx = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 0];
+                    ry = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 1];
+                    rz = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 2];
+                    wxyz.push(decodeSpzRotations(rx, ry, rz));
+                }
+            } else {
+                // spz version 3
+                for (let j = 0, b0 = 0, b1 = 0, b2 = 0, b3 = 0; j < splatCnt; j++) {
+                    datas[n++] = value[offsetAlphas + (i * maxProcessCnt + j)];
+
+                    b0 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 0];
+                    b1 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 1];
+                    b2 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 2];
+                    b3 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 2];
+                    const comp = b0 + (b1 << 8) + (b2 << 16) + (b3 << 24);
+                    const index = comp >> 30;
+                    let remaining = comp;
+                    let sumSquares = 0.0;
+                    let rotation = [];
+                    for (let k = 3; k >= 0; k--) {
+                        if (k != index) {
+                            const magnitude = remaining & CMask;
+                            const negbit = (remaining >> 9) & 0x1;
+                            remaining = remaining >> 10;
+
+                            rotation[i] = Math.SQRT1_2 * (magnitude / CMask);
+                            if (negbit == 1) {
+                                rotation[i] = -rotation[i];
+                            }
+                            sumSquares += rotation[i] * rotation[i];
+                        }
+                    }
+                    rotation[index] = Math.sqrt(Math.max(1.0 - sumSquares, 0));
+                    for (let k = 0; k < 4; k++) {
+                        rotation[k] = clipUint8(rotation[k] * 128.0 + 128.0);
+                    }
+                    wxyz.push(rotation);
+                }
             }
             for (let j = 0; j < splatCnt; j++) {
                 datas[n++] = wxyz[j][0];
@@ -257,9 +294,10 @@ export async function loadSpz(model: SplatModel) {
         header.reserved = value[15];
 
         if (header.magic !== 1347635022) throw new Error('[SPZ ERROR] header not found');
-        if (header.version !== 2) throw new Error('[SPZ ERROR] version not supported:' + header.version);
+        if (header.version < 2 || header.version > 3) throw new Error('[SPZ ERROR] version not supported:' + header.version);
         if (header.shDegree > 3) throw new Error('[SPZ ERROR] unsupported SH degree:' + header.shDegree);
         if (header.fractionalBits !== 12) throw new Error('[SPZ ERROR] unsupported FractionalBits:' + header.fractionalBits); // 仅支持这一种编码方式（坐标24位整数编码）
+        const size = header.version == 2 ? 19 : 20;
 
         let shDim = 0;
         if (header.shDegree === 1) {
@@ -269,7 +307,7 @@ export async function loadSpz(model: SplatModel) {
         } else if (header.shDegree === 3) {
             shDim = 45;
         }
-        if (ui8s.length !== SpxHeaderLength + header.numPoints * (19 + shDim)) throw new Error('[SPZ ERROR] invalid spz data');
+        if (ui8s.length !== SpxHeaderLength + header.numPoints * (size + shDim)) throw new Error('[SPZ ERROR] invalid spz data');
 
         return header;
     }
