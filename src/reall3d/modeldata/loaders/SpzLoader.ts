@@ -151,8 +151,8 @@ export async function loadSpz(model: SplatModel) {
                     b1 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 1];
                     b2 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 2];
                     b3 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 3];
-                    const comp = b0 + (b1 << 8) + (b2 << 16) + (b3 << 24);
-                    const index = comp >> 30;
+                    const comp = b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
+                    const index = comp >>> 30;
                     let remaining = comp;
                     let sumSquares = 0.0;
                     let rotation = [];
