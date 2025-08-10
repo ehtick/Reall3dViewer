@@ -19,7 +19,7 @@
 <br>
 
 ## 特点
-- [x] 支持格式: `.ply`、`.splat`、`.spx`、`.spz`
+- [x] 支持格式: `.ply`、`.splat`、`.spx`、`.spz`(v2,v3)
 - [x] 支持标注测量
 - [x] 支持文字水印
 - [x] 支持1~3级球谐系数
@@ -76,7 +76,6 @@ scene.add(splatMesh);
 ## TODO
 - 持续优化增强渲染性能
 - 大场景
-- 支持spz version 3
 
 
 ## 履历
