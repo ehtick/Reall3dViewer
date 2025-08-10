@@ -157,16 +157,13 @@ export async function loadSpz(model: SplatModel) {
                     let sumSquares = 0.0;
                     let rotation = [];
                     for (let k = 3; k >= 0; k--) {
-                        if (k != index) {
+                        if (k !== index) {
                             const magnitude = remaining & CMask;
-                            const negbit = (remaining >> 9) & 0x1;
+                            const isNeg = ((remaining >> 9) & 0x1) > 0;
+                            rotation[k] = Math.SQRT1_2 * (magnitude / CMask);
+                            isNeg && (rotation[k] = -rotation[k]);
+                            sumSquares += rotation[k] * rotation[k];
                             remaining = remaining >> 10;
-
-                            rotation[i] = Math.SQRT1_2 * (magnitude / CMask);
-                            if (negbit == 1) {
-                                rotation[i] = -rotation[i];
-                            }
-                            sumSquares += rotation[i] * rotation[i];
                         }
                     }
                     rotation[index] = Math.sqrt(Math.max(1.0 - sumSquares, 0));
