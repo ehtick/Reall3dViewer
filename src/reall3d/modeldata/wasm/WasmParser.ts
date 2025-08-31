@@ -1,14 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import {
-    SplatDataSize16,
-    SplatDataSize32,
-    SpxBlockFormatSH1,
-    SpxBlockFormatSH2,
-    SpxBlockFormatSH3,
-    WasmBlockSize,
-} from '../../utils/consts/GlobalConstants';
+import { SplatDataSize16, SplatDataSize32, SpxBlockFormatSH1, SpxBlockFormatSH2, SpxBlockFormatSH3, WasmBlockSize } from '../../utils/consts/GlobalConstants';
 import { SpxHeader } from '../ModelData';
 
 const WasmBase64 =
