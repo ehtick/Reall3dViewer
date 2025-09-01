@@ -223,7 +223,7 @@ export function setupSplatTextureManager(events: Events) {
 
             let ver: string = splatModel.opts.format;
             if (splatModel.opts.format == 'spx') {
-                ver = 'spx' + (splatModel.header.ExclusiveId ? (' ' + splatModel.header.ExclusiveId).substring(0, 6) : '');
+                ver = 'spx v' + splatModel.header.Version + (splatModel.header.ExclusiveId ? (', ' + splatModel.header.ExclusiveId).substring(0, 6) : '');
             } else if (splatModel.opts.format == 'spz') {
                 ver = 'spz v' + splatModel.spzVersion;
             }

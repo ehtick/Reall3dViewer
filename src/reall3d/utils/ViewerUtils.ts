@@ -92,7 +92,7 @@ export function setupViewerUtils(events: Events) {
         fire(Information, { scene: `small (obj)` });
         const datas = await loadFile(url, events);
         if (datas) {
-            const url = URL.createObjectURL(new Blob([datas], { type: 'application/octet-stream' }));
+            const url = URL.createObjectURL(new Blob([datas as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
             new OBJLoader().load(url, object => fire(GetScene).add(object));
             fire(ViewerNeedUpdate, true);
             fire(Flying, true);
