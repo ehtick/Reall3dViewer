@@ -31,7 +31,7 @@
 | 48~51 | uint32  | `*`专属识别号      | 自定义`0(公开)`以外表示非公开的自定义数据块格式 |
 | 52    | uint8   | `*`球谐系数级别    | `0,1,2,3`其他数值按`0`看待 |
 | 53    | uint8   | 位标识             | 按位表示不同的标识，详细如下 |
-|       |   bit 0 | 标识1，是否倒立    | 默认小场景`0` |
+|       |   bit 0 | 标识1，是否倒立    | 默认非倒立`0` |
 |       |   bit 1 | 标识2，预留        | 预留 |
 |       |   bit 2 | 标识3，预留        | 预留 |
 |       |   bit 3 | 标识4，预留        | 预留 |
@@ -163,5 +163,5 @@
 
 ## 历史版本
 
-- `SPX V1` https://github.com/reall3d-com/Reall3dViewer/blob/main/spx-spec/v1/SPX_EN.md
+- `SPX SPEC V1` https://github.com/reall3d-com/Reall3dViewer/blob/main/spx-spec/v1/SPX_ZH.md
 
