@@ -12,7 +12,7 @@ const params: URLSearchParams = new URLSearchParams(location.search);
 let url = params.get('url');
 const debugMode = !!params.get('debug');
 
-const maxRenderCountOfPc = 384 * 10000;
+const maxRenderCountOfPc = 512 * 10000;
 const shDegree = 3;
 
 let viewer: Reall3dViewer;
