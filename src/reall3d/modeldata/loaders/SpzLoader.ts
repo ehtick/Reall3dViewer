@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { Vector3 } from 'three';
-import { clipUint8, DecompressGzip } from '../../utils/CommonUtils';
+import { clipUint8, computeCompressionRatio, DecompressGzip } from '../../utils/CommonUtils';
 import {
     isMobile,
     SH_C0,
@@ -53,6 +53,7 @@ export async function loadSpz(model: SplatModel) {
         }
 
         const header = parseSpzHeader(ui8s);
+        model.CompressionRatio = computeCompressionRatio(header.numPoints, contentLength);
         model.spzVersion = header.version;
         model.modelSplatCount = header.numPoints;
         model.dataShDegree = header.shDegree;

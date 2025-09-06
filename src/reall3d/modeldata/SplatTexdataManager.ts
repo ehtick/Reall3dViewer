@@ -222,12 +222,17 @@ export function setupSplatTextureManager(events: Events) {
             fire(SplatUpdateTopY, (splatModel.header?.Flag2 ? splatModel.header.MaxTopY : splatModel.header?.MinTopY) || 0); // 初次传入高点
 
             let ver: string = splatModel.opts.format;
+            let ratio = '';
             if (splatModel.opts.format == 'spx') {
-                ver = 'spx v' + splatModel.header.Version + (splatModel.header.ExclusiveId ? (', ' + splatModel.header.ExclusiveId).substring(0, 6) : '');
+                ver = 'spx v' + splatModel.header.Version + (splatModel.header.ExclusiveId ? (', ' + splatModel.header.ExclusiveId).substring(0, 5) : '');
+                ratio = splatModel.CompressionRatio;
             } else if (splatModel.opts.format == 'spz') {
                 ver = 'spz v' + splatModel.spzVersion;
+                ratio = splatModel.CompressionRatio;
+            } else if (splatModel.opts.format == 'splat') {
+                ratio = splatModel.CompressionRatio;
             }
-            fire(Information, { scene: `small (${ver})` }); // 初次提示场景模型版本
+            fire(Information, { scene: `small (${ver}) 　${ratio}` }); // 初次提示场景模型版本
         }
 
         splatModel.lastTextWatermarkVersion = splatModel.textWatermarkVersion;

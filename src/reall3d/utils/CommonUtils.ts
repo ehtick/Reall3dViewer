@@ -286,6 +286,12 @@ export function encodeSplatSH(val: number): number {
     return clipUint8(Math.floor((encodeSHval + 4) / 8) * 8);
 }
 
+export function computeCompressionRatio(splatCount: number, bytelength: number): string {
+    const plySize = 1500 + splatCount * 248;
+    const compressionRatio = plySize / bytelength;
+    return compressionRatio.toFixed(2) + 'x';
+}
+
 export async function DecompressGzip(data: Uint8Array): Promise<Uint8Array> {
     try {
         const stream = new ReadableStream({

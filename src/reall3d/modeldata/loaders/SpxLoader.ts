@@ -5,7 +5,7 @@ import { Vector3 } from 'three';
 import { SplatDataSize20, SplatDataSize32, SpxHeaderSize, SpxOpenFormat0, SpxExclusiveFormatReall3d } from '../../utils/consts/GlobalConstants';
 import { parseSpxBlockData, parseSpxHeader } from '../wasm/WasmParser';
 import { ModelStatus, SplatModel, SpxHeader } from '../ModelData';
-import { DecompressGzip, DecompressXZ } from '../../utils/CommonUtils';
+import { computeCompressionRatio, DecompressGzip, DecompressXZ } from '../../utils/CommonUtils';
 
 /** Specify the Recognizable Formats Here */
 const ExclusiveFormats: number[] = [SpxOpenFormat0, SpxExclusiveFormatReall3d];
@@ -87,6 +87,7 @@ export async function loadSpx(model: SplatModel) {
                 }
 
                 model.header = h;
+                model.CompressionRatio = computeCompressionRatio(h.SplatCount, contentLength);
                 model.modelSplatCount = h.SplatCount;
                 model.dataShDegree = h.ShDegree;
                 model.aabbCenter = new Vector3((h.MinX + h.MaxX) / 2, (h.MinY + h.MaxY) / 2, (h.MinZ + h.MaxZ) / 2);

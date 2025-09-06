@@ -5,6 +5,7 @@ import { Vector3 } from 'three';
 import { isMobile, SplatDataSize32 } from '../../utils/consts/GlobalConstants';
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata } from '../wasm/WasmParser';
+import { computeCompressionRatio } from '../../utils/CommonUtils';
 
 const maxProcessCnt = isMobile ? 20480 : 51200;
 
@@ -32,6 +33,7 @@ export async function loadSplat(model: SplatModel) {
             return;
         }
 
+        model.CompressionRatio = '7.75x';
         model.modelSplatCount = maxVertexCount;
         model.downloadSplatCount = 0;
         model.splatData = new Uint8Array(Math.min(model.modelSplatCount, model.fetchLimit) * 32);

@@ -84,6 +84,8 @@ export class SplatModel {
 
     public spzVersion: number;
 
+    public CompressionRatio: string = '';
+
     public dataShDegree: number = 0;
 
     /** Model metadata */
