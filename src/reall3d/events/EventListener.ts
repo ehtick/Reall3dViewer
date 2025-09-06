@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Matrix4, PerspectiveCamera, Vector3, Scene } from 'three';
+import { Matrix4, PerspectiveCamera, Vector3, Scene, Quaternion } from 'three';
 import { Events } from './Events';
 import {
     GetCanvas,
@@ -181,6 +181,24 @@ export function setupEventListener(events: Events) {
             keySet.clear();
         } else if (keySet.has('F2')) {
             !opts.bigSceneMode && window.open('/editor/index.html?url=' + encodeURIComponent((fire(GetSplatMesh) as SplatMesh).meta.url));
+            keySet.clear();
+        } else if (keySet.has('KeyW')) {
+            moveForward(fire(GetControls));
+            keySet.clear();
+        } else if (keySet.has('KeyS')) {
+            moveBackward(fire(GetControls));
+            keySet.clear();
+        } else if (keySet.has('KeyA')) {
+            moveLeft(fire(GetControls));
+            keySet.clear();
+        } else if (keySet.has('KeyD')) {
+            moveRight(fire(GetControls));
+            keySet.clear();
+        } else if (keySet.has('KeyQ')) {
+            rotateTargetLeft(fire(GetControls));
+            keySet.clear();
+        } else if (keySet.has('KeyE')) {
+            rotateTargetRight(fire(GetControls));
             keySet.clear();
         }
     });
@@ -552,4 +570,79 @@ export function setupEventListener(events: Events) {
         canvas.removeEventListener('touchend', canvasTouchendEventListener);
         window.removeEventListener('resize', resize);
     });
+}
+
+// 通用移动函数，可以指定任意方向
+function moveCamera(controls, direction, step = 0.006) {
+    const moveVector = direction.clone().multiplyScalar(step);
+    controls.object.position.add(moveVector);
+    controls.target.add(moveVector);
+    controls.update();
+}
+
+function moveLeft(controls) {
+    const direction = new Vector3();
+    controls.object.getWorldDirection(direction);
+    const leftDir = new Vector3().crossVectors(controls.object.up, direction).normalize();
+
+    moveCamera(controls, leftDir);
+}
+
+function moveRight(controls) {
+    const direction = new Vector3();
+    controls.object.getWorldDirection(direction);
+    const rightDir = new Vector3().crossVectors(controls.object.up, direction).normalize().negate();
+
+    moveCamera(controls, rightDir);
+}
+
+function moveForward(controls) {
+    const forwardDir = new Vector3();
+    controls.object.getWorldDirection(forwardDir);
+    moveCamera(controls, forwardDir);
+}
+
+function moveBackward(controls) {
+    const backwardDir = new Vector3();
+    controls.object.getWorldDirection(backwardDir).negate();
+    moveCamera(controls, backwardDir);
+}
+
+/**
+ * 相机位置不变，目标点顺时针转动（像人转动头部）
+ * @param {OrbitControls} controls - 轨道控制器
+ * @param {number} angle - 转动角度（弧度制）
+ */
+function rotateTargetClockwise(controls, angle = 0.006) {
+    // 获取相机当前位置和目标点位置
+    const cameraPosition = controls.object.position.clone();
+    const targetPosition = controls.target.clone();
+
+    // 计算相机到目标的向量
+    const direction = new Vector3().subVectors(targetPosition, cameraPosition);
+
+    // 获取相机的上方向（旋转轴）
+    const upVector = controls.object.up.clone().normalize();
+
+    // 创建四元数表示顺时针旋转
+    const quaternion = new Quaternion();
+    quaternion.setFromAxisAngle(upVector, -angle); // 负角度表示顺时针
+
+    // 应用旋转到方向向量
+    direction.applyQuaternion(quaternion);
+
+    // 计算新的目标点位置
+    const newTargetPosition = new Vector3().addVectors(cameraPosition, direction);
+
+    // 更新目标点
+    controls.target.copy(newTargetPosition);
+    controls.update();
+}
+
+function rotateTargetLeft(controls) {
+    rotateTargetClockwise(controls, -0.01);
+}
+
+function rotateTargetRight(controls) {
+    rotateTargetClockwise(controls, 0.01);
 }
