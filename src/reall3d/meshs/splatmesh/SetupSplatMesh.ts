@@ -246,7 +246,7 @@ export function setupSplatMesh(events: Events) {
 
             const dataArray = texture.txdata;
             texture.txdata = null;
-            const dataTexture = new DataTexture(dataArray, texwidth, texheight, RGBAIntegerFormat, UnsignedIntType);
+            const dataTexture = new DataTexture(dataArray as BufferSource, texwidth, texheight, RGBAIntegerFormat, UnsignedIntType);
             dataTexture.onUpdate = () => {
                 texture.textureReady = true;
                 texture.textureReadyTime = Date.now();
