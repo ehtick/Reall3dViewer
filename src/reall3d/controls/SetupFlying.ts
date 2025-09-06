@@ -91,7 +91,7 @@ export function setupFlying(events: Events) {
 
     on(FlyOnce, () => {
         if (flyOnceDone) return;
-        (flyOnceDone = true) && fire(Flying);
+        (flyOnceDone = true) && fire(Flying, true);
     });
 
     let t = 0; // 插值因子

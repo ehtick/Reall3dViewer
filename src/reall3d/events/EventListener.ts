@@ -200,6 +200,12 @@ export function setupEventListener(events: Events) {
         } else if (keySet.has('KeyE')) {
             rotateTargetRight(fire(GetControls));
             keySet.clear();
+        } else if (keySet.has('KeyC')) {
+            rotateTargetUp(fire(GetControls));
+            keySet.clear();
+        } else if (keySet.has('KeyZ')) {
+            rotateTargetDown(fire(GetControls));
+            keySet.clear();
         }
     });
 
@@ -572,40 +578,46 @@ export function setupEventListener(events: Events) {
     });
 }
 
-// 通用移动函数，可以指定任意方向
-function moveCamera(controls, direction, step = 0.006) {
-    const moveVector = direction.clone().multiplyScalar(step);
+// 使用当前相机的up向量定义水平面
+function moveCameraHorizontal(controls, direction, step = 0.006) {
+    // 使用相机的up向量作为平面法线
+    const planeNormal = controls.object.up.clone().normalize();
+
+    // 将方向向量投影到以up向量为法线的平面上
+    const projectedDirection = new Vector3().copy(direction).projectOnPlane(planeNormal).normalize();
+
+    const moveVector = projectedDirection.multiplyScalar(step);
     controls.object.position.add(moveVector);
     controls.target.add(moveVector);
     controls.update();
 }
-
+// 左移
 function moveLeft(controls) {
     const direction = new Vector3();
     controls.object.getWorldDirection(direction);
     const leftDir = new Vector3().crossVectors(controls.object.up, direction).normalize();
 
-    moveCamera(controls, leftDir);
+    moveCameraHorizontal(controls, leftDir);
 }
-
+// 右移
 function moveRight(controls) {
     const direction = new Vector3();
     controls.object.getWorldDirection(direction);
     const rightDir = new Vector3().crossVectors(controls.object.up, direction).normalize().negate();
 
-    moveCamera(controls, rightDir);
+    moveCameraHorizontal(controls, rightDir);
 }
-
+// 前进
 function moveForward(controls) {
     const forwardDir = new Vector3();
     controls.object.getWorldDirection(forwardDir);
-    moveCamera(controls, forwardDir);
+    moveCameraHorizontal(controls, forwardDir);
 }
-
+// 后退
 function moveBackward(controls) {
     const backwardDir = new Vector3();
     controls.object.getWorldDirection(backwardDir).negate();
-    moveCamera(controls, backwardDir);
+    moveCameraHorizontal(controls, backwardDir);
 }
 
 /**
@@ -638,11 +650,54 @@ function rotateTargetClockwise(controls, angle = 0.006) {
     controls.target.copy(newTargetPosition);
     controls.update();
 }
-
+// 左看
 function rotateTargetLeft(controls) {
     rotateTargetClockwise(controls, -0.01);
 }
-
+// 右看
 function rotateTargetRight(controls) {
     rotateTargetClockwise(controls, 0.01);
+}
+
+/**
+ * 相机位置不变，目标点上下转动（像人抬头低头）
+ * @param {OrbitControls} controls - 轨道控制器
+ * @param {number} angle - 转动角度（弧度制），正数为抬头，负数为低头
+ */
+function rotateTargetVertical(controls, angle = 0.006) {
+    // 获取相机当前位置和目标点位置
+    const cameraPosition = controls.object.position.clone();
+    const targetPosition = controls.target.clone();
+
+    // 计算相机到目标的向量
+    const direction = new Vector3().subVectors(targetPosition, cameraPosition);
+
+    // 获取相机的右侧方向（用于垂直旋转的轴）
+    const forwardDir = new Vector3();
+    controls.object.getWorldDirection(forwardDir);
+    const rightVector = new Vector3().crossVectors(controls.object.up, forwardDir).normalize();
+
+    // 创建四元数表示垂直旋转
+    const quaternion = new Quaternion();
+    quaternion.setFromAxisAngle(rightVector, angle);
+
+    // 应用旋转到方向向量
+    direction.applyQuaternion(quaternion);
+
+    // 计算新的目标点位置
+    const newTargetPosition = new Vector3().addVectors(cameraPosition, direction);
+
+    // 更新目标点
+    controls.target.copy(newTargetPosition);
+    controls.update();
+}
+
+// 抬头
+function rotateTargetUp(controls, angle = 0.01) {
+    rotateTargetVertical(controls, -angle);
+}
+
+// 低头
+function rotateTargetDown(controls, angle = 0.01) {
+    rotateTargetVertical(controls, angle);
 }
