@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { Vector3 } from 'three';
-import { clipUint8, unGzip } from '../../utils/CommonUtils';
+import { clipUint8, DecompressGzip } from '../../utils/CommonUtils';
 import {
     isMobile,
     SH_C0,
@@ -45,7 +45,7 @@ export async function loadSpz(model: SplatModel) {
             model.downloadSize += value.length;
         }
 
-        const ui8s = await unGzip(datas);
+        const ui8s = await DecompressGzip(datas);
         if (!ui8s || ui8s.length < 16) {
             console.error(`Invalid spz format`);
             model.status = ModelStatus.Invalid;

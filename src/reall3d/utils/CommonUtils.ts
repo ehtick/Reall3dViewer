@@ -27,6 +27,7 @@ import {
 } from '../events/EventConstants';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { ViewerVersion } from './consts/GlobalConstants';
+import { XzReadableStream } from 'xz-decompress';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -274,7 +275,18 @@ export function isNeedReload(yyyymmdd: number = 0): boolean {
     return yyyymmdd >= date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
 }
 
-export async function unGzip(data: Uint8Array): Promise<Uint8Array> {
+export const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+export function clipUint8(value: number): number {
+    return value < 0 ? 0 : value > 255 ? 255 : value | 0;
+}
+
+export function encodeSplatSH(val: number): number {
+    const encodeSHval = clipUint8(Math.round(val * 128) + 128);
+    return clipUint8(Math.floor((encodeSHval + 4) / 8) * 8);
+}
+
+export async function DecompressGzip(data: Uint8Array): Promise<Uint8Array> {
     try {
         const stream = new ReadableStream({
             async start(controller: any) {
@@ -286,18 +298,20 @@ export async function unGzip(data: Uint8Array): Promise<Uint8Array> {
         const rs = new Response(stream.pipeThrough(new DecompressionStream('gzip')));
         return new Uint8Array(await rs.arrayBuffer());
     } catch (error) {
-        console.error('unGzip Failed:', error);
+        console.error('Decompress gzip failed:', error);
         return null;
     }
 }
 
-export const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+export async function DecompressXZ(datas: Uint8Array): Promise<Uint8Array> {
+    try {
+        const url = URL.createObjectURL(new Blob([datas as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
+        const compressedResponse = await fetch(url);
 
-export function clipUint8(value: number): number {
-    return value < 0 ? 0 : value > 255 ? 255 : value | 0;
-}
-
-export function encodeSplatSH(val: number): number {
-    const encodeSHval = clipUint8(Math.round(val * 128) + 128);
-    return clipUint8(Math.floor((encodeSHval + 4) / 8) * 8);
+        const decompressedResponse = new Response(new XzReadableStream(compressedResponse.body));
+        return new Uint8Array(await decompressedResponse.arrayBuffer());
+    } catch (error) {
+        console.error('Decompress xz failed:', error);
+        return null;
+    }
 }
