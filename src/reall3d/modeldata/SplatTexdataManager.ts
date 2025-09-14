@@ -222,17 +222,18 @@ export function setupSplatTextureManager(events: Events) {
             fire(SplatUpdateTopY, (splatModel.header?.Flag2 ? splatModel.header.MaxTopY : splatModel.header?.MinTopY) || 0); // 初次传入高点
 
             let ver: string = splatModel.opts.format;
-            let ratio = '';
+            let ratio = '　';
             if (splatModel.opts.format == 'spx') {
                 ver = 'spx v' + splatModel.header.Version + (splatModel.header.ExclusiveId ? (', ' + splatModel.header.ExclusiveId).substring(0, 5) : '');
-                ratio = splatModel.CompressionRatio;
+                ratio += splatModel.CompressionRatio;
             } else if (splatModel.opts.format == 'spz') {
                 ver = 'spz v' + splatModel.spzVersion;
-                ratio = splatModel.CompressionRatio;
+                ratio += splatModel.CompressionRatio;
             } else if (splatModel.opts.format == 'splat') {
-                ratio = splatModel.CompressionRatio;
+                ratio += splatModel.CompressionRatio;
             }
-            fire(Information, { scene: `small (${ver}) 　${ratio}` }); // 初次提示场景模型版本
+            const size = '　' + (splatModel.fileSize / 1024 / 1024).toFixed(1) + 'M';
+            fire(Information, { scene: `small (${ver}) ${ratio}${size}` }); // 初次提示场景模型版本
         }
 
         splatModel.lastTextWatermarkVersion = splatModel.textWatermarkVersion;
@@ -328,10 +329,13 @@ export function setupSplatTextureManager(events: Events) {
 
         if (!texture.version) {
             let ver: string = splatModel.opts.format;
+            let ratio = '　';
             if (splatModel.opts.format == 'spx') {
                 ver = 'spx' + (splatModel.header.ExclusiveId ? (' ' + splatModel.header.ExclusiveId).substring(0, 6) : '');
+                ratio += splatModel.CompressionRatio;
             }
-            fire(Information, { scene: `large (${ver})` }); // 初次提示场景模型版本
+            const size = '　' + (splatModel.fileSize / 1024 / 1024).toFixed(1) + 'M';
+            fire(Information, { scene: `large (${ver}) ${ratio}${size}` }); // 初次提示场景模型版本
         }
 
         const sysTime = Date.now();
