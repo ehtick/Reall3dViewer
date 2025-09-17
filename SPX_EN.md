@@ -17,7 +17,7 @@ Fixed-length header for format identification, containing bounding box data for 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
 |-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
 | 0–2         | ASCII     | `*`Magic           | Fixed value `spx`                                                         |
-| 3           | uint8     | `*`Version               | Current version: `1`                                                        |
+| 3           | uint8     | `*`Version               | Current version: `2`                                                        |
 | 4–7         | uint32    | `*`Gaussian Count        | Total number of Gaussian points                                             |
 | 8–11        | float32   | `*`MinX                  | Bounding box minimum X coordinate                                           |
 | 12–15       | float32   | `*`MaxX                  | Bounding box maximum X coordinate                                           |
