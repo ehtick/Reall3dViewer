@@ -1,7 +1,17 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { SplatDataSize16, SplatDataSize32, SpxBlockFormatSH1, SpxBlockFormatSH2, SpxBlockFormatSH3, WasmBlockSize } from '../../utils/consts/GlobalConstants';
+import { data190To19, sh123To1, sh123To2, sh123To3 } from '../../utils/CommonUtils';
+import {
+    SplatDataSize16,
+    SplatDataSize32,
+    SpxBlockFormatData190,
+    SpxBlockFormatSH1,
+    SpxBlockFormatSH2,
+    SpxBlockFormatSH3,
+    SpxBlockFormatSH4,
+    WasmBlockSize,
+} from '../../utils/consts/GlobalConstants';
 import { SpxHeader } from '../ModelData';
 
 const WasmBase64 =
@@ -71,13 +81,42 @@ interface SpxBlockResult {
     isSh1?: boolean;
     isSh2?: boolean;
     isSh3?: boolean;
+    isSh23?: boolean;
+    dataSh3?: Uint8Array;
     success: boolean;
 }
 
-export async function parseSpxBlockData(data: Uint8Array): Promise<SpxBlockResult> {
-    const ui32s = new Uint32Array(data.slice(0, 8).buffer);
+export async function parseSpxBlockData(data: Uint8Array, header: SpxHeader = null): Promise<SpxBlockResult> {
+    let ui32s = new Uint32Array(data.slice(0, 8).buffer);
     const splatCount = ui32s[0];
     const blockFormat = ui32s[1];
+
+    if (blockFormat == SpxBlockFormatSH4) {
+        if (header.ShDegree == SpxBlockFormatSH1) {
+            const data1 = await sh123To1(data);
+            return parseBlockData(splatCount, SpxBlockFormatSH1, data1);
+        } else if (header.ShDegree == SpxBlockFormatSH2) {
+            const data2 = await sh123To2(data);
+            return parseBlockData(splatCount, SpxBlockFormatSH2, data2);
+        } else if (header.ShDegree == SpxBlockFormatSH3) {
+            const data2 = await sh123To2(data);
+            const data3 = await sh123To3(data);
+            const rs2 = await parseBlockData(splatCount, SpxBlockFormatSH2, data2);
+            const rs3 = await parseBlockData(splatCount, SpxBlockFormatSH3, data3);
+            rs2.success = rs2.success && rs3.success;
+            rs2.isSh23 = true;
+            rs2.dataSh3 = rs3.datas;
+            return rs2;
+        }
+    }
+
+    if (blockFormat == SpxBlockFormatData190) {
+        data = await data190To19(data);
+    }
+    return parseBlockData(splatCount, blockFormat, data);
+}
+
+async function parseBlockData(splatCount: number, blockFormat: number, data: Uint8Array): Promise<SpxBlockResult> {
     const isSh1: boolean = SpxBlockFormatSH1 == blockFormat;
     const isSh2: boolean = SpxBlockFormatSH2 == blockFormat;
     const isSh3: boolean = SpxBlockFormatSH3 == blockFormat;

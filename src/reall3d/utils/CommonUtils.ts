@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Object3D, PerspectiveCamera, ShaderChunk, Vector3 } from 'three';
+import { Audio, Object3D, PerspectiveCamera, ShaderChunk, Vector3 } from 'three';
 import { Events } from '../events/Events';
 import {
     Vector3ToString,
@@ -320,4 +320,216 @@ export async function DecompressXZ(datas: Uint8Array): Promise<Uint8Array> {
         console.error('Decompress xz failed:', error);
         return null;
     }
+}
+
+export function showTvText(txt: string, duration: number, audio: Audio): Promise<boolean> {
+    return new Promise((res, rej) => {
+        const div: HTMLDivElement = document.querySelector('.tv-text');
+        if (div) {
+            div.innerText = txt;
+            div.classList.remove('hide');
+        }
+        setTimeout(() => {
+            clearTvText();
+            if (audio.isPlaying) {
+                setTimeout(() => res(true), 200);
+            } else {
+                rej('stop');
+            }
+        }, duration);
+    });
+}
+
+export function clearTvText() {
+    const div: HTMLDivElement = document.querySelector('.tv-text');
+    if (div) {
+        div.classList.add('hide');
+        div.innerText = '';
+    }
+}
+
+export async function data190To19(data190: Uint8Array): Promise<Uint8Array> {
+    const ui32s = new Uint32Array(data190.slice(0, 12).buffer);
+    const splatCount = ui32s[0];
+    const size1 = ui32s[2];
+    let offset = 8;
+    const data1: Uint8Array = data190.slice(offset + 4, offset + 4 + size1);
+    const { rgba: rgba1 } = await webpToRgba(data1);
+    offset += 4 + size1;
+    const size2 = new Uint32Array(data190.slice(offset, offset + 4).buffer)[0];
+    const data2: Uint8Array = data190.slice(offset + 4, offset + 4 + size2);
+    const { rgba: rgba2 } = await webpToRgba(data2);
+    offset += 4 + size2;
+    const size3 = new Uint32Array(data190.slice(offset, offset + 4).buffer)[0];
+    const data3: Uint8Array = data190.slice(offset + 4, offset + 4 + size3);
+    const { rgba: rgba3 } = await webpToRgba(data3);
+    offset += 4 + size3;
+    const size4 = new Uint32Array(data190.slice(offset, offset + 4).buffer)[0];
+    const data4: Uint8Array = data190.slice(offset + 4, offset + 4 + size4);
+    const { rgba: rgba4 } = await webpToRgba(data4);
+
+    const rs = new Uint8Array(8 + splatCount * 19);
+    let n = 0;
+    rs[n] = data190[n++];
+    rs[n] = data190[n++];
+    rs[n] = data190[n++];
+    rs[n] = data190[n++];
+    rs[n++] = 19;
+    rs[n++] = 0;
+    rs[n++] = 0;
+    rs[n++] = 0;
+
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[i * 4 + 0]; // x0
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[i * 4 + 1]; // y0
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[i * 4 + 2]; // z0
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 4 + i * 4 + 0]; // x1
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 4 + i * 4 + 1]; // y1
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 4 + i * 4 + 2]; // z1
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 8 + i * 4 + 0]; // x2
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 8 + i * 4 + 1]; // y2
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 8 + i * 4 + 2]; // z2
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba2[i * 4 + 0]; // sx
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba2[i * 4 + 1]; // sy
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba2[i * 4 + 2]; // sz
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba3[i * 4 + 0]; // r
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba3[i * 4 + 1]; // g
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba3[i * 4 + 2]; // b
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba3[i * 4 + 3]; // a
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba4[i * 4 + 0]; // rx
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba4[i * 4 + 1]; // ry
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba4[i * 4 + 2]; // rz
+    }
+
+    return rs;
+}
+
+export async function sh123To1(data123: Uint8Array): Promise<Uint8Array> {
+    const ui32s = new Uint32Array(data123.slice(0, 8).buffer);
+    const splatCount = ui32s[0];
+    const data1: Uint8Array = data123.slice(8);
+    const { rgba } = await webpToRgba(data1);
+
+    const rs = new Uint8Array(8 + splatCount * 9);
+    let n = 0;
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n++] = 1;
+    rs[n++] = 0;
+    rs[n++] = 0;
+    rs[n++] = 0;
+
+    for (let i = 0; i < splatCount; i++) {
+        for (let j = 0; j < 3; j++) {
+            rs[n++] = rgba[i * 60 + j * 4 + 0];
+            rs[n++] = rgba[i * 60 + j * 4 + 1];
+            rs[n++] = rgba[i * 60 + j * 4 + 2];
+        }
+    }
+    return rs;
+}
+
+export async function sh123To2(data123: Uint8Array): Promise<Uint8Array> {
+    const ui32s = new Uint32Array(data123.slice(0, 8).buffer);
+    const splatCount = ui32s[0];
+    const data1: Uint8Array = data123.slice(8);
+    const { rgba } = await webpToRgba(data1);
+
+    const rs = new Uint8Array(8 + splatCount * 24);
+    let n = 0;
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n++] = 2;
+    rs[n++] = 0;
+    rs[n++] = 0;
+    rs[n++] = 0;
+
+    for (let i = 0; i < splatCount; i++) {
+        for (let j = 0; j < 8; j++) {
+            rs[n++] = rgba[i * 60 + j * 4 + 0];
+            rs[n++] = rgba[i * 60 + j * 4 + 1];
+            rs[n++] = rgba[i * 60 + j * 4 + 2];
+        }
+    }
+    return rs;
+}
+
+export async function sh123To3(data123: Uint8Array): Promise<Uint8Array> {
+    const ui32s = new Uint32Array(data123.slice(0, 8).buffer);
+    const splatCount = ui32s[0];
+    const data1: Uint8Array = data123.slice(8);
+    const { rgba } = await webpToRgba(data1);
+
+    const rs = new Uint8Array(8 + splatCount * 21);
+    let n = 0;
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n] = data123[n++];
+    rs[n++] = 3;
+    rs[n++] = 0;
+    rs[n++] = 0;
+    rs[n++] = 0;
+
+    for (let i = 0; i < splatCount; i++) {
+        for (let j = 8; j < 15; j++) {
+            rs[n++] = rgba[i * 60 + j * 4 + 0];
+            rs[n++] = rgba[i * 60 + j * 4 + 1];
+            rs[n++] = rgba[i * 60 + j * 4 + 2];
+        }
+    }
+    return rs;
+}
+
+async function webpToRgba(webps: Uint8Array) {
+    const blob = new Blob([webps as any], { type: 'image/webp' });
+    const url = URL.createObjectURL(blob);
+    const bmp = await createImageBitmap(await fetch(url).then(r => r.blob()));
+    const canvas = new OffscreenCanvas(bmp.width, bmp.height);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bmp, 0, 0);
+    const imData = ctx.getImageData(0, 0, bmp.width, bmp.height);
+    bmp.close();
+    URL.revokeObjectURL(url);
+    return { width: bmp.width, height: bmp.height, rgba: imData.data };
 }

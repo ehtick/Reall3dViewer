@@ -161,7 +161,7 @@ export async function loadSpx(model: SplatModel) {
                         console.error('unsuported compress type:', compressType);
                     }
                 }
-                const spxBlock = await parseSpxBlockData(ui8sBlock);
+                const spxBlock = await parseSpxBlockData(ui8sBlock, model.header);
                 if (!spxBlock.success) {
                     console.error('spx block data parser failed. block format:', spxBlock.blockFormat);
                     model.abortController.abort();
@@ -170,11 +170,29 @@ export async function loadSpx(model: SplatModel) {
                 }
 
                 if (spxBlock.isSplat) {
-                    model.downloadSplatCount += spxBlock.datas.byteLength / 32;
+                    model.downloadSplatCount += spxBlock.splatCount;
                     setBlockSplatData(model, spxBlock.datas);
                 } else {
                     const maxSplatDataCnt = Math.min(model.fetchLimit, model.modelSplatCount);
-                    if (spxBlock.isSh3) {
+                    if (spxBlock.isSh23) {
+                        if (model.sh12Count + spxBlock.splatCount > maxSplatDataCnt) {
+                            const cnt = maxSplatDataCnt - model.sh12Count;
+                            model.sh12Data.push(spxBlock.datas.slice(0, cnt * 16));
+                            model.sh12Count += cnt;
+                        } else {
+                            model.sh12Data.push(spxBlock.datas);
+                            model.sh12Count += spxBlock.splatCount;
+                        }
+
+                        if (model.sh3Count + spxBlock.splatCount > maxSplatDataCnt) {
+                            const cnt = maxSplatDataCnt - model.sh3Count;
+                            model.sh3Data.push(spxBlock.dataSh3.slice(0, cnt * 16));
+                            model.sh3Count += cnt;
+                        } else {
+                            model.sh3Data.push(spxBlock.dataSh3);
+                            model.sh3Count += spxBlock.splatCount;
+                        }
+                    } else if (spxBlock.isSh3) {
                         if (model.sh3Count + spxBlock.splatCount > maxSplatDataCnt) {
                             const cnt = maxSplatDataCnt - model.sh3Count;
                             model.sh3Data.push(spxBlock.datas.slice(0, cnt * 16));
