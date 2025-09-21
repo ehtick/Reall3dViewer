@@ -109,6 +109,25 @@ he data block format encompasses both open and exclusive formats. The reserved r
 ---
 
 
+
+✅  Open Format `190`, basic data, webp encoding
+
+
+| Byte Offset | Type      | Field Name            | Description                                                                 |
+|-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
+| 0~3 | uint32 | `*`Gaussian Count | Number of Gaussians |
+| 4~7 | uint32 | `*`Format ID | `190` splat per 19 bytes, webp encoding |
+| 8~n | bytes | `*`Data | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([rx,ry,rz,255...]) |
+
+- `x,y,z` Coordinates, 24-bit precision (`x`, `y`, `z`).
+- `sx,sy,sz` Scale, 8-bit per axis (`sx`, `sy`, `sz`).
+- `r,g,b,a` Color, RGBA channels (8-bit each).
+- `rx,ry,rz` Rotation, Quaternion components (8-bit each).
+
+---
+
+
+
 ✅  Open Format `1`, data of SH degree 1 (SH1 only)
 
 
@@ -148,6 +167,20 @@ he data block format encompasses both open and exclusive formats. The reserved r
 | 8~n      | bytes  | `*`Data               | sh24...sh44,sh24...sh44,... |
 
 - `sh24...sh44` Spherical harmonics (8-bit each)
+
+---
+
+
+✅  Open Format `4`, data of SH degree 1~3, webp encoding
+
+
+| Byte Offset | Type      | Field Name            | Description                                                                 |
+|----------|------|------|------|
+| 0–3      | uint32 | `*`Gaussian Count     | Number of Gaussians                                                         |
+| 4–7      | uint32 | `*`Format ID          | `4` data of Spherical harmonics (SH) degree 1~3                       |
+| 8~n      | bytes  | `*`Data               | webp([sh1,sh2,sh3...sh44,sh1,sh2,sh3...sh44,...])                |
+
+- `sh1,sh2,sh3...sh44` Spherical harmonics (8-bit each)
 
 ---
 
