@@ -135,7 +135,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
     const isV1 = !meta.version;
     const cntSplat: number = isV1 ? meta.means.shape[0] : meta.count;
     const limitCnt = Math.min(cntSplat, model.fetchLimit);
-    const shDegree = 0; // meta.shN ? 3 : 0; // TODO parse SH
+    const shDegree = meta.shN ? 3 : 0;
     const splatData = new Uint8Array(limitCnt * DataSize32);
     model.modelSplatCount = cntSplat;
     model.dataShDegree = shDegree;
@@ -231,54 +231,54 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
             n++;
         }
 
-        // if (shDegree > 0) {
-        //     const u2s = new Uint32Array(2);
-        //     u2s[0] = processCnt;
-        //     u2s[1] = SpxBlockFormatSH2;
-        //     const ui8sSH2 = new Uint8Array(8 + processCnt * 24);
-        //     ui8sSH2.set(new Uint8Array(u2s.buffer), 0);
+        if (shDegree > 0) {
+            const u2s = new Uint32Array(2);
+            u2s[0] = processCnt;
+            u2s[1] = SpxBlockFormatSH2;
+            const ui8sSH2 = new Uint8Array(8 + processCnt * 24);
+            ui8sSH2.set(new Uint8Array(u2s.buffer), 0);
 
-        //     const u3s = new Uint32Array(2);
-        //     u3s[0] = processCnt;
-        //     u3s[1] = SpxBlockFormatSH3;
-        //     const ui8sSH3 = new Uint8Array(8 + processCnt * 21);
-        //     ui8sSH3.set(new Uint8Array(u3s.buffer), 0);
+            const u3s = new Uint32Array(2);
+            u3s[0] = processCnt;
+            u3s[1] = SpxBlockFormatSH3;
+            const ui8sSH3 = new Uint8Array(8 + processCnt * 21);
+            ui8sSH3.set(new Uint8Array(u3s.buffer), 0);
 
-        //     for (let i = startCnt, n = 0; i < maxCnt; i++) {
-        //         const label = labels[i * 4 + 0] + (labels[i * 4 + 1] << 8);
-        //         const col = (label & 63) * 15; // 同 (n % 64) * 15
-        //         const row = label >> 6; // 同 Math.floor(n / 64)
-        //         const offset = row * width + col;
+            for (let i = startCnt, n = 0; i < maxCnt; i++) {
+                const label = labels[i * 4 + 0] + (labels[i * 4 + 1] << 8);
+                const col = (label & 63) * 15; // 同 (n % 64) * 15
+                const row = label >> 6; // 同 Math.floor(n / 64)
+                const offset = row * width + col;
 
-        //         const sh1 = new Uint8Array(9);
-        //         const sh2 = new Uint8Array(15);
-        //         const sh3 = new Uint8Array(21);
-        //         let shValue: number;
-        //         for (let d = 0; d < 3; d++) {
-        //             for (let k = 0; k < 3; k++) {
-        //                 shValue = meta.shN.codebook[centroids[(offset + k) * 4 + d]];
-        //                 sh1[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-        //             }
-        //             for (let k = 0; k < 5; k++) {
-        //                 shValue = meta.shN.codebook[centroids[(offset + 3 + k) * 4 + d]];
-        //                 sh2[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-        //             }
-        //             for (let k = 0; k < 7; k++) {
-        //                 shValue = meta.shN.codebook[centroids[(offset + 8 + k) * 4 + d]];
-        //                 sh3[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-        //             }
-        //         }
-        //         ui8sSH2.set(sh1, 8 + n * 24);
-        //         ui8sSH2.set(sh2, 8 + n * 24 + 9);
-        //         ui8sSH3.set(sh3, 8 + n * 21);
-        //         n++;
-        //     }
+                const sh1 = new Uint8Array(9);
+                const sh2 = new Uint8Array(15);
+                const sh3 = new Uint8Array(21);
+                let shValue: number;
+                for (let d = 0; d < 3; d++) {
+                    for (let k = 0; k < 3; k++) {
+                        shValue = ((meta.shN.maxs - meta.shN.mins) * centroids[(offset + k) * 4 + d]) / 255.0 + meta.shN.mins;
+                        sh1[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
+                    }
+                    for (let k = 0; k < 5; k++) {
+                        shValue = ((meta.shN.maxs - meta.shN.mins) * centroids[(offset + 3 + k) * 4 + d]) / 255.0 + meta.shN.mins;
+                        sh2[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
+                    }
+                    for (let k = 0; k < 7; k++) {
+                        shValue = ((meta.shN.maxs - meta.shN.mins) * centroids[(offset + 8 + k) * 4 + d]) / 255.0 + meta.shN.mins;
+                        sh3[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
+                    }
+                }
+                ui8sSH2.set(sh1, 8 + n * 24);
+                ui8sSH2.set(sh2, 8 + n * 24 + 9);
+                ui8sSH3.set(sh3, 8 + n * 21);
+                n++;
+            }
 
-        //     const sh2Block = await parseSpxBlockData(ui8sSH2);
-        //     model.sh12Data.push(sh2Block.datas);
-        //     const sh3Block = await parseSpxBlockData(ui8sSH3);
-        //     model.sh3Data.push(sh3Block.datas);
-        // }
+            const sh2Block = await parseSpxBlockData(ui8sSH2);
+            model.sh12Data.push(sh2Block.datas);
+            const sh3Block = await parseSpxBlockData(ui8sSH3);
+            model.sh3Data.push(sh3Block.datas);
+        }
 
         return await parseSplatToTexdata(ui8sData, processCnt);
     }
@@ -354,54 +354,54 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
             n++;
         }
 
-        // if (shDegree > 0) {
-        //     const u2s = new Uint32Array(2);
-        //     u2s[0] = processCnt;
-        //     u2s[1] = SpxBlockFormatSH2;
-        //     const ui8sSH2 = new Uint8Array(8 + processCnt * 24);
-        //     ui8sSH2.set(new Uint8Array(u2s.buffer), 0);
+        if (shDegree > 0) {
+            const u2s = new Uint32Array(2);
+            u2s[0] = processCnt;
+            u2s[1] = SpxBlockFormatSH2;
+            const ui8sSH2 = new Uint8Array(8 + processCnt * 24);
+            ui8sSH2.set(new Uint8Array(u2s.buffer), 0);
 
-        //     const u3s = new Uint32Array(2);
-        //     u3s[0] = processCnt;
-        //     u3s[1] = SpxBlockFormatSH3;
-        //     const ui8sSH3 = new Uint8Array(8 + processCnt * 21);
-        //     ui8sSH3.set(new Uint8Array(u3s.buffer), 0);
+            const u3s = new Uint32Array(2);
+            u3s[0] = processCnt;
+            u3s[1] = SpxBlockFormatSH3;
+            const ui8sSH3 = new Uint8Array(8 + processCnt * 21);
+            ui8sSH3.set(new Uint8Array(u3s.buffer), 0);
 
-        //     for (let i = startCnt, n = 0; i < maxCnt; i++) {
-        //         const label = labels[i * 4 + 0] + (labels[i * 4 + 1] << 8);
-        //         const col = (label & 63) * 15; // 同 (n % 64) * 15
-        //         const row = label >> 6; // 同 Math.floor(n / 64)
-        //         const offset = row * width + col;
+            for (let i = startCnt, n = 0; i < maxCnt; i++) {
+                const label = labels[i * 4 + 0] + (labels[i * 4 + 1] << 8);
+                const col = (label & 63) * 15; // 同 (n % 64) * 15
+                const row = label >> 6; // 同 Math.floor(n / 64)
+                const offset = row * width + col;
 
-        //         const sh1 = new Uint8Array(9);
-        //         const sh2 = new Uint8Array(15);
-        //         const sh3 = new Uint8Array(21);
-        //         let shValue: number;
-        //         for (let d = 0; d < 3; d++) {
-        //             for (let k = 0; k < 3; k++) {
-        //                 shValue = meta.shN.codebook[centroids[(offset + k) * 4 + d]];
-        //                 sh1[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-        //             }
-        //             for (let k = 0; k < 5; k++) {
-        //                 shValue = meta.shN.codebook[centroids[(offset + 3 + k) * 4 + d]];
-        //                 sh2[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-        //             }
-        //             for (let k = 0; k < 7; k++) {
-        //                 shValue = meta.shN.codebook[centroids[(offset + 8 + k) * 4 + d]];
-        //                 sh3[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-        //             }
-        //         }
-        //         ui8sSH2.set(sh1, 8 + n * 24);
-        //         ui8sSH2.set(sh2, 8 + n * 24 + 9);
-        //         ui8sSH3.set(sh3, 8 + n * 21);
-        //         n++;
-        //     }
+                const sh1 = new Uint8Array(9);
+                const sh2 = new Uint8Array(15);
+                const sh3 = new Uint8Array(21);
+                let shValue: number;
+                for (let d = 0; d < 3; d++) {
+                    for (let k = 0; k < 3; k++) {
+                        shValue = meta.shN.codebook[centroids[(offset + k) * 4 + d]];
+                        sh1[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
+                    }
+                    for (let k = 0; k < 5; k++) {
+                        shValue = meta.shN.codebook[centroids[(offset + 3 + k) * 4 + d]];
+                        sh2[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
+                    }
+                    for (let k = 0; k < 7; k++) {
+                        shValue = meta.shN.codebook[centroids[(offset + 8 + k) * 4 + d]];
+                        sh3[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
+                    }
+                }
+                ui8sSH2.set(sh1, 8 + n * 24);
+                ui8sSH2.set(sh2, 8 + n * 24 + 9);
+                ui8sSH3.set(sh3, 8 + n * 21);
+                n++;
+            }
 
-        //     const sh2Block = await parseSpxBlockData(ui8sSH2);
-        //     model.sh12Data.push(sh2Block.datas);
-        //     const sh3Block = await parseSpxBlockData(ui8sSH3);
-        //     model.sh3Data.push(sh3Block.datas);
-        // }
+            const sh2Block = await parseSpxBlockData(ui8sSH2);
+            model.sh12Data.push(sh2Block.datas);
+            const sh3Block = await parseSpxBlockData(ui8sSH3);
+            model.sh3Data.push(sh3Block.datas);
+        }
 
         return await parseSplatToTexdata(ui8sData, processCnt);
     }
