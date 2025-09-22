@@ -24,6 +24,7 @@ const SQRT2 = Math.sqrt(2.0);
 
 export async function loadSog(model: SplatModel) {
     try {
+        model.status = ModelStatus.Fetching;
         if (model.opts.url.startsWith('blob:') || model.opts.url.endsWith('.sog')) {
             // 必须完全下载后，才能得知模型点数等基本信息
             model.status = ModelStatus.Fetching;
@@ -132,13 +133,11 @@ export async function loadSog(model: SplatModel) {
 
 async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, meta: any) {
     const isV1 = !meta.version;
-    console.info('model.sogVersion ', model.sogVersion);
     const cntSplat: number = isV1 ? meta.means.shape[0] : meta.count;
     const limitCnt = Math.min(cntSplat, model.fetchLimit);
     const shDegree = 0; // meta.shN ? 3 : 0; // TODO parse SH
     const splatData = new Uint8Array(limitCnt * DataSize32);
     model.modelSplatCount = cntSplat;
-    model.downloadSplatCount = cntSplat;
     model.dataShDegree = shDegree;
     model.splatData = splatData;
 
@@ -155,6 +154,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
         model.splatData.set(data.slice(0), model.dataSplatCount * SplatDataSize32);
         updateModelMinMax(model, data);
         model.dataSplatCount += data.byteLength / SplatDataSize32;
+        model.downloadSplatCount = model.dataSplatCount;
     }
 
     async function parseSogV1(startCnt: number): Promise<Uint8Array> {

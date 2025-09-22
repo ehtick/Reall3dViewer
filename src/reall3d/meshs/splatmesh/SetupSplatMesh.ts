@@ -473,12 +473,12 @@ export function setupSplatMesh(events: Events) {
         fire(
             RunLoopByFrame,
             () => {
-                if (disposed || currentMaxRadius <= currentVisibleRadius) return;
+                if (disposed) return;
 
                 currentVisibleRadius += (currentMaxRadius - currentVisibleRadius) * stepRate;
                 fire(SplatUpdateCurrentVisibleRadius, currentVisibleRadius);
 
-                let isDataAllReay = fire(IsSmallSceneRenderDataReady);
+                let isDataAllReay = true; //fire(IsSmallSceneRenderDataReady);
                 isDataAllReay && !startTime && (startTime = Date.now());
                 let visibleRate = currentVisibleRadius / maxRadius;
                 if (isDataAllReay && (visibleRate > 0.9 || Date.now() - startTime > 2500)) {

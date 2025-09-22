@@ -179,7 +179,7 @@ export function setupSplatTextureManager(events: Events) {
         if (downloadDone) {
             // 已下载完，通知一次进度条
             const downloadCount = Math.min(splatModel.fetchLimit, splatModel.downloadSplatCount);
-            !splatModel.notifyFetchStopDone && (splatModel.notifyFetchStopDone = true) && fire(OnFetchStop, downloadCount);
+            downloadCount && !splatModel.notifyFetchStopDone && (splatModel.notifyFetchStopDone = true) && fire(OnFetchStop, downloadCount);
         } else {
             // 没下载完，更新下载进度条
             fire(OnFetching, (100 * splatModel.downloadSize) / splatModel.fileSize);
@@ -573,7 +573,11 @@ export function setupSplatTextureManager(events: Events) {
             }
             if (splatModel.modelSplatCount > 0) {
                 fnResolveModelSplatCount(splatModel.modelSplatCount);
-                !splatModel.meta.particleMode && setTimeout(() => fire(SplatMeshCycleZoom), 5);
+                if (!splatModel.meta.particleMode && splatModel.dataSplatCount) {
+                    setTimeout(() => fire(SplatMeshCycleZoom), 5);
+                } else {
+                    setTimeout(fnCheckModelSplatCount, 10); // 没数据可以渲染，继续做以便触发过渡效果
+                }
             } else {
                 setTimeout(fnCheckModelSplatCount, 10);
             }
