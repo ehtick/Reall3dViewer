@@ -83,6 +83,7 @@ export class SplatModel {
     public header: SpxHeader = null;
 
     public spzVersion: number;
+    public sogVersion: number;
 
     public CompressionRatio: string = '';
 
@@ -136,6 +137,8 @@ export class SplatModel {
                 that.opts.format = 'ply';
             } else if (opts.url?.endsWith('.spz')) {
                 that.opts.format = 'spz';
+            } else if (opts.url?.endsWith('.sog')) {
+                that.opts.format = 'sog';
             } else {
                 console.error('unknown format!');
             }

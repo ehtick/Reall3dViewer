@@ -55,6 +55,7 @@ import {
     MobileDownloadLimitSplatCount,
     PcDownloadLimitSplatCount,
 } from '../utils/consts/GlobalConstants';
+import { loadSog } from './loaders/SogLoader';
 
 /**
  * 纹理数据管理
@@ -184,7 +185,8 @@ export function setupSplatTextureManager(events: Events) {
             fire(OnFetching, (100 * splatModel.downloadSize) / splatModel.fileSize);
         }
 
-        if (!splatModel.downloadSplatCount) return; // 尚无高斯数据
+        // if (!splatModel.downloadSplatCount) return; // 尚无高斯数据
+        if (!splatModel.dataSplatCount) return; // 尚无高斯数据
 
         if (mergeRunning) return;
         mergeRunning = true;
@@ -228,6 +230,9 @@ export function setupSplatTextureManager(events: Events) {
                 ratio += splatModel.CompressionRatio;
             } else if (splatModel.opts.format == 'spz') {
                 ver = 'spz v' + splatModel.spzVersion;
+                ratio += splatModel.CompressionRatio;
+            } else if (splatModel.opts.format == 'sog') {
+                ver = 'sog v' + splatModel.sogVersion;
                 ratio += splatModel.CompressionRatio;
             } else if (splatModel.opts.format == 'splat') {
                 ratio += splatModel.CompressionRatio;
@@ -533,6 +538,8 @@ export function setupSplatTextureManager(events: Events) {
             loadPly(model);
         } else if (model.opts.format === 'spz') {
             loadSpz(model);
+        } else if (model.opts.format === 'sog') {
+            loadSog(model);
         } else {
             return false;
         }
@@ -564,7 +571,7 @@ export function setupSplatTextureManager(events: Events) {
             if (!splatModel || splatModel.status == ModelStatus.Invalid || splatModel.status == ModelStatus.FetchFailed) {
                 return fnResolveModelSplatCount(0);
             }
-            if (splatModel.modelSplatCount >= 0) {
+            if (splatModel.modelSplatCount > 0) {
                 fnResolveModelSplatCount(splatModel.modelSplatCount);
                 !splatModel.meta.particleMode && setTimeout(() => fire(SplatMeshCycleZoom), 5);
             } else if (Date.now() - startTime >= 3000) {

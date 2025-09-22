@@ -28,6 +28,7 @@ import {
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
+import { unzip, unzipSync } from 'fflate';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -521,7 +522,7 @@ export async function sh123To3(data123: Uint8Array): Promise<Uint8Array> {
     return rs;
 }
 
-async function webpToRgba(webps: Uint8Array) {
+export async function webpToRgba(webps: Uint8Array): Promise<{ width: number; height: number; rgba: Uint8Array }> {
     const blob = new Blob([webps as any], { type: 'image/webp' });
     const url = URL.createObjectURL(blob);
     const bmp = await createImageBitmap(await fetch(url).then(r => r.blob()));
@@ -531,5 +532,28 @@ async function webpToRgba(webps: Uint8Array) {
     const imData = ctx.getImageData(0, 0, bmp.width, bmp.height);
     bmp.close();
     URL.revokeObjectURL(url);
-    return { width: bmp.width, height: bmp.height, rgba: imData.data };
+    return { width: bmp.width, height: bmp.height, rgba: imData.data as any };
+}
+
+export function unzipToMap(zipBytes: Uint8Array): Map<string, Uint8Array> {
+    const map = new Map<string, Uint8Array>();
+
+    try {
+        const entries = unzipSync(zipBytes);
+        for (const [filename, file] of Object.entries(entries)) {
+            if (file) {
+                const content = new Uint8Array(file);
+                map.set(filename, content);
+            }
+        }
+    } catch (error) {
+        console.error('解压失败:', error);
+    }
+
+    return map;
+}
+
+export function uint8ArrayToString(uint8Array: Uint8Array): string {
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(uint8Array);
 }

@@ -11,9 +11,9 @@ export interface ModelOptions {
     url: string;
 
     /**
-     * Model format (ply | splat | spx | spz | obj), auto-detected by default
+     * Model format (ply | splat | spx | spz | sog | obj), auto-detected by default
      */
-    format?: 'ply' | 'splat' | 'spx' | 'spz' | 'obj';
+    format?: 'ply' | 'splat' | 'spx' | 'spz' | 'sog' | 'obj';
 
     /**
      * Whether to force re-download

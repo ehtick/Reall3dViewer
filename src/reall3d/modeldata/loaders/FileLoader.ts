@@ -8,7 +8,7 @@ export async function loadFile(url: string, events: Events): Promise<Uint8Array>
     const abortController: AbortController = new AbortController();
     const signal: AbortSignal = abortController.signal;
     try {
-        events.fire(OnFetchStart);
+        events?.fire(OnFetchStart);
         const req = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'reload', signal });
         if (req.status != 200) {
             console.warn(`fetch error: ${req.status}`);
@@ -24,7 +24,7 @@ export async function loadFile(url: string, events: Events): Promise<Uint8Array>
             if (done) break;
             datas.set(value, bytesRead);
             bytesRead += value.length;
-            events.fire(OnFetching, (100 * bytesRead) / contentLength);
+            events?.fire(OnFetching, (100 * bytesRead) / contentLength);
         }
         return datas;
     } catch (e) {

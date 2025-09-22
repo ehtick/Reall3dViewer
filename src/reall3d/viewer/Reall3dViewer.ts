@@ -228,7 +228,7 @@ export class Reall3dViewer {
             let file = e.dataTransfer.files[0];
             if (!file) return;
 
-            let format: 'ply' | 'splat' | 'spx' | 'spz' | 'obj';
+            let format: 'ply' | 'splat' | 'spx' | 'spz' | 'sog' | 'obj';
             let isSceneJson = false;
             if (file.name.endsWith('.spx')) {
                 format = 'spx';
@@ -238,6 +238,8 @@ export class Reall3dViewer {
                 format = 'ply';
             } else if (file.name.endsWith('.spz')) {
                 format = 'spz';
+            } else if (file.name.endsWith('.sog')) {
+                format = 'sog';
             } else if (file.name.endsWith('.obj')) {
                 format = 'obj';
             } else if (file.name.endsWith('.scene.json')) {
@@ -468,6 +470,8 @@ export class Reall3dViewer {
                 modelOpts.format = 'ply';
             } else if (modelOpts.url.endsWith('.spz')) {
                 modelOpts.format = 'spz';
+            } else if (modelOpts.url.endsWith('.sog')) {
+                modelOpts.format = 'sog';
             } else if (modelOpts.url.endsWith('.obj')) {
                 modelOpts.format = 'obj';
             } else {

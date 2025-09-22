@@ -5,7 +5,6 @@ import { Vector3 } from 'three';
 import { isMobile, SplatDataSize32 } from '../../utils/consts/GlobalConstants';
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata } from '../wasm/WasmParser';
-import { computeCompressionRatio } from '../../utils/CommonUtils';
 
 const maxProcessCnt = isMobile ? 20480 : 51200;
 
