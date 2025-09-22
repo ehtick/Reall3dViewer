@@ -4,7 +4,9 @@
 import { OnFetching, OnFetchStart } from '../../events/EventConstants';
 import { Events } from '../../events/Events';
 
-export async function loadFile(url: string, events: Events): Promise<Uint8Array> {
+export async function loadFile(url: string, events?: Events): Promise<Uint8Array> {
+    if (!url) return new Uint8Array(0);
+
     const abortController: AbortController = new AbortController();
     const signal: AbortSignal = abortController.signal;
     try {

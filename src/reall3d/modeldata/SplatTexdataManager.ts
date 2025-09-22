@@ -566,16 +566,14 @@ export function setupSplatTextureManager(events: Events) {
             splatModel.fetchLimit = maxRenderCount;
         }
 
-        const startTime: number = Date.now();
         const fnCheckModelSplatCount = () => {
+            // 除非下载失败，否则总是等待继续下载，直到得知模型文件的点数为止
             if (!splatModel || splatModel.status == ModelStatus.Invalid || splatModel.status == ModelStatus.FetchFailed) {
                 return fnResolveModelSplatCount(0);
             }
             if (splatModel.modelSplatCount > 0) {
                 fnResolveModelSplatCount(splatModel.modelSplatCount);
                 !splatModel.meta.particleMode && setTimeout(() => fire(SplatMeshCycleZoom), 5);
-            } else if (Date.now() - startTime >= 3000) {
-                return fnResolveModelSplatCount(0); // 超3秒还取不到模型数量，放弃，将按配置的最大渲染数计算
             } else {
                 setTimeout(fnCheckModelSplatCount, 10);
             }

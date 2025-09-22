@@ -530,9 +530,11 @@ export async function webpToRgba(webps: Uint8Array): Promise<{ width: number; he
     const ctx = canvas.getContext('2d');
     ctx.drawImage(bmp, 0, 0);
     const imData = ctx.getImageData(0, 0, bmp.width, bmp.height);
+    const width = bmp.width;
+    const height = bmp.height;
     bmp.close();
     URL.revokeObjectURL(url);
-    return { width: bmp.width, height: bmp.height, rgba: imData.data as any };
+    return { width, height, rgba: imData.data as any };
 }
 
 export function unzipToMap(zipBytes: Uint8Array): Map<string, Uint8Array> {

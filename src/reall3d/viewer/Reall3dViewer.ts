@@ -470,7 +470,7 @@ export class Reall3dViewer {
                 modelOpts.format = 'ply';
             } else if (modelOpts.url.endsWith('.spz')) {
                 modelOpts.format = 'spz';
-            } else if (modelOpts.url.endsWith('.sog')) {
+            } else if (modelOpts.url.endsWith('.sog') || modelOpts.url.endsWith('/meta.json') || modelOpts.url == 'meta.json') {
                 modelOpts.format = 'sog';
             } else if (modelOpts.url.endsWith('.obj')) {
                 modelOpts.format = 'obj';
