@@ -12,7 +12,6 @@
         "@gotoeasy/three-tile": "^0.8.7",
         "@tweenjs/tween.js": "^25.0.0",
         "fflate": "^0.8.2",
-        "lzma": "^2.3.2",
         "three": "^0.171.0",
         "xz-decompress": "^0.2.3"
     },
