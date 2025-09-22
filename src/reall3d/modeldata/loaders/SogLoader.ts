@@ -61,10 +61,12 @@ export async function loadSog(model: SplatModel) {
             await parseSog(model, mapFile, meta);
         } else {
             // 先下载meta.json，解析后再下载关联文件，都成功完成后再继续处理。（多文件，挺讨厌，下载必须完全成功，如何设定.meta.json?）
+            const response = await fetch(model.opts.url, { mode: 'cors', credentials: 'omit', cache: 'reload' });
+            if (response.status != 200) return console.error(`fetch error: ${response.status}`);
+            const meta: any = await response.json();
+
             const ary = model.opts.url.split('/');
             const mapFile: Map<string, Uint8Array> = new Map();
-            const metaBytes = await loadFile(model.opts.url);
-            const meta = JSON.parse(uint8ArrayToString(metaBytes));
             const modelSplatCount: number = meta.count || meta.means.shape[0];
             model.modelSplatCount = modelSplatCount;
 
@@ -107,7 +109,8 @@ export async function loadSog(model: SplatModel) {
             mapFile.set(sh0Name, sh0);
             mapFile.set(centroidsName, centroids);
             mapFile.set(labelsName, labels);
-            const totalSize = metaBytes.length + meansu.length + meansl.length + scales.length + quats.length + sh0.length + centroids.length + labels.length;
+            const totalSize =
+                JSON.stringify(meta).length + meansu.length + meansl.length + scales.length + quats.length + sh0.length + centroids.length + labels.length;
 
             model.fileSize = totalSize;
             model.downloadSize = totalSize;
