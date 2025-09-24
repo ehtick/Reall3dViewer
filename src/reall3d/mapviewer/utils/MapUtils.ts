@@ -258,10 +258,12 @@ export function initMapViewerOptions(options: Reall3dMapViewerOptions): Reall3dM
 }
 
 export function initTileMap(): tt.TileMap {
-    const TOKEN = '7f8f4f56f3ccda758f9a497e2b981018';
-    const tdtImgSource = new tt.plugin.TDTSource({ token: TOKEN, style: 'img_w' });
-    const tdtVecSource = new tt.plugin.TDTSource({ token: TOKEN, style: 'cia_w' });
-    const imgSource = location.host.includes('reall3d.com') ? [tdtImgSource, tdtVecSource] : new tt.plugin.BingSource();
+    // const TOKEN = '7f8f4f56f3ccda758f9a497e2b981018';
+    // const tdtImgSource = new tt.plugin.TDTSource({ token: TOKEN, style: 'img_w' });
+    // const tdtVecSource = new tt.plugin.TDTSource({ token: TOKEN, style: 'cia_w' });
+    // const imgSource = location.host.includes('reall3d.com') ? [tdtImgSource, tdtVecSource] : new tt.plugin.BingSource();
+
+    const imgSource = new tt.plugin.BingSource();
 
     // const imgSource = new tt.plugin.BingSource();
 
