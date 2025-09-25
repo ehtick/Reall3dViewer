@@ -579,7 +579,7 @@ export function setupEventListener(events: Events) {
 }
 
 // 使用当前相机的up向量定义水平面
-function moveCameraHorizontal(controls, direction, step = 0.006) {
+function moveCameraHorizontal(controls, direction, step = 0.012) {
     // 使用相机的up向量作为平面法线
     const planeNormal = controls.object.up.clone().normalize();
 
