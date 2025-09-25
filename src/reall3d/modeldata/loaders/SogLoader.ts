@@ -338,7 +338,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
             let r = meta.sh0.codebook[sh0[i * 4 + 0]];
             let g = meta.sh0.codebook[sh0[i * 4 + 1]];
             let b = meta.sh0.codebook[sh0[i * 4 + 2]];
-            let a = meta.sh0.codebook[sh0[i * 4 + 3]];
+            let a = sh0[i * 4 + 3];
 
             f32sData[n * 8 + 0] = x;
             f32sData[n * 8 + 1] = y;
@@ -349,7 +349,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
             ui8sData[n * 32 + 24] = clipUint8((0.5 + SH_C0 * r) * 255);
             ui8sData[n * 32 + 25] = clipUint8((0.5 + SH_C0 * g) * 255);
             ui8sData[n * 32 + 26] = clipUint8((0.5 + SH_C0 * b) * 255);
-            ui8sData[n * 32 + 27] = clipUint8((1.0 / (1.0 + Math.exp(-a))) * 255);
+            ui8sData[n * 32 + 27] = a;
             ui8sData[n * 32 + 28] = clipUint8(rw * 128.0 + 128.0);
             ui8sData[n * 32 + 29] = clipUint8(rx * 128.0 + 128.0);
             ui8sData[n * 32 + 30] = clipUint8(ry * 128.0 + 128.0);
