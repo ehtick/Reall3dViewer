@@ -178,9 +178,9 @@ he data block format encompasses both open and exclusive formats. The reserved r
 |----------|------|------|------|
 | 0–3      | uint32 | `*`Gaussian Count     | Number of Gaussians                                                         |
 | 4–7      | uint32 | `*`Format ID          | `4` data of Spherical harmonics (SH) degree 1~3                       |
-| 8~n      | bytes  | `*`Data               | webp([sh1,sh2,sh3...sh44,sh1,sh2,sh3...sh44,...])                |
+| 8~n      | bytes  | `*`Data               | webp([sh0,sh1,sh2...sh44,sh0,sh1,sh2...sh44,...])                |
 
-- `sh1,sh2,sh3...sh44` Spherical harmonics (8-bit each)
+- `sh0,sh1,sh2...sh44` Spherical harmonics (8-bit each)
 
 ---
 
