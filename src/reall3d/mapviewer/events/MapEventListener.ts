@@ -19,6 +19,10 @@ import {
     GetCameraLookAt,
     MapSplatMeshMoveY,
     GetOptions,
+    AddFlyPosition,
+    ClearFlyPosition,
+    Flying,
+    FlySavePositions,
 } from '../../events/EventConstants';
 import { SplatMesh } from '../../meshs/splatmesh/SplatMesh';
 import { MarkDistanceLine } from '../../meshs/mark/MarkDistanceLine';
@@ -56,6 +60,7 @@ export function setupMapEventListener(events: Events) {
 
         const opts: Reall3dMapViewerOptions = fire(GetOptions);
         if (!opts.enableKeyboard) return keySet.clear();
+        const canEdit = opts.editMode;
 
         // if (opts.markMode && keySet.has('Escape')) {
         //     fire(CancelCurrentMark);
@@ -68,74 +73,95 @@ export function setupMapEventListener(events: Events) {
             splatMesh && (splatMesh.visible = !splatMesh.visible);
             keySet.clear();
         } else if (keySet.has('Equal')) {
-            const splatMesh: SplatMesh = fire(MapGetSplatMesh);
-            if (!splatMesh || !splatMesh.visible) return keySet.clear();
-
-            if (keySet.has('KeyX')) {
-                const angleInRadians = MathUtils.degToRad(0.1);
-                splatMesh.rotateOnAxis(new Vector3(1, 0, 0), angleInRadians);
+            if (canEdit) {
+                const splatMesh: SplatMesh = fire(MapGetSplatMesh);
+                if (!splatMesh || !splatMesh.visible) return keySet.clear();
+                if (keySet.has('KeyX')) {
+                    const angleInRadians = MathUtils.degToRad(0.1);
+                    splatMesh.rotateOnAxis(new Vector3(1, 0, 0), angleInRadians);
+                } else {
+                    splatMesh.scale.set(splatMesh.scale.x + 0.01, splatMesh.scale.y + 0.01, splatMesh.scale.z + 0.01);
+                }
             } else {
-                splatMesh.scale.set(splatMesh.scale.x + 0.01, splatMesh.scale.y + 0.01, splatMesh.scale.z + 0.01);
+                fire(AddFlyPosition);
+                keySet.clear();
             }
-
-            // keySet.clear();
         } else if (keySet.has('Minus')) {
-            const splatMesh: SplatMesh = fire(MapGetSplatMesh);
-            if (!splatMesh || !splatMesh.visible) return keySet.clear();
-
-            if (keySet.has('KeyX')) {
-                const angleInRadians = MathUtils.degToRad(-0.1);
-                splatMesh.rotateOnAxis(new Vector3(1, 0, 0), angleInRadians);
+            if (canEdit) {
+                const splatMesh: SplatMesh = fire(MapGetSplatMesh);
+                if (!splatMesh || !splatMesh.visible) return keySet.clear();
+                if (keySet.has('KeyX')) {
+                    const angleInRadians = MathUtils.degToRad(-0.1);
+                    splatMesh.rotateOnAxis(new Vector3(1, 0, 0), angleInRadians);
+                } else {
+                    splatMesh.scale.set(splatMesh.scale.x - 0.01, splatMesh.scale.y - 0.01, splatMesh.scale.z - 0.01);
+                }
             } else {
-                splatMesh.scale.set(splatMesh.scale.x - 0.01, splatMesh.scale.y - 0.01, splatMesh.scale.z - 0.01);
+                fire(ClearFlyPosition);
+                keySet.clear();
             }
-
-            // keySet.clear();
+        } else if (keySet.has('KeyP')) {
+            fire(Flying, true);
+            keySet.clear();
         } else if (keySet.has('ArrowUp')) {
-            const splatMesh: SplatMesh = fire(MapGetSplatMesh);
-            splatMesh && splatMesh.visible && (splatMesh.position.z += 0.1);
+            if (canEdit) {
+                const splatMesh: SplatMesh = fire(MapGetSplatMesh);
+                splatMesh && splatMesh.visible && (splatMesh.position.z += 0.1);
+            }
             // keySet.clear();
         } else if (keySet.has('ArrowDown')) {
-            const splatMesh: SplatMesh = fire(MapGetSplatMesh);
-            splatMesh && splatMesh.visible && (splatMesh.position.z -= 0.1);
+            if (canEdit) {
+                const splatMesh: SplatMesh = fire(MapGetSplatMesh);
+                splatMesh && splatMesh.visible && (splatMesh.position.z -= 0.1);
+            }
             // keySet.clear();
         } else if (keySet.has('ArrowRight')) {
-            const splatMesh: SplatMesh = fire(MapGetSplatMesh);
-            splatMesh && splatMesh.visible && (splatMesh.position.x += 0.1);
+            if (canEdit) {
+                const splatMesh: SplatMesh = fire(MapGetSplatMesh);
+                splatMesh && splatMesh.visible && (splatMesh.position.x += 0.1);
+            }
             // keySet.clear();
         } else if (keySet.has('ArrowLeft')) {
-            const splatMesh: SplatMesh = fire(MapGetSplatMesh);
-            splatMesh && splatMesh.visible && (splatMesh.position.x -= 0.1);
+            if (canEdit) {
+                const splatMesh: SplatMesh = fire(MapGetSplatMesh);
+                splatMesh && splatMesh.visible && (splatMesh.position.x -= 0.1);
+            }
             // keySet.clear();
         } else if (keySet.has('KeyU')) {
-            const splatMesh: SplatMesh = fire(MapGetSplatMesh);
-            if (splatMesh) {
-                const meta = splatMesh.meta || {};
-                meta.transform = splatMesh.matrix.toArray();
-                // fire(HttpPostMetaData, JSON.stringify(meta, null, 2), splatMesh.url);
+            if (canEdit) {
+                const splatMesh: SplatMesh = fire(MapGetSplatMesh);
+                if (splatMesh) {
+                    const meta = splatMesh.meta || {};
+                    meta.transform = splatMesh.matrix.toArray();
+                    // fire(HttpPostMetaData, JSON.stringify(meta, null, 2), splatMesh.url);
+                }
             }
             // keySet.clear();
         } else if (keySet.has('KeyQ')) {
-            fire(MapSplatMeshRotateX, 0.1);
+            canEdit && fire(MapSplatMeshRotateX, 0.1);
         } else if (keySet.has('KeyW')) {
-            fire(MapSplatMeshRotateY, 0.1);
+            canEdit && fire(MapSplatMeshRotateY, 0.1);
         } else if (keySet.has('KeyE')) {
-            fire(MapSplatMeshRotateZ, 0.1);
+            canEdit && fire(MapSplatMeshRotateZ, 0.1);
         } else if (keySet.has('KeyA')) {
-            fire(MapSplatMeshRotateX, -0.1);
+            canEdit && fire(MapSplatMeshRotateX, -0.1);
         } else if (keySet.has('KeyS')) {
-            fire(MapSplatMeshRotateY, -0.1);
+            canEdit && fire(MapSplatMeshRotateY, -0.1);
         } else if (keySet.has('KeyD')) {
-            fire(MapSplatMeshRotateZ, -0.1);
+            canEdit && fire(MapSplatMeshRotateZ, -0.1);
         } else if (keySet.has('KeyY')) {
-            fire(MapSplatMeshMoveY, keySet.has('ShiftLeft') || keySet.has('ShiftRight') ? -0.1 : 0.1);
+            if (canEdit) {
+                fire(MapSplatMeshMoveY, keySet.has('ShiftLeft') || keySet.has('ShiftRight') ? -0.1 : 0.1);
+            } else {
+                fire(FlySavePositions, true);
+                keySet.clear();
+            }
         } else if (keySet.has('KeyC')) {
             console.info('position=', (fire(GetCameraPosition) as Vector3).toArray(), 'lookat=', (fire(GetCameraLookAt) as Vector3).toArray());
         }
     });
 
     const keydownEventListener = (e: KeyboardEvent) => {
-        console.info(e.code);
         if (e.target['type'] === 'text') return;
 
         if (disposed || e.code === 'F5') return;

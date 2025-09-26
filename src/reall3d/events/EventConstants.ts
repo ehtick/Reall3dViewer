@@ -422,3 +422,9 @@ export const TweenFlyOnce = i++;
 export const TweenFlyEnable = i++;
 /** 禁止相机飞行控制 */
 export const TweenFlyDisable = i++;
+/** 飞行暂停 */
+export const FlyingPause = i++;
+/** 飞行继续 */
+export const FlyingContinue = i++;
+/** 飞行播放 */
+export const FlyingPlay = i++;

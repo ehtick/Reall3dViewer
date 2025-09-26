@@ -35,4 +35,9 @@ export declare interface Reall3dMapViewerOptions {
      * Debug mode flag (default: false in production)
      */
     debugMode?: boolean;
+
+    /**
+     * Edit mode flag (default: false)
+     */
+    editMode?: boolean;
 }

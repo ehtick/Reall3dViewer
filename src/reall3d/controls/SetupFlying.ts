@@ -22,9 +22,12 @@ import {
     FlyEnable,
     FlyOnce,
     GetMeta,
+    FlyingPause,
+    FlyingPlay,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
 import { MetaData } from '../modeldata/ModelData';
+import { ScenesJsonData } from '../mapviewer/Reall3dMapViewer';
 
 export function setupFlying(events: Events) {
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
@@ -72,7 +75,48 @@ export function setupFlying(events: Events) {
         flyTargets.length = 0;
     });
     on(FlySavePositions, async (bSave: boolean = true) => {
-        const meta: MetaData = fire(GetSplatMesh).meta || fire(GetMeta);
+        const obj: MetaData | ScenesJsonData = fire(GetSplatMesh)?.meta || fire(GetMeta);
+        if ((obj as any).scenes) {
+            // 地图
+            const meta = obj as ScenesJsonData;
+            if (flyPositions.length) {
+                const positions: number[] = [];
+                const targets: number[] = [];
+                for (let i = 0, max = flyPositions.length; i < max; i++) {
+                    positions.push(...flyPositions[i].toArray());
+                    targets.push(...flyTargets[i].toArray());
+                }
+                meta.flyPositions = positions;
+                meta.flyTargets = targets;
+            } else {
+                delete meta.flyPositions;
+                delete meta.flyTargets;
+            }
+
+            const controls: CameraControls = fire(GetControls);
+            meta.position = controls.object.position.toArray();
+            meta.lookAt = controls.target.toArray();
+
+            bSave && (await fire(HttpPostMetaData, meta));
+        } else {
+            // 小场景
+            const meta = obj as MetaData;
+            if (flyPositions.length) {
+                const positions: number[] = [];
+                const targets: number[] = [];
+                for (let i = 0, max = flyPositions.length; i < max; i++) {
+                    positions.push(...flyPositions[i].toArray());
+                    targets.push(...flyTargets[i].toArray());
+                }
+                meta.flyPositions = positions;
+                meta.flyTargets = targets;
+            } else {
+                delete meta.flyPositions;
+                delete meta.flyTargets;
+            }
+            bSave && (await fire(HttpPostMetaData, meta));
+        }
+        const meta = (obj as any).scenes ? (obj as ScenesJsonData) : (obj as MetaData);
         if (flyPositions.length) {
             const positions: number[] = [];
             const targets: number[] = [];
@@ -95,13 +139,23 @@ export function setupFlying(events: Events) {
     });
 
     let t = 0; // 插值因子
-    const flyTotalTime = 120 * 1000;
+    const duration = 125 * 1000;
+    let flyTotalTime = duration;
     let flyStartTime = 0;
+    let flyPauseTime = 0;
+    let flyElapsedTime = 0;
+    let flyElapsed = 0;
+    let flySpeed = 1;
     let curvePos: CatmullRomCurve3 | null;
     let curveTgt: CatmullRomCurve3 | null;
     on(Flying, (force: boolean) => {
         t = 0;
+        flyTotalTime = duration;
         flyStartTime = Date.now();
+        flyPauseTime = 0;
+        flyElapsedTime = flyStartTime;
+        flyElapsed = 0;
+        flySpeed = 1;
         curvePos = null;
         curveTgt = null;
         if (!flyPositions.length) return;
@@ -111,31 +165,55 @@ export function setupFlying(events: Events) {
 
         const points: Vector3[] = [controls.object.position.clone()];
         const tgts: Vector3[] = [controls.target.clone()];
-        // const points: Vector3[] = [];
-        // const tgts: Vector3[] = [];
         const all: Vector3[] = fire(GetFlyPositions) || [];
-        for (let i = 0, max = Math.min(all.length, 100); i < max; i++) {
+        for (let i = 0, max = Math.min(all.length, 1000); i < max; i++) {
             all[i] && points.push(all[i]);
             flyTargets[i] && tgts.push(flyTargets[i]);
         }
         curvePos = new CatmullRomCurve3(points);
-        curvePos.closed = true;
+        curvePos.closed = false;
         curveTgt = new CatmullRomCurve3(tgts);
-        curveTgt.closed = true;
+        curveTgt.closed = false;
 
         fire(FlyEnable);
         fire(StopAutoRotate, false);
     });
 
+    on(FlyingPause, () => {
+        flyPauseTime = flyPauseTime || Date.now(); // 重复暂停仅首次有效
+    });
+
+    // 1,2,4,-2,-4
+    on(FlyingPlay, (speed: number, elapsed: number) => {
+        if (elapsed) {
+            flyElapsed = elapsed * duration;
+        }
+
+        if (flyPauseTime) {
+            flyElapsedTime = Date.now();
+            flyPauseTime = 0;
+        }
+
+        if (!flyEnable) {
+            fire(Flying, true);
+        }
+        flySpeed = speed;
+    });
+
     on(
         OnViewerAfterUpdate,
         () => {
-            if (Date.now() - flyStartTime > flyTotalTime) fire(FlyDisable);
+            const controls: CameraControls = fire(GetControls);
+            if (flyPauseTime) return; // 暂停
+
+            flyElapsed += flySpeed * (Date.now() - flyElapsedTime); // 累加最近一次计时至今的时长
+            flyElapsedTime = Date.now();
+            if (flyElapsed < 0 || flyElapsed > flyTotalTime) {
+                fire(FlyDisable); // 播放结束
+            }
             if (!flyEnable || !curvePos || !curveTgt) return;
 
-            const controls: CameraControls = fire(GetControls);
-
-            t = (Date.now() - flyStartTime) / flyTotalTime;
+            t = flyElapsed / flyTotalTime;
             const pt = curvePos.getPoint(t);
             const tgt = curveTgt.getPoint(t);
 

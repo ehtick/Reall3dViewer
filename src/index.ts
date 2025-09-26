@@ -133,12 +133,16 @@ function fnClick(className: string) {
         viewer?.options({ markMode: true, markType: 'circle' });
     } else if (className == 'add-pos') {
         viewer?.fire(2);
+        mapViewer?.fire(2);
     } else if (className == 'fly') {
         viewer?.fire(3);
+        mapViewer?.fire(3);
     } else if (className == 'clear-pos') {
         viewer?.fire(4);
+        mapViewer?.fire(4);
     } else if (className == 'fly-save') {
         viewer?.fire(5);
+        mapViewer?.fire(5);
     } else if (className == 'add-sh') {
         viewer?.fire(8, 1);
     } else if (className == 'default-sh') {

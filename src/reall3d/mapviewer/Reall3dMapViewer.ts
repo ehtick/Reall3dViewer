@@ -32,6 +32,13 @@ import {
     CSS3DRendererDispose,
     GetCSS3DRenderer,
     GetCamera,
+    GetMeta,
+    OnSetFlyPositions,
+    OnSetFlyTargets,
+    AddFlyPosition,
+    Flying,
+    ClearFlyPosition,
+    FlySavePositions,
 } from '../events/EventConstants';
 import { initMapViewerOptions, initTileMap, setupMapUtils } from './utils/MapUtils';
 import { setupCommonUtils } from '../utils/CommonUtils';
@@ -43,6 +50,7 @@ import { CSS3DRenderer } from 'three/examples/jsm/Addons.js';
 import { WarpSplatMesh } from './warpsplatmesh/WarpSplatMesh';
 import { isMobile, ViewerVersion } from '../utils/consts/GlobalConstants';
 import * as tt from '@gotoeasy/three-tile';
+import { setupFlying } from '../controls/SetupFlying';
 
 /**
  * Built-in Map viewer with Gaussian Splatting model support
@@ -80,6 +88,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         setupApi(events);
         setupMapUtils(events);
         setupRaycaster(events);
+        setupFlying(events);
 
         that.camera = new PerspectiveCamera(60, 1, 0.01, 100);
         on(GetCamera, () => that.camera);
@@ -155,6 +164,9 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
      * @param 场景索引文件地址
      */
     public addScenes(urlScenesJson: string) {
+        const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => this.events.on(key, fn, multiFn);
+        const fire = (key: number, ...args: any): any => this.events.fire(key, ...args);
+
         const that = this;
         fetch(urlScenesJson, { mode: 'cors', credentials: 'omit', cache: 'reload' })
             .then(response => (!response.ok ? {} : response.json()))
@@ -164,6 +176,10 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
                 that.controls.object.position.copy(position);
                 that.controls.target.copy(lookAt);
                 that.dirLight.target.position.copy(lookAt);
+
+                on(GetMeta, () => data);
+                fire(OnSetFlyPositions, data.flyPositions || []);
+                fire(OnSetFlyTargets, data.flyTargets || []);
 
                 const set = new Set();
                 for (let url of data.scenes) {
@@ -176,6 +192,15 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
             .catch(e => {
                 console.error(e.message);
             });
+    }
+
+    // 开发调试用临时接口
+    public fire(n: number, p1?: any, p2?: any): void {
+        const that = this;
+        n === 2 && that.events.fire(AddFlyPosition);
+        n === 3 && that.events.fire(Flying, true);
+        n === 4 && that.events.fire(ClearFlyPosition);
+        n === 5 && that.events.fire(FlySavePositions);
     }
 
     private resize() {
@@ -240,7 +265,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
 /**
  * 地图入口索引文件
  */
-interface ScenesJsonData {
+export interface ScenesJsonData {
     /**
      *  名称
      */
@@ -265,4 +290,9 @@ interface ScenesJsonData {
      * 场景url列表
      */
     scenes?: string[];
+
+    /** Fly-through camera positions */
+    flyPositions?: number[];
+    /** Fly-through camera look-at points */
+    flyTargets?: number[];
 }
