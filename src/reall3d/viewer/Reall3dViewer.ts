@@ -254,6 +254,7 @@ export class Reall3dViewer {
             opts.pointcloudMode = true;
             opts.debugMode = true;
             opts.autoRotate = format !== 'obj';
+            opts.maxRenderCountOfPc = 2048 * 10000;
             that.reset(opts);
             if (isSceneJson) {
                 await that.addScene(url);
