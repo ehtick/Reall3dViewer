@@ -83,7 +83,7 @@ export interface SplatMeshOptions {
     depthTest?: boolean;
 
     /**
-     * Render quality (low, default, high)
+     * Render quality level (1~9, default to 8)
      */
-    renderQuality?: 'low' | 'default' | 'high';
+    qualityLevel?: number;
 }

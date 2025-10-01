@@ -61,7 +61,7 @@ import {
     SplatUpdateFlagValue,
     OnLoadAndRenderObj,
     GetMetaMatrix,
-    ChangeRenderQuality,
+    UpdateQualityLevel,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -165,9 +165,9 @@ export class Reall3dViewer {
         scene.add(that.splatMesh);
         setupControlPlane(events);
 
-        on(ChangeRenderQuality, (renderQuality: 'low' | 'default' | 'high') => {
-            opts.renderQuality = renderQuality;
-            that.splatMesh.options({ renderQuality, renderer: undefined, scene: undefined });
+        on(UpdateQualityLevel, (qualityLevel: number) => {
+            opts.qualityLevel = qualityLevel;
+            that.splatMesh.options({ qualityLevel, renderer: undefined, scene: undefined });
         });
 
         scene.add(new AmbientLight('#ffffff', 2));
@@ -261,7 +261,7 @@ export class Reall3dViewer {
             opts.debugMode = true;
             opts.autoRotate = format !== 'obj';
             opts.maxRenderCountOfPc = 1024 * 10000;
-            opts.renderQuality = 'high';
+            opts.qualityLevel = 9; // 按最高级渲染质量设置
             that.reset(opts);
             if (isSceneJson) {
                 await that.addScene(url);
@@ -304,7 +304,14 @@ export class Reall3dViewer {
                 that.splatMesh.fire(SplatUpdateShDegree, shDegree);
             })();
         }
-        n === 9 && that.events.fire(ChangeRenderQuality, p1);
+        if (n === 9) {
+            if (!p1) {
+                that.events.fire(UpdateQualityLevel, 8);
+            } else {
+                const level: number = (that.events.fire(GetOptions) as Reall3dViewerOptions).qualityLevel;
+                that.events.fire(UpdateQualityLevel, Math.max(1, Math.min(level + p1, 9)));
+            }
+        }
     }
 
     /**

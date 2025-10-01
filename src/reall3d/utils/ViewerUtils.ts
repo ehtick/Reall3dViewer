@@ -145,6 +145,7 @@ export function initGsViewerOptions(options: Reall3dViewerOptions): Reall3dViewe
     opts.background ??= '#000000';
     opts.minDistance ??= 0.1;
     opts.maxDistance ??= 1000;
+    opts.qualityLevel ??= 8;
 
     return opts;
 }
@@ -210,7 +211,7 @@ export function copyGsViewerOptions(gsViewerOptions: Reall3dViewerOptions): Spla
     opts.maxRenderCountOfPc = gsViewerOptions.maxRenderCountOfPc;
     opts.lightFactor = gsViewerOptions.lightFactor;
     opts.shDegree = gsViewerOptions.shDegree;
-    opts.renderQuality = gsViewerOptions.renderQuality;
+    opts.qualityLevel = gsViewerOptions.qualityLevel;
 
     return opts;
 }

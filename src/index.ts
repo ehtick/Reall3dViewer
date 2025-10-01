@@ -24,7 +24,7 @@ if (url) {
     viewer.addModel(url);
     debugMode && initDevMode(true);
 } else {
-    viewer = new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree, renderQuality: 'high' });
+    viewer = new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree, qualityLevel: 9 });
     viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.spx`);
 
     // viewer.addModel(`https://reall3d.com/demo-models/sogv1/v1.sog`);
@@ -152,12 +152,12 @@ function fnClick(className: string) {
         viewer?.fire(8);
     } else if (className == 'sub-sh') {
         viewer?.fire(8, -1);
-    } else if (className == 'low-quality') {
-        viewer?.fire(9, 'low');
+    } else if (className == 'add-quality') {
+        viewer?.fire(9, 1);
     } else if (className == 'default-quality') {
-        viewer?.fire(9, 'default');
-    } else if (className == 'high-quality') {
-        viewer?.fire(9, 'high');
+        viewer?.fire(9);
+    } else if (className == 'sub-quality') {
+        viewer?.fire(9, -1);
     } else if (className == 'map') {
         viewer?.dispose();
         mapViewer?.dispose();

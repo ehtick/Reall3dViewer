@@ -9,9 +9,10 @@ import {
     GetViewProjectionMatrixArray,
     GetMaxRenderCount,
     IsBigSceneMode,
-    GetRenderQuality,
+    GetRenderQualityLevel,
+    WorkerUpdateQualityLevel,
 } from '../events/EventConstants';
-import { WkInit, WkIsBigSceneMode, WkMaxRenderCount, WkRenderQuality, WkViewProjection } from '../utils/consts/WkConstants';
+import { WkInit, WkIsBigSceneMode, WkMaxRenderCount, WkQualityLevel, WkUpdateParams, WkViewProjection } from '../utils/consts/WkConstants';
 
 export function setupSorter(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
@@ -21,13 +22,14 @@ export function setupSorter(events: Events) {
     on(GetWorker, () => worker);
     on(WorkerSort, () => worker.postMessage({ [WkViewProjection]: fire(GetViewProjectionMatrixArray) }));
     on(WorkerDispose, () => worker.terminate());
+    on(WorkerUpdateQualityLevel, () => worker.postMessage({ [WkUpdateParams]: true, [WkQualityLevel]: fire(GetRenderQualityLevel) }));
 
     (async () => {
         worker.postMessage({
             [WkInit]: true,
             [WkMaxRenderCount]: await fire(GetMaxRenderCount),
             [WkIsBigSceneMode]: fire(IsBigSceneMode),
-            [WkRenderQuality]: fire(GetRenderQuality),
+            [WkQualityLevel]: fire(GetRenderQualityLevel),
         });
     })();
 }

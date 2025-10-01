@@ -34,7 +34,8 @@ import {
     GetCameraDirection,
     SplatUpdateBoundBox,
     SplatSetBoundBoxVisible,
-    GetRenderQuality,
+    GetRenderQualityLevel,
+    WorkerUpdateQualityLevel,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -86,7 +87,7 @@ export class SplatMesh extends Mesh {
         on(IsBigSceneMode, () => opts.bigSceneMode);
         on(IsPointcloudMode, () => opts.pointcloudMode);
         on(GetSplatMesh, () => that);
-        on(GetRenderQuality, () => opts.renderQuality || '');
+        on(GetRenderQualityLevel, () => opts.qualityLevel || 8);
 
         on(NotifyViewerNeedUpdate, () => opts.viewerEvents?.fire(ViewerNeedUpdate));
 
@@ -143,7 +144,7 @@ export class SplatMesh extends Mesh {
             opts.lightFactor !== undefined && fire(SplatUpdateLightFactor, opts.lightFactor);
             opts.maxRenderCountOfMobile !== undefined && (thisOpts.maxRenderCountOfMobile = opts.maxRenderCountOfMobile);
             opts.maxRenderCountOfPc !== undefined && (thisOpts.maxRenderCountOfPc = opts.maxRenderCountOfPc);
-            opts.renderQuality !== undefined && (thisOpts.renderQuality = opts.renderQuality);
+            opts.qualityLevel !== undefined && (thisOpts.qualityLevel = opts.qualityLevel) && fire(WorkerUpdateQualityLevel);
 
             fire(NotifyViewerNeedUpdate);
         }

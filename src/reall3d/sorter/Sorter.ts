@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { WkInit, WkRenderQuality, WkWatermarkCount } from '../utils/consts/WkConstants';
+import { WkInit, WkQualityLevel, WkUpdateParams, WkWatermarkCount } from '../utils/consts/WkConstants';
 import {
     WkIndex,
     WkIsBigSceneMode,
@@ -29,7 +29,7 @@ const worker: Worker = self as any;
 let texture0: SplatTexdata = { index: 0, version: 0 };
 let texture1: SplatTexdata = { index: 1, version: 0 };
 let isSorterReady: boolean = false;
-let renderQuality: string = 'default'; // 'low' | 'default' | 'high'
+let qualityLevel: number = 8; // 1~9
 
 let sortRunning: boolean;
 const Epsilon: number = isMobile ? 0.2 : 0.2;
@@ -39,6 +39,21 @@ let distances: Int32Array;
 
 let lastSortVersion: number = 0;
 let isBigSceneMode: boolean;
+
+function getBucketCount(splatCnt: number, isWatermark = false) {
+    const levels = [512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 9]; // 1~9级，第9级动态计算
+    const maxByData = Math.max((splatCnt / 8) | 0, levels[0]); // 数据很少，多数为加载过程，意思下即可
+    let maxByLevel = levels[qualityLevel - 1];
+    if (qualityLevel == 9) {
+        maxByLevel = 2 ** Math.max(10, Math.min(20, Math.round(Math.log2(splatCnt / 4))));
+    } else if (isWatermark) {
+        maxByLevel = Math.max(maxByLevel / 4, levels[0]); // 水印降低2个级别但不低于最低级
+    }
+    if (isMobile) {
+        maxByLevel = Math.max(maxByLevel / 4, levels[0]); // 手机降低2个级别但不低于最低级
+    }
+    return (Math.min(maxByData, maxByLevel) - 1) | 0;
+}
 
 function runSort(sortViewProj: number[]) {
     if (!isSorterReady) return; // 尚未就绪
@@ -90,9 +105,7 @@ function runSort(sortViewProj: number[]) {
         for (let i = 0; i < renderSplatCount; i++) depthIndex[i] = i;
     } else {
         // 数据
-        const high = 2 ** Math.max(10, Math.min(20, Math.round(Math.log2(dataCount / 4))));
-        let bucketCnt = Math.min(Math.max((dataCount / 8) | 0, 512), renderQuality === 'low' ? 32768 : renderQuality === 'high' ? high : 65536);
-        bucketCnt = ((isMobile ? bucketCnt / 2 : bucketCnt) - 1) | 0;
+        let bucketCnt = getBucketCount(dataCount);
         let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
         let counters: Int32Array = new Int32Array(bucketCnt);
         for (let i = 0, idx = 0; i < dataCount; i++) {
@@ -104,7 +117,7 @@ function runSort(sortViewProj: number[]) {
 
         // 水印
         if (watermarkCount) {
-            bucketCnt = Math.min(Math.max((watermarkCount / 8) | 0, 512) - 1, 16383);
+            bucketCnt = getBucketCount(dataCount, true);
             depthInv = (bucketCnt - 1) / (maxDepth - minDepth);
             counters = new Int32Array(bucketCnt);
             for (let i = dataCount, idx = 0; i < renderSplatCount; i++) {
@@ -201,10 +214,12 @@ worker.onmessage = (e: any) => {
     } else if (data[WkViewProjection]) {
         viewProj = data[WkViewProjection];
         throttledSort();
+    } else if (data[WkUpdateParams]) {
+        qualityLevel = Math.max(1, Math.min(data[WkQualityLevel] || 8, 9)); // 限制1~9,默认8
     } else if (data[WkInit]) {
         isBigSceneMode = data[WkIsBigSceneMode];
         distances = new Int32Array(data[WkMaxRenderCount]);
-        data[WkRenderQuality] === 'low' ? (renderQuality = 'low') : data[WkRenderQuality] === 'high' && (renderQuality = 'high');
+        qualityLevel = Math.max(1, Math.min(data[WkQualityLevel] || 8, 9)); // 限制1~9,默认8
         isSorterReady = true;
     }
 };
