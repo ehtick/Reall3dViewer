@@ -63,3 +63,5 @@ export const WkInit = `$${n++}`;
 export const WkWatermarkCount = `$${n++}`;
 /** 相机方向 */
 export const WkCameraDirection = `$${n++}`;
+/** 渲染质量（高中低） */
+export const WkRenderQuality = `$${n++}`;

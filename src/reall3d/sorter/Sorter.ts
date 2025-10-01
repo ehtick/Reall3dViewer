@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { WkInit, WkWatermarkCount } from '../utils/consts/WkConstants';
+import { WkInit, WkRenderQuality, WkWatermarkCount } from '../utils/consts/WkConstants';
 import {
     WkIndex,
     WkIsBigSceneMode,
@@ -29,6 +29,7 @@ const worker: Worker = self as any;
 let texture0: SplatTexdata = { index: 0, version: 0 };
 let texture1: SplatTexdata = { index: 1, version: 0 };
 let isSorterReady: boolean = false;
+let renderQuality: string = 'default'; // 'low' | 'default' | 'high'
 
 let sortRunning: boolean;
 const Epsilon: number = isMobile ? 0.2 : 0.2;
@@ -89,7 +90,9 @@ function runSort(sortViewProj: number[]) {
         for (let i = 0; i < renderSplatCount; i++) depthIndex[i] = i;
     } else {
         // 数据
-        let bucketCnt: number = Math.min(dataCount, 65535);
+        const high = 2 ** Math.max(10, Math.min(20, Math.round(Math.log2(dataCount / 4))));
+        let bucketCnt = Math.min(Math.max((dataCount / 8) | 0, 512), renderQuality === 'low' ? 32768 : renderQuality === 'high' ? high : 65536);
+        bucketCnt = ((isMobile ? bucketCnt / 2 : bucketCnt) - 1) | 0;
         let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
         let counters: Int32Array = new Int32Array(bucketCnt);
         for (let i = 0, idx = 0; i < dataCount; i++) {
@@ -101,7 +104,7 @@ function runSort(sortViewProj: number[]) {
 
         // 水印
         if (watermarkCount) {
-            bucketCnt = Math.min(Math.max((watermarkCount / 8) | 0, 512), 65535);
+            bucketCnt = Math.min(Math.max((watermarkCount / 8) | 0, 512) - 1, 16383);
             depthInv = (bucketCnt - 1) / (maxDepth - minDepth);
             counters = new Int32Array(bucketCnt);
             for (let i = dataCount, idx = 0; i < renderSplatCount; i++) {
@@ -201,6 +204,7 @@ worker.onmessage = (e: any) => {
     } else if (data[WkInit]) {
         isBigSceneMode = data[WkIsBigSceneMode];
         distances = new Int32Array(data[WkMaxRenderCount]);
+        data[WkRenderQuality] === 'low' ? (renderQuality = 'low') : data[WkRenderQuality] === 'high' && (renderQuality = 'high');
         isSorterReady = true;
     }
 };

@@ -188,4 +188,9 @@ export interface Reall3dViewerOptions {
      * Background color (defaults to '#000000')
      */
     background?: string;
+
+    /**
+     * Render quality (low, default, high)
+     */
+    renderQuality?: 'low' | 'default' | 'high';
 }

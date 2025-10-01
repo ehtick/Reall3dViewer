@@ -428,3 +428,5 @@ export const FlyingPause = i++;
 export const FlyingContinue = i++;
 /** 飞行播放 */
 export const FlyingPlay = i++;
+/** 取设定的渲染质量 */
+export const GetRenderQuality = i++;

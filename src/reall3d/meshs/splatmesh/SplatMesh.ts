@@ -34,6 +34,7 @@ import {
     GetCameraDirection,
     SplatUpdateBoundBox,
     SplatSetBoundBoxVisible,
+    GetRenderQuality,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -85,6 +86,7 @@ export class SplatMesh extends Mesh {
         on(IsBigSceneMode, () => opts.bigSceneMode);
         on(IsPointcloudMode, () => opts.pointcloudMode);
         on(GetSplatMesh, () => that);
+        on(GetRenderQuality, () => opts.renderQuality || '');
 
         on(NotifyViewerNeedUpdate, () => opts.viewerEvents?.fire(ViewerNeedUpdate));
 
