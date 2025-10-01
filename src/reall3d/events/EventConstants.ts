@@ -430,3 +430,13 @@ export const FlyingContinue = i++;
 export const FlyingPlay = i++;
 /** 取设定的渲染质量 */
 export const GetRenderQuality = i++;
+
+// 以下全局单例事件对象使用
+/** 取背景音乐对象 */
+export const GetBgAudio = i++;
+/** 播放背景音乐 */
+export const PlaytBgAudio = i++;
+/** 背景音乐音量渐进调小 */
+export const SetBgAudioVolumeDown = i++;
+/** 背景音乐音量渐进调大 */
+export const SetBgAudioVolumeUp = i++;

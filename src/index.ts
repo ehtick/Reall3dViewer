@@ -7,6 +7,8 @@ import 'virtual:svg-icons-register';
 import { Reall3dViewer } from './reall3d/viewer/Reall3dViewer';
 import { Reall3dViewerOptions } from './reall3d/viewer/Reall3dViewerOptions';
 import { Reall3dMapViewer } from './reall3d/mapviewer/Reall3dMapViewer';
+import { globalEv } from './reall3d/events/SetupGlobalEV';
+import { PlaytBgAudio } from './reall3d/events/EventConstants';
 
 const params: URLSearchParams = new URLSearchParams(location.search);
 let url = params.get('url');
@@ -83,6 +85,7 @@ function fnClick(className: string) {
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/djj.spx`), 50); // Let it GC
+        globalEv.fire(PlaytBgAudio);
     } else if (className == 'demo4') {
         viewer?.dispose();
         mapViewer?.dispose();

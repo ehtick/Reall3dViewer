@@ -567,3 +567,11 @@ export function logEncode(v: number): number {
 export function logDecode(v: number): number {
     return Math.sign(v) * (Math.exp(v) - 1);
 }
+
+export function loopByTime(fnRun: Function, fnIsContinue: Function = null, delay: number = 20) {
+    const run = () => {
+        fnRun();
+        fnIsContinue?.() && setTimeout(run, delay);
+    };
+    run();
+}
