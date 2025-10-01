@@ -559,3 +559,11 @@ export function uint8ArrayToString(uint8Array: Uint8Array): string {
     const decoder = new TextDecoder('utf-8');
     return decoder.decode(uint8Array);
 }
+
+export function logEncode(v: number): number {
+    return Math.sign(v) * Math.log(Math.abs(v) + 1);
+}
+
+export function logDecode(v: number): number {
+    return Math.sign(v) * (Math.exp(v) - 1);
+}
