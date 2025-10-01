@@ -152,6 +152,12 @@ function fnClick(className: string) {
         viewer?.fire(8);
     } else if (className == 'sub-sh') {
         viewer?.fire(8, -1);
+    } else if (className == 'low-quality') {
+        viewer?.fire(9, 'low');
+    } else if (className == 'default-quality') {
+        viewer?.fire(9, 'default');
+    } else if (className == 'high-quality') {
+        viewer?.fire(9, 'high');
     } else if (className == 'map') {
         viewer?.dispose();
         mapViewer?.dispose();

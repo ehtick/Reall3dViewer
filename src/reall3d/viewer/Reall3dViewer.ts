@@ -61,6 +61,7 @@ import {
     SplatUpdateFlagValue,
     OnLoadAndRenderObj,
     GetMetaMatrix,
+    ChangeRenderQuality,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -163,6 +164,11 @@ export class Reall3dViewer {
         on(GetSplatMesh, () => that.splatMesh);
         scene.add(that.splatMesh);
         setupControlPlane(events);
+
+        on(ChangeRenderQuality, (renderQuality: 'low' | 'default' | 'high') => {
+            opts.renderQuality = renderQuality;
+            that.splatMesh.options({ renderQuality, renderer: undefined, scene: undefined });
+        });
 
         scene.add(new AmbientLight('#ffffff', 2));
         renderer.setAnimationLoop(that.update.bind(that));
@@ -298,6 +304,7 @@ export class Reall3dViewer {
                 that.splatMesh.fire(SplatUpdateShDegree, shDegree);
             })();
         }
+        n === 9 && that.events.fire(ChangeRenderQuality, p1);
     }
 
     /**

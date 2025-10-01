@@ -143,6 +143,7 @@ export class SplatMesh extends Mesh {
             opts.lightFactor !== undefined && fire(SplatUpdateLightFactor, opts.lightFactor);
             opts.maxRenderCountOfMobile !== undefined && (thisOpts.maxRenderCountOfMobile = opts.maxRenderCountOfMobile);
             opts.maxRenderCountOfPc !== undefined && (thisOpts.maxRenderCountOfPc = opts.maxRenderCountOfPc);
+            opts.renderQuality !== undefined && (thisOpts.renderQuality = opts.renderQuality);
 
             fire(NotifyViewerNeedUpdate);
         }

@@ -430,6 +430,8 @@ export const FlyingContinue = i++;
 export const FlyingPlay = i++;
 /** 取设定的渲染质量 */
 export const GetRenderQuality = i++;
+/** 修改渲染质量 */
+export const ChangeRenderQuality = i++;
 
 // 以下全局单例事件对象使用
 /** 取背景音乐对象 */
