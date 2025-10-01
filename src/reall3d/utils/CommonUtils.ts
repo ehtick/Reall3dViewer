@@ -219,7 +219,7 @@ export function setupCommonUtils(events: Events) {
             // renderModels !== undefined && setInfo('renderModels', renderModels);
             fps !== undefined && setInfo('fps', fps);
             realFps !== undefined && setInfo('realFps', `raw ${realFps}`);
-            sortTime !== undefined && setInfo('sort', `${sortTime} ms`);
+            sortTime !== undefined && setInfo('sort', `${sortTime} ms （${fire(GetOptions).renderQuality || 'default'} quality）`);
             cuts !== undefined && setInfo('cuts', cuts === '' ? '' : `（${cuts} cuts）`);
             worker && setInfo('worker', `${worker}`);
             // updateSceneData && setInfo('updateSceneData', `（up ${updateSceneData} ms）`);
