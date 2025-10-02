@@ -18,6 +18,9 @@ export const WasmBlockSize: number = 64 * 1024;
 export const MobileDownloadLimitSplatCount = 1024 * 10000; // 移动端高斯点数下载限制
 export const PcDownloadLimitSplatCount = 10240 * 10000; // PC端高斯点数下载限制
 export const SH_C0 = 0.28209479177387814;
+export const MinQualityLevel = 1;
+export const DefaultQualityLevel = 5;
+export const MaxQualityLevel = 9;
 
 /** 【官方创建者Reall3d】Creater: Reall3d */
 export const SpxCreaterReall3d = 0;

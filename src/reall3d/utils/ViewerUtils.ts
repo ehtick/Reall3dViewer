@@ -31,6 +31,7 @@ import {
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { loadFile } from '../modeldata/loaders/FileLoader';
+import { DefaultQualityLevel } from './consts/GlobalConstants';
 
 export function setupViewerUtils(events: Events) {
     let disposed: boolean = false;
@@ -145,7 +146,7 @@ export function initGsViewerOptions(options: Reall3dViewerOptions): Reall3dViewe
     opts.background ??= '#000000';
     opts.minDistance ??= 0.1;
     opts.maxDistance ??= 1000;
-    opts.qualityLevel ??= 8;
+    opts.qualityLevel ??= DefaultQualityLevel;
 
     return opts;
 }

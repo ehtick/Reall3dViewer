@@ -80,7 +80,7 @@ import { setupApi } from '../api/SetupApi';
 import { MarkData } from '../meshs/mark/data/MarkData';
 import { setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
-import { isMobile, ViewerVersion } from '../utils/consts/GlobalConstants';
+import { DefaultQualityLevel, isMobile, MaxQualityLevel, MinQualityLevel, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/ModelData';
 
 /**
@@ -261,7 +261,7 @@ export class Reall3dViewer {
             opts.debugMode = true;
             opts.autoRotate = format !== 'obj';
             opts.maxRenderCountOfPc = 1024 * 10000;
-            opts.qualityLevel = 9; // 按最高级渲染质量设置
+            opts.qualityLevel = 9; // 主要目的为确认模型质量，按最高级别设置
             that.reset(opts);
             if (isSceneJson) {
                 await that.addScene(url);
@@ -306,10 +306,10 @@ export class Reall3dViewer {
         }
         if (n === 9) {
             if (!p1) {
-                that.events.fire(UpdateQualityLevel, 8);
+                that.events.fire(UpdateQualityLevel, DefaultQualityLevel);
             } else {
                 const level: number = (that.events.fire(GetOptions) as Reall3dViewerOptions).qualityLevel;
-                that.events.fire(UpdateQualityLevel, Math.max(1, Math.min(level + p1, 9)));
+                that.events.fire(UpdateQualityLevel, Math.max(MinQualityLevel, Math.min(level + p1, MaxQualityLevel)));
             }
         }
     }

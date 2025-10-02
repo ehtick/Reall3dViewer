@@ -183,15 +183,15 @@ export function setupEventListener(events: Events) {
             !opts.bigSceneMode && window.open('/editor/index.html?url=' + encodeURIComponent((fire(GetSplatMesh) as SplatMesh).meta.url));
             keySet.clear();
         } else if (keySet.has('KeyW')) {
-            moveForward(fire(GetControls));
+            moveForward(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyS')) {
-            moveBackward(fire(GetControls));
+            moveBackward(fire(GetControls), 0.15);
             keySet.clear();
-        } else if (keySet.has('KeyA')) {
+        } else if ((keySet.has('KeyA'), 0.15)) {
             moveLeft(fire(GetControls));
             keySet.clear();
-        } else if (keySet.has('KeyD')) {
+        } else if ((keySet.has('KeyD'), 0.15)) {
             moveRight(fire(GetControls));
             keySet.clear();
         } else if (keySet.has('KeyQ')) {
@@ -592,32 +592,32 @@ function moveCameraHorizontal(controls, direction, step = 0.012) {
     controls.update();
 }
 // 左移
-function moveLeft(controls) {
+function moveLeft(controls, step = 0.2) {
     const direction = new Vector3();
     controls.object.getWorldDirection(direction);
     const leftDir = new Vector3().crossVectors(controls.object.up, direction).normalize();
 
-    moveCameraHorizontal(controls, leftDir);
+    moveCameraHorizontal(controls, leftDir, step);
 }
 // 右移
-function moveRight(controls) {
+function moveRight(controls, step = 0.2) {
     const direction = new Vector3();
     controls.object.getWorldDirection(direction);
     const rightDir = new Vector3().crossVectors(controls.object.up, direction).normalize().negate();
 
-    moveCameraHorizontal(controls, rightDir);
+    moveCameraHorizontal(controls, rightDir, step);
 }
 // 前进
-function moveForward(controls) {
+function moveForward(controls, step = 0.2) {
     const forwardDir = new Vector3();
     controls.object.getWorldDirection(forwardDir);
-    moveCameraHorizontal(controls, forwardDir);
+    moveCameraHorizontal(controls, forwardDir, step);
 }
 // 后退
-function moveBackward(controls) {
+function moveBackward(controls, step = 0.2) {
     const backwardDir = new Vector3();
     controls.object.getWorldDirection(backwardDir).negate();
-    moveCameraHorizontal(controls, backwardDir);
+    moveCameraHorizontal(controls, backwardDir, step);
 }
 
 /**

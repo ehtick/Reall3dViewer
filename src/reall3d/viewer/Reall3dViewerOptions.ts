@@ -190,7 +190,7 @@ export interface Reall3dViewerOptions {
     background?: string;
 
     /**
-     * Render quality level (1~9, default to 8)
+     * Render quality level (1~9, default to 5)
      */
     qualityLevel?: number;
 }

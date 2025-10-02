@@ -48,6 +48,7 @@ import { setupCommonUtils } from '../../utils/CommonUtils';
 import { MetaData } from '../../modeldata/ModelData';
 import { setupSorter } from '../../sorter/SetupSorter';
 import { BoundBox } from '../boundbox/BoundBox';
+import { DefaultQualityLevel } from '../../utils/consts/GlobalConstants';
 
 /**
  * Gaussian splatting mesh
@@ -87,7 +88,7 @@ export class SplatMesh extends Mesh {
         on(IsBigSceneMode, () => opts.bigSceneMode);
         on(IsPointcloudMode, () => opts.pointcloudMode);
         on(GetSplatMesh, () => that);
-        on(GetRenderQualityLevel, () => opts.qualityLevel || 8);
+        on(GetRenderQualityLevel, () => opts.qualityLevel || DefaultQualityLevel);
 
         on(NotifyViewerNeedUpdate, () => opts.viewerEvents?.fire(ViewerNeedUpdate));
 
