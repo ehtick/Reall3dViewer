@@ -101,7 +101,6 @@ function runSort(sortViewProj: number[]) {
     } else {
         // 数据
         let bucketCnt = getBucketCount(dataCount);
-        console.info('bucketCnt', bucketCnt);
         let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
         let counters: Int32Array = new Int32Array(bucketCnt);
         for (let i = 0, idx = 0; i < dataCount; i++) {

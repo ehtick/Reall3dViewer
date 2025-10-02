@@ -234,6 +234,9 @@ export interface MetaData {
     /** Fly-through camera look-at points */
     flyTargets?: number[];
 
+    /** render quality level */
+    qualityLevel?: number;
+
     /** Enable particle loading effect (small scenes) */
     particleMode?: boolean;
 

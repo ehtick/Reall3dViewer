@@ -328,26 +328,30 @@ export class Reall3dViewer {
         scene.traverse((obj: any) => !splatOpts && obj instanceof SplatMesh && (splatOpts = (obj as SplatMesh).options()));
 
         if (opts) {
+            const viewOpts = fire(GetOptions);
             if (opts.autoRotate !== undefined) {
+                viewOpts.autoRotate = opts.autoRotate;
                 fire(GetControls).autoRotate = opts.autoRotate;
-                fire(GetOptions).autoRotate = opts.autoRotate;
             }
             opts.pointcloudMode !== undefined && fire(SplatSetPointcloudMode, opts.pointcloudMode);
             opts.lightFactor !== undefined && fire(SplatUpdateLightFactor, opts.lightFactor);
 
-            opts.maxRenderCountOfMobile && (fire(GetOptions).maxRenderCountOfMobile = opts.maxRenderCountOfMobile);
-            opts.maxRenderCountOfPc && (fire(GetOptions).maxRenderCountOfPc = opts.maxRenderCountOfPc);
-            opts.debugMode !== undefined && (fire(GetOptions).debugMode = opts.debugMode);
+            opts.maxRenderCountOfMobile && (viewOpts.maxRenderCountOfMobile = opts.maxRenderCountOfMobile);
+            opts.maxRenderCountOfPc && (viewOpts.maxRenderCountOfPc = opts.maxRenderCountOfPc);
+            opts.debugMode !== undefined && (viewOpts.debugMode = opts.debugMode);
+            opts.qualityLevel !== undefined &&
+                (viewOpts.qualityLevel = opts.qualityLevel) &&
+                this.splatMesh.options({ qualityLevel: opts.qualityLevel } as any);
 
-            opts.markType !== undefined && (fire(GetOptions).markType = opts.markType);
+            opts.markType !== undefined && (viewOpts.markType = opts.markType);
             if (opts.markVisible !== undefined) {
                 fire(MarkUpdateVisible, opts.markVisible);
             }
             if (opts.meterScale !== undefined) {
-                fire(GetOptions).meterScale = opts.meterScale;
+                viewOpts.meterScale = opts.meterScale;
             }
             if (opts.markMode !== undefined) {
-                fire(GetOptions).markMode = opts.markMode;
+                viewOpts.markMode = opts.markMode;
                 !opts.markMode && fire(ClearMarkPoint);
                 fire(GetControls).autoRotate = fire(GetOptions).autoRotate = false;
             }
@@ -496,11 +500,13 @@ export class Reall3dViewer {
             }
         }
 
+        meta.qualityLevel = meta.qualityLevel || DefaultQualityLevel;
         on(GetMeta, () => meta);
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;
 
         // 按元数据调整更新相机、标注等信息
         fire(LoadSmallSceneMetaData, meta);
+        this.options({ qualityLevel: meta.qualityLevel }); // 允许根据具体模型特点在meta中定义渲染质量级别，均衡质量性能资源
 
         // 加载模型
         if (modelOpts.format === 'obj') {
