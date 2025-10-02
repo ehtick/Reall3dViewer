@@ -188,11 +188,11 @@ export function setupEventListener(events: Events) {
         } else if (keySet.has('KeyS')) {
             moveBackward(fire(GetControls), 0.15);
             keySet.clear();
-        } else if ((keySet.has('KeyA'), 0.15)) {
-            moveLeft(fire(GetControls));
+        } else if (keySet.has('KeyA')) {
+            moveLeft(fire(GetControls), 0.15);
             keySet.clear();
-        } else if ((keySet.has('KeyD'), 0.15)) {
-            moveRight(fire(GetControls));
+        } else if (keySet.has('KeyD')) {
+            moveRight(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyQ')) {
             rotateTargetLeft(fire(GetControls));
