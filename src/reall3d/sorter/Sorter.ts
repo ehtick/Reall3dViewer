@@ -138,7 +138,7 @@ function runSort(sortViewProj: number[]) {
     worker.postMessage(
         {
             [WkSplatIndex]: depthIndex,
-            [WkRenderSplatCount]: renderSplatCount,
+            [WkRenderSplatCount]: depthIndex.length, // 可按实际变化
             [WkVisibleSplatCount]: visibleSplatCount,
             [WkModelSplatCount]: modelSplatCount,
             [WkIndex]: index,
