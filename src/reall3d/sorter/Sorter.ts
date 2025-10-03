@@ -40,14 +40,13 @@ let distances: Int32Array;
 let lastSortVersion: number = 0;
 let isBigSceneMode: boolean;
 
-function getBucketCount(splatCnt: number, isWatermark = false) {
-    // 水印最高3级
-    let level = isWatermark ? Math.min(3, qualityLevel) : qualityLevel;
+function getBucketCount(splatCnt: number, useLevel: number = 0) {
+    // 水印等情景允许通过参数指定级别
+    let level = useLevel ? Math.min(useLevel, qualityLevel) : qualityLevel;
     // 手机降低1级并控制不低于1级
     isMobile && (level = Math.max(level - 1, 1));
-    // 最低1级12位4096，默认5级16位65536，最高9级20位1048576
-    const cnt = 2 ** Math.max(12, Math.min(level + 11, Math.round(Math.log2(splatCnt / 2))));
-    return cnt - 1;
+    // 按级别，最低1级12位4096，默认5级16位65536，最高9级20位1048576。数据很少时也确保8位256个桶
+    return 2 ** Math.max(8, Math.min(level + 11, Math.round(Math.log2(splatCnt / 2))));
 }
 
 function runSort(sortViewProj: number[]) {
@@ -95,7 +94,7 @@ function runSort(sortViewProj: number[]) {
     let sortTime = 0;
     const dataCount = renderSplatCount - watermarkCount;
     depthIndex = new Uint32Array(renderSplatCount);
-    const { maxDepth, minDepth } = getDepth(texture, viewProj);
+    let { maxDepth, minDepth } = getDepth(texture, viewProj);
     if (maxDepth - minDepth <= 0.00001) {
         for (let i = 0; i < renderSplatCount; i++) depthIndex[i] = i;
     } else {
@@ -112,15 +111,26 @@ function runSort(sortViewProj: number[]) {
 
         // 水印
         if (watermarkCount) {
-            bucketCnt = getBucketCount(dataCount, true);
-            depthInv = (bucketCnt - 1) / (maxDepth - minDepth);
-            counters = new Int32Array(bucketCnt);
-            for (let i = dataCount, idx = 0; i < renderSplatCount; i++) {
-                idx = ((computeDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
-                counters[(distances[i - dataCount] = idx)]++;
+            bucketCnt = getBucketCount(watermarkCount, 1); // 水印数据很少精度要求低，按最低1级计算，范围值重新计算避免太大误差
+            maxDepth = minDepth = computeDepth(sortViewProj, xyz[3 * dataCount], xyz[3 * dataCount + 1], xyz[3 * dataCount + 2]);
+            for (let i = dataCount, dpt = 0; i < renderSplatCount; i++) {
+                dpt = computeDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
+                maxDepth = Math.max(dpt, maxDepth);
+                minDepth = Math.min(dpt, minDepth);
             }
-            for (let i = 1; i < bucketCnt; i++) counters[i] += counters[i - 1];
-            for (let i = 0; i < watermarkCount; i++) depthIndex[dataCount + --counters[distances[i]]] = dataCount + i;
+
+            if (maxDepth - minDepth <= 0.00001) {
+                for (let i = 0; i < watermarkCount; i++) depthIndex[dataCount + i] = dataCount + i;
+            } else {
+                depthInv = (bucketCnt - 1) / (maxDepth - minDepth);
+                counters = new Int32Array(bucketCnt);
+                for (let i = dataCount, idx = 0; i < renderSplatCount; i++) {
+                    idx = ((computeDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
+                    counters[(distances[i - dataCount] = idx)]++;
+                }
+                for (let i = 1; i < bucketCnt; i++) counters[i] += counters[i - 1];
+                for (let i = 0; i < watermarkCount; i++) depthIndex[dataCount + --counters[distances[i]]] = dataCount + i;
+            }
         }
     }
 
