@@ -77,7 +77,7 @@ function runSort(sortViewProj: number[]) {
         worker.postMessage(
             {
                 [WkSplatIndex]: depthIndex,
-                [WkRenderSplatCount]: renderSplatCount,
+                [WkRenderSplatCount]: depthIndex.length, // 可变
                 [WkVisibleSplatCount]: visibleSplatCount,
                 [WkModelSplatCount]: modelSplatCount,
                 [WkIndex]: index,
@@ -152,8 +152,8 @@ function runSort(sortViewProj: number[]) {
 
 function computeDepth(svp: number[], x: number, y: number, z: number): number {
     // return (svp[2] * x + svp[6] * y + svp[10] * z) * -4096;
-    return -(svp[2] * x + svp[6] * y + svp[10] * z);
-    // return -(svp[2] * x + svp[6] * y + svp[10] * z + svp[14]);
+    // return -(svp[2] * x + svp[6] * y + svp[10] * z);
+    return -(svp[2] * x + svp[6] * y + svp[10] * z + svp[14]);
 }
 
 function getDepth(texture: SplatTexdata, sortViewProj: number[]): any {
