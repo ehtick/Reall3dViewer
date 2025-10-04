@@ -63,7 +63,13 @@ export const WkInit = `$${n++}`;
 export const WkWatermarkCount = `$${n++}`;
 /** 相机方向 */
 export const WkCameraDirection = `$${n++}`;
-/** 渲染质量级别（1~9，默认5） */
+/** 相机位置 */
+export const WkCameraPosition = `$${n++}`;
+/** 渲染质量级别 */
 export const WkQualityLevel = `$${n++}`;
 /** 更新参数 */
 export const WkUpdateParams = `$${n++}`;
+/** 排序桶使用的位数 */
+export const WkBucketBits = `$${n++}`;
+/** 排序类型 */
+export const WkSortType = `$${n++}`;

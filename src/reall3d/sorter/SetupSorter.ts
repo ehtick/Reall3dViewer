@@ -11,8 +11,20 @@ import {
     IsBigSceneMode,
     GetRenderQualityLevel,
     WorkerUpdateQualityLevel,
+    GetCameraPosition,
+    GetCameraDirection,
 } from '../events/EventConstants';
-import { WkInit, WkIsBigSceneMode, WkMaxRenderCount, WkQualityLevel, WkUpdateParams, WkViewProjection } from '../utils/consts/WkConstants';
+import {
+    WkCameraDirection,
+    WkCameraPosition,
+    WkInit,
+    WkIsBigSceneMode,
+    WkMaxRenderCount,
+    WkQualityLevel,
+    WkUpdateParams,
+    WkViewProjection,
+} from '../utils/consts/WkConstants';
+import { Vector3 } from 'three';
 
 export function setupSorter(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
@@ -20,7 +32,13 @@ export function setupSorter(events: Events) {
     const worker = new Worker(new URL('./Sorter.ts', import.meta.url), { type: 'module' });
 
     on(GetWorker, () => worker);
-    on(WorkerSort, () => worker.postMessage({ [WkViewProjection]: fire(GetViewProjectionMatrixArray) }));
+    on(WorkerSort, () =>
+        worker.postMessage({
+            [WkViewProjection]: fire(GetViewProjectionMatrixArray),
+            [WkCameraDirection]: fire(GetCameraDirection),
+            [WkCameraPosition]: (fire(GetCameraPosition) as Vector3).toArray(),
+        }),
+    );
     on(WorkerDispose, () => worker.terminate());
     on(WorkerUpdateQualityLevel, () => worker.postMessage({ [WkUpdateParams]: true, [WkQualityLevel]: fire(GetRenderQualityLevel) }));
 
