@@ -171,7 +171,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
     } else if (sortType === SortTypes.DirWithPruneOnlyNear) {
         // 按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
         const maxDepth1 = Math.min(maxDepth, 0);
-        const minDepth1 = minDepth * 0.008; // TODO 此处比例系数有待商酌，或者考虑可配置化
+        const minDepth1 = minDepth * 0.01; // TODO 此处比例系数有待商酌，或者考虑可配置化
         const tags = new Uint8Array(dataCount);
         let nearCnt = 0;
         for (let i = 0, idx = 0; i < dataCount; ++i) {
@@ -185,7 +185,9 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
         for (let i = 0; i < dataCount; ++i) tgts[tags[i]][idxs[tags[i]]++] = i;
         depthIndex = new Uint32Array(nearCnt + watermarkCount);
         // 近端排序
-        let bucketCnt = getBucketCount(nearCnt).bucketCnt; // 按配置级别
+        let obucket = getBucketCount(nearCnt);
+        bucketBits = obucket.bucketBits;
+        let bucketCnt = obucket.bucketCnt;
         let depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
         let counters = new Int32Array(bucketCnt);
         distances = new Int32Array(nearCnt);

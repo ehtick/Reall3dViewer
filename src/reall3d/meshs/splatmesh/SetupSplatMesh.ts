@@ -119,6 +119,8 @@ import {
     WkVisibleSplatCount,
     WkModelSplatCount,
     WkWatermarkCount,
+    WkBucketBits,
+    WkSortType,
 } from '../../utils/consts/Index';
 import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
@@ -131,6 +133,8 @@ export function setupSplatMesh(events: Events) {
     let maxRadius: number = 0;
     let currentMaxRadius: number = 0;
     const arySwitchProcess: any[] = [];
+    let bucketBits: number = 0;
+    let sortType: number = 0;
 
     let currentDisplayShDegree: number = 0;
     on(GetCurrentDisplayShDegree, () => currentDisplayShDegree);
@@ -175,7 +179,7 @@ export function setupSplatMesh(events: Events) {
             });
             geometry.instanceCount = datas.length;
             fire(NotifyViewerNeedUpdate);
-            fire(Information, { sortTime: `${sortTime} / ${Date.now() - sortStartTime}` });
+            fire(Information, { sortTime: `${sortTime} / ${Date.now() - sortStartTime}`, bucketBits, sortType });
         });
 
         on(GetSplatGeometry, () => geometry);
@@ -571,6 +575,8 @@ export function setupSplatMesh(events: Events) {
     worker.onmessage = e => {
         const data: any = e.data;
         if (data[WkSplatIndex]) {
+            bucketBits = data[WkBucketBits];
+            sortType = data[WkSortType];
             fire(SplatUpdateSplatIndex, data[WkSplatIndex], data[WkIndex], data[WkSortTime], data[WkSortStartTime], data[WkRenderSplatCount]);
         }
     };

@@ -198,6 +198,9 @@ export function setupCommonUtils(events: Events) {
             fps,
             realFps,
             sortTime,
+            bucketBits,
+            sortType,
+            qualityLevel,
             fov,
             position,
             lookUp,
@@ -219,7 +222,8 @@ export function setupCommonUtils(events: Events) {
             // renderModels !== undefined && setInfo('renderModels', renderModels);
             fps !== undefined && setInfo('fps', fps);
             realFps !== undefined && setInfo('realFps', `raw ${realFps}`);
-            sortTime !== undefined && setInfo('sort', `${sortTime} ms （quality level ${fire(GetOptions).qualityLevel || DefaultQualityLevel}）`);
+            // sortTime !== undefined && setInfo('sort', `${sortTime} ms （quality level ${fire(GetOptions).qualityLevel || DefaultQualityLevel}）`);
+            sortTime !== undefined && setInfo('sort', `${sortTime} ms （L ${fire(GetOptions).qualityLevel}, ${bucketBits} B, T ${sortType}）`);
             cuts !== undefined && setInfo('cuts', cuts === '' ? '' : `（${cuts} cuts）`);
             worker && setInfo('worker', `${worker}`);
             // updateSceneData && setInfo('updateSceneData', `（up ${updateSceneData} ms）`);
