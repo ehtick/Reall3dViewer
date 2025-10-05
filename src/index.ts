@@ -99,6 +99,12 @@ function fnClick(className: string) {
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/ppt.spx`), 50); // Let it GC
+    } else if (className == 'lff-house') {
+        viewer?.dispose();
+        mapViewer?.dispose();
+        viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
+        viewer.reset({ debugMode: true });
+        setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/tijerin-hobbit-2.5m.spz`), 50); // Let it GC
     } else if (className == 'switch-rotate') {
         let opts: Reall3dViewerOptions = viewer?.options();
         viewer?.options({ autoRotate: !opts.autoRotate });
