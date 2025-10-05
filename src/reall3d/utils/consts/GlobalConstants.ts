@@ -45,7 +45,15 @@ export const SpxBlockFormatSH4 = 4;
 /** 【Reall3D扩展的专属格式】the exclusive format extended by reall3d */
 export const SpxExclusiveFormatReall3d = 3141592653;
 
-/** 【排序类型】允许按不同场景选择参数，调优的参数写入meta达到个性化优化效果。注意避免动态切换，否则性能有可能适得其反 */
+/**
+ * 【排序类型】
+ * 允许按不同场景选择参数，配合调优的近端分段参数depthNearRate或depthNearValue一并写入meta达到个性化优化效果。
+ * 注意应避免动态切换排序类型，否则可能因为不相吻合而适得其反
+ * 例:大片的山洞模型内部视角，即使场景尺寸远大于1000，但实际拐弯抹角每个角度都最多能看10个深度尺寸，
+ *    这时设定depthNearValue=10，选择DirWithPruneOnlyNear就是合适的。
+ *
+ * 默认以外的排序类型都是为了具体个性化场景而准备的，应当具体实验后再确定选用。
+ */
 export enum SortTypes {
     /** 默认，按视图投影矩阵排序 */
     Default = 1,
