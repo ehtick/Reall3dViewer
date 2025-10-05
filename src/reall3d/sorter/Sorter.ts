@@ -146,7 +146,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
         // 按相机方向（剔除相机背面数据提高渲染性能）
         ({ depthIndex, bucketBits } = sortDirWithPrune({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir }));
     } else if (sortType === SortTypes.DirWithTwoSort) {
-        // 按相机方向（按近远分2段排序提高近处渲染质量）
+        // 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量）
         ({ depthIndex, bucketBits } = sortDirWithTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir }));
     } else {
         // 默认，按视图投影矩阵排序（全量渲染）
@@ -316,7 +316,7 @@ function sortDirWithPrune(oArg: any) {
     return { depthIndex, bucketBits };
 }
 
-/** 按相机方向（剔除相机背面数据提高渲染性能） */
+/** 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量） */
 function sortDirWithTwoSort(oArg: any) {
     const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir } = oArg;
 
@@ -324,7 +324,7 @@ function sortDirWithTwoSort(oArg: any) {
     const minDepth1 = depthNearValue ? maxDepth1 - Math.abs(depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * depthNearRate;
     const tags = new Uint8Array(dataCount);
     let nearCnt = 0;
-    for (let i = 0, idx = 0; i < dataCount; ++i) {
+    for (let i = 0; i < dataCount; ++i) {
         depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
         tags[i] = ((depths[i] < 0 && depths[i] >= minDepth1) as any) | 0;
         nearCnt += tags[i];
@@ -333,9 +333,9 @@ function sortDirWithTwoSort(oArg: any) {
     const cnt2 = dataCount - nearCnt;
     const dataIdx1 = new Uint32Array(nearCnt);
     const dataIdx2 = new Uint32Array(cnt2);
-    const fns = [(i: number, v: number) => (dataIdx2[i] = v), (i: number, v: number) => (dataIdx1[i] = v)];
+    const dataIdxs = [dataIdx2, dataIdx1];
     const idxs: number[] = [0, 0];
-    for (let i = 0; i < dataCount; ++i) fns[tags[i]](idxs[tags[i]]++, i);
+    for (let i = 0; i < dataCount; ++i) dataIdxs[tags[i]][idxs[tags[i]]++] = i;
     const depthIndex = new Uint32Array(dataCount + watermarkCount);
     // 远端排序
     let { bucketBits, bucketCnt } = getBucketCount(cnt2);
