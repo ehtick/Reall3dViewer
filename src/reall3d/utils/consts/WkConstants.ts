@@ -73,3 +73,7 @@ export const WkUpdateParams = `$${n++}`;
 export const WkBucketBits = `$${n++}`;
 /** 排序类型 */
 export const WkSortType = `$${n++}`;
+/** 深度远近分段比例 */
+export const WkDepthNearRate = `$${n++}`;
+/** 深度远近分段值（设定时优先） */
+export const WkDepthNearValue = `$${n++}`;

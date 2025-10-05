@@ -14,10 +14,13 @@ import {
     GetCameraPosition,
     GetCameraDirection,
     GetSortType,
+    GetSplatMesh,
 } from '../events/EventConstants';
 import {
     WkCameraDirection,
     WkCameraPosition,
+    WkDepthNearRate,
+    WkDepthNearValue,
     WkInit,
     WkIsBigSceneMode,
     WkMaxRenderCount,
@@ -27,6 +30,7 @@ import {
     WkViewProjection,
 } from '../utils/consts/WkConstants';
 import { Vector3 } from 'three';
+import { SplatMesh } from '../pkg';
 
 export function setupSorter(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
@@ -43,7 +47,13 @@ export function setupSorter(events: Events) {
     );
     on(WorkerDispose, () => worker.terminate());
     on(WorkerUpdateParams, () =>
-        worker.postMessage({ [WkUpdateParams]: true, [WkQualityLevel]: fire(GetRenderQualityLevel), [WkSortType]: fire(GetSortType) }),
+        worker.postMessage({
+            [WkUpdateParams]: true,
+            [WkQualityLevel]: fire(GetRenderQualityLevel),
+            [WkSortType]: fire(GetSortType),
+            [WkDepthNearRate]: (fire(GetSplatMesh) as SplatMesh).meta?.depthNearRate,
+            [WkDepthNearValue]: (fire(GetSplatMesh) as SplatMesh).meta?.depthNearValue,
+        }),
     );
 
     (async () => {
@@ -52,6 +62,9 @@ export function setupSorter(events: Events) {
             [WkMaxRenderCount]: await fire(GetMaxRenderCount),
             [WkIsBigSceneMode]: fire(IsBigSceneMode),
             [WkQualityLevel]: fire(GetRenderQualityLevel),
+            [WkSortType]: fire(GetSortType),
+            [WkDepthNearRate]: (fire(GetSplatMesh) as SplatMesh).meta?.depthNearRate,
+            [WkDepthNearValue]: (fire(GetSplatMesh) as SplatMesh).meta?.depthNearValue,
         });
     })();
 }

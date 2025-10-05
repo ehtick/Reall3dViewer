@@ -5,6 +5,8 @@ import {
     WkBucketBits,
     WkCameraDirection,
     WkCameraPosition,
+    WkDepthNearRate,
+    WkDepthNearValue,
     WkInit,
     WkQualityLevel,
     WkSortType,
@@ -54,8 +56,8 @@ let sortType: number = SortTypes.Default;
 
 let lastSortVersion: number = 0;
 let isBigSceneMode: boolean;
-let depthNearRate = 0.4; // TODO 可配置化
-let depthNearValue = 0; // TODO 可配置化
+let depthNearRate = 0.4; // 按比例计算分段(近端占比0.4是为了调试看到效果，实际应用应根据模型尺寸具体调整)
+let depthNearValue = 0; // 按设定值计算分段(设定时优先)
 
 function getBucketCount(splatCnt: number, useLevel: number = 0) {
     // 没有数据无排序，简单返回
@@ -490,11 +492,15 @@ worker.onmessage = (e: any) => {
     } else if (data[WkUpdateParams]) {
         qualityLevel = Math.max(MinQualityLevel, Math.min(data[WkQualityLevel] || DefaultQualityLevel, MaxQualityLevel)); // 限制1~9,默认5
         sortType = data[WkSortType] || sortType;
+        depthNearRate = data[WkDepthNearRate] || depthNearRate;
+        depthNearValue = data[WkDepthNearValue] || depthNearValue;
     } else if (data[WkInit]) {
         isBigSceneMode = data[WkIsBigSceneMode];
         distances = new Int32Array(data[WkMaxRenderCount]);
         qualityLevel = Math.max(MinQualityLevel, Math.min(data[WkQualityLevel] || DefaultQualityLevel, MaxQualityLevel)); // 限制1~9,默认5
         sortType = data[WkSortType] || sortType;
+        depthNearRate = data[WkDepthNearRate] || depthNearRate;
+        depthNearValue = data[WkDepthNearValue] || depthNearValue;
         isSorterReady = true;
     }
 };

@@ -238,6 +238,10 @@ export interface MetaData {
     qualityLevel?: number;
     /** sort type */
     sortType?: number;
+    /** depth near rate */
+    depthNearRate?: number;
+    /** depth near value */
+    depthNearValue?: number;
 
     /** Enable particle loading effect (small scenes) */
     particleMode?: boolean;
