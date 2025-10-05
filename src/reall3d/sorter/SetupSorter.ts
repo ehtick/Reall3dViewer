@@ -51,8 +51,8 @@ export function setupSorter(events: Events) {
             [WkUpdateParams]: true,
             [WkQualityLevel]: fire(GetRenderQualityLevel),
             [WkSortType]: fire(GetSortType),
-            [WkDepthNearRate]: (fire(GetSplatMesh) as SplatMesh).meta?.depthNearRate,
-            [WkDepthNearValue]: (fire(GetSplatMesh) as SplatMesh).meta?.depthNearValue,
+            [WkDepthNearRate]: (fire(GetSplatMesh) as SplatMesh)?.meta?.depthNearRate,
+            [WkDepthNearValue]: (fire(GetSplatMesh) as SplatMesh)?.meta?.depthNearValue,
         }),
     );
 
@@ -63,8 +63,8 @@ export function setupSorter(events: Events) {
             [WkIsBigSceneMode]: fire(IsBigSceneMode),
             [WkQualityLevel]: fire(GetRenderQualityLevel),
             [WkSortType]: fire(GetSortType),
-            [WkDepthNearRate]: (fire(GetSplatMesh) as SplatMesh).meta?.depthNearRate,
-            [WkDepthNearValue]: (fire(GetSplatMesh) as SplatMesh).meta?.depthNearValue,
+            [WkDepthNearRate]: (fire(GetSplatMesh) as SplatMesh)?.meta?.depthNearRate,
+            [WkDepthNearValue]: (fire(GetSplatMesh) as SplatMesh)?.meta?.depthNearValue,
         });
     })();
 }

@@ -46,8 +46,10 @@ let sortRunning: boolean;
 let Epsilon: number = isMobile ? 0.5 : 0.2;
 let viewProj: number[];
 let lastViewProj: number[] = [];
-let distances: Int32Array;
-let depths: number[] = [];
+let distances: Int32Array | number[] = [];
+let depths: Float32Array | number[] = [];
+let tags: Uint8Array | number[] = [];
+let counters: Int32Array | number[] = [];
 let cameraDir: number[];
 let cameraPos: number[];
 let sortType: number = SortTypes.Default;
@@ -167,8 +169,8 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
             [WkVersion]: version,
             [WkSortStartTime]: startTime,
             [WkSortTime]: sortTime,
-            [WkBucketBits]: bucketBits,
-            [WkSortType]: sortType,
+            [WkBucketBits]: bucketBits || 16,
+            [WkSortType]: sortType || 1,
         },
         [depthIndex.buffer],
     );
@@ -183,7 +185,6 @@ function sortDirWithPruneTwoSort(oArg: any) {
     const minDepth1 = depthNearValue ? maxDepth1 - Math.abs(depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * depthNearRate;
     const maxDepth2 = minDepth1;
     const minDepth2 = minDepth;
-    const tags = new Uint8Array(dataCount);
     const cnts = [0, 0, 0];
     for (let i = 0; i < dataCount; ++i) {
         depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
@@ -206,7 +207,7 @@ function sortDirWithPruneTwoSort(oArg: any) {
     const depthIndex = new Uint32Array(cnt1 + cnt2 + watermarkCount);
     let { bucketBits, bucketCnt } = getBucketCount(cnt2);
     let depthInv: number = (bucketCnt - 1) / (maxDepth2 - minDepth2);
-    let counters: Int32Array = new Int32Array(bucketCnt);
+    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     for (let i = 0, idx = 0; i < cnt2; ++i) {
         idx = ((depths[dataIdx2[i]] - minDepth2) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
@@ -218,7 +219,7 @@ function sortDirWithPruneTwoSort(oArg: any) {
     // console.time('近端排序');
     ({ bucketCnt } = getBucketCount(cnt1));
     depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    counters = new Int32Array(bucketCnt);
+    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     for (let i = 0, idx = 0; i < cnt1; ++i) {
         idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
@@ -236,9 +237,8 @@ function sortDirWithPruneOnlyNear(oArg: any) {
 
     const maxDepth1 = Math.min(maxDepth, 0);
     const minDepth1 = depthNearValue ? maxDepth1 - Math.abs(depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * depthNearRate;
-    const tags = new Uint8Array(dataCount);
     let nearCnt = 0;
-    for (let i = 0, idx = 0; i < dataCount; ++i) {
+    for (let i = 0; i < dataCount; ++i) {
         depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
         tags[i] = ((depths[i] < 0 && depths[i] >= minDepth1) as any) | 0;
         nearCnt += tags[i];
@@ -252,7 +252,7 @@ function sortDirWithPruneOnlyNear(oArg: any) {
     // 近端排序
     let { bucketBits, bucketCnt } = getBucketCount(nearCnt);
     let depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    let counters = new Int32Array(bucketCnt);
+    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     for (let i = 0, idx = 0; i < nearCnt; ++i) {
         idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
@@ -269,7 +269,6 @@ function sortDirWithPrune(oArg: any) {
 
     const maxDepth1 = Math.min(maxDepth, 0);
     const minDepth1 = minDepth;
-    const tags = new Uint8Array(dataCount);
     let frontCnt = 0;
     for (let i = 0, idx = 0; i < dataCount; ++i) {
         depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
@@ -285,7 +284,7 @@ function sortDirWithPrune(oArg: any) {
     // 近端排序
     let { bucketCnt, bucketBits } = getBucketCount(frontCnt);
     let depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    let counters = new Int32Array(bucketCnt);
+    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     for (let i = 0, idx = 0; i < frontCnt; ++i) {
         idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
@@ -298,8 +297,7 @@ function sortDirWithPrune(oArg: any) {
     // bucketBits = obucket.bucketBits;
     // let bucketCnt = obucket.bucketCnt;
     // let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-    // let counters: Int32Array = new Int32Array(bucketCnt);
-    // const tags = new Uint8Array(dataCount);
+    // counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     // let pruneCnt = 0;
     // for (let i = 0, idx = 0, depth = 0; i < dataCount; ++i) {
     //     depth = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
@@ -322,7 +320,6 @@ function sortDirWithTwoSort(oArg: any) {
 
     const maxDepth1 = Math.min(maxDepth, 0);
     const minDepth1 = depthNearValue ? maxDepth1 - Math.abs(depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * depthNearRate;
-    const tags = new Uint8Array(dataCount);
     let nearCnt = 0;
     for (let i = 0; i < dataCount; ++i) {
         depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
@@ -340,7 +337,7 @@ function sortDirWithTwoSort(oArg: any) {
     // 远端排序
     let { bucketBits, bucketCnt } = getBucketCount(cnt2);
     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-    let counters: Int32Array = new Int32Array(bucketCnt);
+    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     for (let i = 0, idx = 0; i < cnt2; ++i) {
         idx = ((depths[dataIdx2[i]] - minDepth) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
@@ -350,7 +347,7 @@ function sortDirWithTwoSort(oArg: any) {
     // 近端排序
     bucketCnt = getBucketCount(nearCnt).bucketCnt; // 按配置级别
     depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    counters = new Int32Array(bucketCnt);
+    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     for (let i = 0, idx = 0; i < nearCnt; ++i) {
         idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
@@ -368,7 +365,7 @@ function sortByViewProjDefault(oArg: any) {
     const depthIndex = new Uint32Array(dataCount + watermarkCount);
     let { bucketBits, bucketCnt } = getBucketCount(dataCount);
     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-    let counters: Int32Array = new Int32Array(bucketCnt);
+    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     for (let i = 0, idx = 0; i < dataCount; ++i) {
         idx = ((fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
@@ -398,7 +395,7 @@ function sortWatermark(oArg: any) {
         for (let i = 0; i < watermarkCount; ++i) depthIndex[dataCount + i] = dataCount + i;
     } else {
         let depthInv = (bucketCnt - 1) / (maxDepth - minDepth);
-        let counters = new Int32Array(bucketCnt);
+        counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
         for (let i = dataCount, idx = 0; i < renderSplatCount; ++i) {
             idx = ((calcDepthByViewProj(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
             counters[(distances[i - dataCount] = idx)]++;
@@ -497,6 +494,9 @@ worker.onmessage = (e: any) => {
     } else if (data[WkInit]) {
         isBigSceneMode = data[WkIsBigSceneMode];
         distances = new Int32Array(data[WkMaxRenderCount]);
+        depths = new Float32Array(data[WkMaxRenderCount]);
+        tags = new Uint8Array(data[WkMaxRenderCount]);
+        counters = new Int32Array(data[WkMaxRenderCount]);
         qualityLevel = Math.max(MinQualityLevel, Math.min(data[WkQualityLevel] || DefaultQualityLevel, MaxQualityLevel)); // 限制1~9,默认5
         sortType = data[WkSortType] || sortType;
         depthNearRate = data[WkDepthNearRate] || depthNearRate;
