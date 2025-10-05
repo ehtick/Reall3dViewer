@@ -45,16 +45,16 @@ export const SpxBlockFormatSH4 = 4;
 /** 【Reall3D扩展的专属格式】the exclusive format extended by reall3d */
 export const SpxExclusiveFormatReall3d = 3141592653;
 
-/** 【排序类型】 */
+/** 【排序类型】允许按不同场景选择参数，调优的参数写入meta达到个性化优化效果 */
 export enum SortTypes {
-    /** 默认，按视图投影矩阵 */
+    /** 默认，按视图投影矩阵排序 */
     Default = 1,
-    /** 按相机方向，剔除背后和远端数据，仅渲染近端，有遮挡只能看到近端场景时适用 */
+    /** 按相机方向排序，剔除背后和远端数据，仅渲染近端，有遮挡只能看到近端场景时适用 */
     DirWithPruneOnlyNear = 2010,
-    /** 按相机方向，剔除背后数据 */
+    /** 按相机方向排序，剔除背后数据 */
     DirWithPrune = 2011,
-    /** 按相机方向，剔除背后数据，分近端远端两段排序，用以提高近端渲染精度 */
+    /** 按相机方向排序，剔除背后数据，分近端远端两段排序，用以提高近端渲染精度 */
     DirWithPruneTwoSort = 2012,
-    /** 按相机方向，不剔除数据，分近端远端两段排序，用以提高近端渲染精度 */
+    /** 按相机方向排序，不剔除数据，分近端远端两段排序，用以提高近端渲染精度 */
     DirWithTwoSort = 2112,
 }
