@@ -179,7 +179,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
             tags[i] = ((depths[i] < 0 && depths[i] >= minDepth1) as any) | 0;
             nearCnt += tags[i];
         }
-        // TODO 分段
+        // 分段
         const tgts: Uint32Array[] = [new Uint32Array(0), new Uint32Array(nearCnt)];
         const idxs: number[] = [0, 0];
         for (let i = 0; i < dataCount; ++i) tgts[tags[i]][idxs[tags[i]]++] = i;
@@ -199,25 +199,53 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
         for (let i = 0; i < nearCnt; ++i) depthIndex[--counters[distances[i]]] = tgts[1][i];
     } else if (sortType === SortTypes.DirWithPrune) {
         // 按相机方向（剔除相机背面数据提高渲染性能）
-        maxDepth = Math.min(maxDepth, 0);
-        let obucket = getBucketCount(dataCount);
+        const maxDepth1 = Math.min(maxDepth, 0);
+        const minDepth1 = minDepth;
+        const tags = new Uint8Array(dataCount);
+        let frontCnt = 0;
+        for (let i = 0, idx = 0; i < dataCount; ++i) {
+            depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
+            tags[i] = ((depths[i] < 0) as any) | 0;
+            frontCnt += tags[i];
+        }
+        // 分段
+        const tgts: Uint32Array[] = [new Uint32Array(0), new Uint32Array(frontCnt)];
+        const idxs: number[] = [0, 0];
+        for (let i = 0; i < dataCount; ++i) tgts[tags[i]][idxs[tags[i]]++] = i;
+        depthIndex = new Uint32Array(frontCnt + watermarkCount);
+        // 近端排序
+        let obucket = getBucketCount(frontCnt);
         bucketBits = obucket.bucketBits;
         let bucketCnt = obucket.bucketCnt;
-        let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-        let counters: Int32Array = new Int32Array(bucketCnt);
-        const tags = new Uint8Array(dataCount);
-        let pruneCnt = 0;
-        for (let i = 0, idx = 0, depth = 0; i < dataCount; ++i) {
-            depth = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
-            idx = ((depth - minDepth) * depthInv) | 0;
+        let depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
+        let counters = new Int32Array(bucketCnt);
+        distances = new Int32Array(frontCnt);
+        for (let i = 0, idx = 0; i < frontCnt; ++i) {
+            idx = ((depths[tgts[1][i]] - minDepth1) * depthInv) | 0;
             counters[(distances[i] = idx)]++;
-            tags[i] = ((depth > 0) as any) | 0;
-            pruneCnt += tags[i];
         }
         for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-        depthIndex = new Uint32Array(dataCount - pruneCnt + watermarkCount);
-        const tgts: Uint32Array[] = [depthIndex, new Uint32Array(0)];
-        for (let i = 0; i < dataCount; ++i) tgts[tags[i]][--counters[distances[i]]] = i;
+        for (let i = 0; i < frontCnt; ++i) depthIndex[--counters[distances[i]]] = tgts[1][i];
+
+        // maxDepth = Math.min(maxDepth, 0);
+        // let obucket = getBucketCount(dataCount);
+        // bucketBits = obucket.bucketBits;
+        // let bucketCnt = obucket.bucketCnt;
+        // let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
+        // let counters: Int32Array = new Int32Array(bucketCnt);
+        // const tags = new Uint8Array(dataCount);
+        // let pruneCnt = 0;
+        // for (let i = 0, idx = 0, depth = 0; i < dataCount; ++i) {
+        //     depth = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
+        //     idx = ((depth - minDepth) * depthInv) | 0;
+        //     counters[(distances[i] = idx)]++;
+        //     tags[i] = ((depth > 0) as any) | 0;
+        //     pruneCnt += tags[i];
+        // }
+        // for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
+        // depthIndex = new Uint32Array(dataCount - pruneCnt + watermarkCount);
+        // const tgts: Uint32Array[] = [depthIndex, new Uint32Array(0)];
+        // for (let i = 0; i < dataCount; ++i) tgts[tags[i]][--counters[distances[i]]] = i;
     } else if (sortType === SortTypes.DirWithTwoSort) {
         // 按相机方向（按近远分2段排序提高近处渲染质量）
         const maxDepth1 = Math.min(maxDepth, 0);
