@@ -58,12 +58,22 @@ let isBigSceneMode: boolean;
 function getBucketCount(splatCnt: number, useLevel: number = 0) {
     // 水印等情景允许通过参数指定级别
     let level = useLevel ? Math.min(useLevel, qualityLevel) : qualityLevel;
-    // 手机降低1级并控制不低于1级
-    isMobile && (level = Math.max(level - 1, 1));
-    // 按级别，最低1级12位4096，默认5级16位65536，最高9级20位1048576。数据很少时也确保8位256个桶
-    const bucketBits = Math.max(8, Math.min(level + 11, Math.round(Math.log2(splatCnt / 4))));
-    const bucketCnt = 2 ** bucketBits;
-    return { bucketBits, bucketCnt };
+    // 按级别确定精度，达到允许自定义调整的目的，手机降低1级并控制不低于1级
+    let bucketBits = 11 + (isMobile ? Math.max(level - 1, 1) : level);
+    // 低级别时，根据数据量计算，进一步降低精度，确保至少8位不失控
+    if (level < 3) {
+        bucketBits = Math.max(8, Math.min(bucketBits, Math.round(Math.log2(splatCnt / 32))));
+    } else if (level < 4) {
+        bucketBits = Math.max(8, Math.min(bucketBits, Math.round(Math.log2(splatCnt / 16))));
+    } else if (level < 5) {
+        bucketBits = Math.max(8, Math.min(bucketBits, Math.round(Math.log2(splatCnt / 8))));
+    }
+    // 高级别时，根据数据量计算控制，避免不必要的浪费
+    if (level >= 5) {
+        bucketBits = Math.min(bucketBits, Math.round(Math.log2(splatCnt / 2)));
+    }
+
+    return { bucketBits, bucketCnt: 2 ** bucketBits };
 }
 
 function runSort(sortViewProj: number[], sortCameraDir: number[]) {
@@ -120,7 +130,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
     if (maxDepth - minDepth <= 0.00001) {
         // 都挤一起了没必要排序
         depthIndex = new Uint32Array(renderSplatCount);
-        for (let i = 0; i < dataCount; i++) depthIndex[i] = i;
+        for (let i = 0; i < dataCount; ++i) depthIndex[i] = i;
     } else if (sortType === SortTypes.DirWithPruneTwoSort) {
         // 按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量）
         ({ depthIndex, bucketBits } = sortDirWithPruneTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir }));
@@ -379,23 +389,23 @@ function sortWatermark(oArg: any) {
     let bucketCnt = getBucketCount(watermarkCount, 1).bucketCnt; // 水印数据很少精度要求低，按最低1级计算，范围值重新计算避免太大误差
     // TODO 考虑传入包围盒点进行计算
     maxDepth = minDepth = calcDepthByViewProj(sortViewProj, xyz[3 * dataCount], xyz[3 * dataCount + 1], xyz[3 * dataCount + 2]);
-    for (let i = dataCount, dpt = 0; i < renderSplatCount; i++) {
+    for (let i = dataCount, dpt = 0; i < renderSplatCount; ++i) {
         dpt = calcDepthByViewProj(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
         maxDepth = Math.max(dpt, maxDepth);
         minDepth = Math.min(dpt, minDepth);
     }
 
     if (maxDepth - minDepth <= 0.00001) {
-        for (let i = 0; i < watermarkCount; i++) depthIndex[dataCount + i] = dataCount + i;
+        for (let i = 0; i < watermarkCount; ++i) depthIndex[dataCount + i] = dataCount + i;
     } else {
         let depthInv = (bucketCnt - 1) / (maxDepth - minDepth);
         let counters = new Int32Array(bucketCnt);
-        for (let i = dataCount, idx = 0; i < renderSplatCount; i++) {
+        for (let i = dataCount, idx = 0; i < renderSplatCount; ++i) {
             idx = ((calcDepthByViewProj(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
             counters[(distances[i - dataCount] = idx)]++;
         }
-        for (let i = 1; i < bucketCnt; i++) counters[i] += counters[i - 1];
-        for (let i = 0; i < watermarkCount; i++) depthIndex[dataCount + --counters[distances[i]]] = dataCount + i;
+        for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
+        for (let i = 0; i < watermarkCount; ++i) depthIndex[dataCount + --counters[distances[i]]] = dataCount + i;
     }
 }
 
