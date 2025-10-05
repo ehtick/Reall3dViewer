@@ -45,7 +45,7 @@ export const SpxBlockFormatSH4 = 4;
 /** 【Reall3D扩展的专属格式】the exclusive format extended by reall3d */
 export const SpxExclusiveFormatReall3d = 3141592653;
 
-/** 【排序类型】允许按不同场景选择参数，调优的参数写入meta达到个性化优化效果 */
+/** 【排序类型】允许按不同场景选择参数，调优的参数写入meta达到个性化优化效果。注意避免动态切换，否则性能有可能适得其反 */
 export enum SortTypes {
     /** 默认，按视图投影矩阵排序 */
     Default = 1,

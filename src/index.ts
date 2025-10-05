@@ -9,6 +9,7 @@ import { Reall3dViewerOptions } from './reall3d/viewer/Reall3dViewerOptions';
 import { Reall3dMapViewer } from './reall3d/mapviewer/Reall3dMapViewer';
 import { globalEv } from './reall3d/events/SetupGlobalEV';
 import { PlaytBgAudio } from './reall3d/events/EventConstants';
+import { SortTypes } from './reall3d/utils/consts/GlobalConstants';
 
 const params: URLSearchParams = new URLSearchParams(location.search);
 let url = params.get('url');
@@ -158,6 +159,12 @@ function fnClick(className: string) {
         viewer?.fire(9);
     } else if (className == 'sub-quality') {
         viewer?.fire(9, -1);
+    } else if (className == 'add-sorttype') {
+        viewer?.fire(10, 1);
+    } else if (className == 'default-sorttype') {
+        viewer?.fire(10);
+    } else if (className == 'sub-sorttype') {
+        viewer?.fire(10, -1);
     } else if (className == 'map') {
         viewer?.dispose();
         mapViewer?.dispose();
