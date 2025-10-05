@@ -10,9 +10,10 @@ import {
     GetMaxRenderCount,
     IsBigSceneMode,
     GetRenderQualityLevel,
-    WorkerUpdateQualityLevel,
+    WorkerUpdateParams,
     GetCameraPosition,
     GetCameraDirection,
+    GetSortType,
 } from '../events/EventConstants';
 import {
     WkCameraDirection,
@@ -21,6 +22,7 @@ import {
     WkIsBigSceneMode,
     WkMaxRenderCount,
     WkQualityLevel,
+    WkSortType,
     WkUpdateParams,
     WkViewProjection,
 } from '../utils/consts/WkConstants';
@@ -40,7 +42,9 @@ export function setupSorter(events: Events) {
         }),
     );
     on(WorkerDispose, () => worker.terminate());
-    on(WorkerUpdateQualityLevel, () => worker.postMessage({ [WkUpdateParams]: true, [WkQualityLevel]: fire(GetRenderQualityLevel) }));
+    on(WorkerUpdateParams, () =>
+        worker.postMessage({ [WkUpdateParams]: true, [WkQualityLevel]: fire(GetRenderQualityLevel), [WkSortType]: fire(GetSortType) }),
+    );
 
     (async () => {
         worker.postMessage({

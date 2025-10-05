@@ -54,7 +54,7 @@ export class WarpSplatMesh extends Mesh {
                 const pointcloudMode = false;
                 const depthTest = false;
                 const showWatermark = meta.showWatermark !== false;
-                const opts: SplatMeshOptions = { renderer, scene, controls, pointcloudMode, bigSceneMode, showWatermark, depthTest };
+                const opts: SplatMeshOptions = { renderer, scene, controls, pointcloudMode, bigSceneMode, showWatermark, depthTest, mapMode: true };
                 opts.maxRenderCountOfMobile ??= opts.bigSceneMode ? 128 * 10240 : 400 * 10000;
                 opts.maxRenderCountOfPc ??= opts.bigSceneMode ? 320 * 10000 : 400 * 10000;
                 opts.debugMode = (that.mapViewer.events.fire(GetOptions) as Reall3dMapViewerOptions).debugMode;

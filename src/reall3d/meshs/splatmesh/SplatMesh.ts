@@ -35,7 +35,8 @@ import {
     SplatUpdateBoundBox,
     SplatSetBoundBoxVisible,
     GetRenderQualityLevel,
-    WorkerUpdateQualityLevel,
+    WorkerUpdateParams,
+    GetSortType,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -48,7 +49,7 @@ import { setupCommonUtils } from '../../utils/CommonUtils';
 import { MetaData } from '../../modeldata/ModelData';
 import { setupSorter } from '../../sorter/SetupSorter';
 import { BoundBox } from '../boundbox/BoundBox';
-import { DefaultQualityLevel } from '../../utils/consts/GlobalConstants';
+import { DefaultQualityLevel, SortTypes } from '../../utils/consts/GlobalConstants';
 
 /**
  * Gaussian splatting mesh
@@ -89,6 +90,7 @@ export class SplatMesh extends Mesh {
         on(IsPointcloudMode, () => opts.pointcloudMode);
         on(GetSplatMesh, () => that);
         on(GetRenderQualityLevel, () => opts.qualityLevel || DefaultQualityLevel);
+        on(GetSortType, () => opts.sortType || SortTypes.Default);
 
         on(NotifyViewerNeedUpdate, () => opts.viewerEvents?.fire(ViewerNeedUpdate));
 
@@ -145,7 +147,8 @@ export class SplatMesh extends Mesh {
             opts.lightFactor !== undefined && fire(SplatUpdateLightFactor, opts.lightFactor);
             opts.maxRenderCountOfMobile !== undefined && (thisOpts.maxRenderCountOfMobile = opts.maxRenderCountOfMobile);
             opts.maxRenderCountOfPc !== undefined && (thisOpts.maxRenderCountOfPc = opts.maxRenderCountOfPc);
-            opts.qualityLevel !== undefined && (thisOpts.qualityLevel = opts.qualityLevel) && fire(WorkerUpdateQualityLevel);
+            opts.qualityLevel !== undefined && (thisOpts.qualityLevel = opts.qualityLevel) && fire(WorkerUpdateParams);
+            !thisOpts.mapMode && opts.sortType !== undefined && (thisOpts.sortType = opts.sortType) && fire(WorkerUpdateParams);
 
             fire(NotifyViewerNeedUpdate);
         }

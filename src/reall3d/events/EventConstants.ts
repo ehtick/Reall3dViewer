@@ -430,10 +430,14 @@ export const FlyingContinue = i++;
 export const FlyingPlay = i++;
 /** 取设定的渲染质量级别(1~9) */
 export const GetRenderQualityLevel = i++;
+/** 取设定的排序类型 */
+export const GetSortType = i++;
+/** 更新排序类型 */
+export const UpdateSortType = i++;
 /** 更新渲染质量级别 */
 export const UpdateQualityLevel = i++;
-/** 更新渲染质量级别 */
-export const WorkerUpdateQualityLevel = i++;
+/** 更新Worker相关参数 */
+export const WorkerUpdateParams = i++;
 
 // 以下全局单例事件对象使用
 /** 取背景音乐对象 */

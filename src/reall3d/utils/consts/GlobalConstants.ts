@@ -53,8 +53,8 @@ export enum SortTypes {
     DirWithPruneOnlyNear = 2010,
     /** 按相机方向，剔除背后数据 */
     DirWithPrune = 2011,
-    /** 按相机方向，不剔除数据，分近端远端两段排序，用以提高近端渲染精度 */
-    DirWithTwoSort = 2112,
     /** 按相机方向，剔除背后数据，分近端远端两段排序，用以提高近端渲染精度 */
     DirWithPruneTwoSort = 2012,
+    /** 按相机方向，不剔除数据，分近端远端两段排序，用以提高近端渲染精度 */
+    DirWithTwoSort = 2112,
 }

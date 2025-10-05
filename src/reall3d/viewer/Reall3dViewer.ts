@@ -62,6 +62,7 @@ import {
     OnLoadAndRenderObj,
     GetMetaMatrix,
     UpdateQualityLevel,
+    UpdateSortType,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -80,7 +81,7 @@ import { setupApi } from '../api/SetupApi';
 import { MarkData } from '../meshs/mark/data/MarkData';
 import { setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
-import { DefaultQualityLevel, isMobile, MaxQualityLevel, MinQualityLevel, ViewerVersion } from '../utils/consts/GlobalConstants';
+import { DefaultQualityLevel, isMobile, MaxQualityLevel, MinQualityLevel, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/ModelData';
 
 /**
@@ -168,6 +169,11 @@ export class Reall3dViewer {
         on(UpdateQualityLevel, (qualityLevel: number) => {
             opts.qualityLevel = qualityLevel;
             that.splatMesh.options({ qualityLevel, renderer: undefined, scene: undefined });
+        });
+
+        on(UpdateSortType, (sortType: number) => {
+            opts.sortType = sortType;
+            that.splatMesh.options({ sortType, renderer: undefined, scene: undefined });
         });
 
         scene.add(new AmbientLight('#ffffff', 2));
@@ -312,6 +318,17 @@ export class Reall3dViewer {
                 that.events.fire(UpdateQualityLevel, Math.max(MinQualityLevel, Math.min(level + p1, MaxQualityLevel)));
             }
         }
+        if (n === 10) {
+            if (!p1) {
+                that.events.fire(UpdateSortType, SortTypes.Default);
+            } else {
+                const types = [1, 2010, 2011, 2012, 2112];
+                const sortType: number = (that.events.fire(GetOptions) as Reall3dViewerOptions).sortType;
+                let idx = types.indexOf(sortType) + p1;
+                idx = Math.max(0, Math.min(idx, 4));
+                that.events.fire(UpdateSortType, types[idx]);
+            }
+        }
     }
 
     /**
@@ -342,6 +359,7 @@ export class Reall3dViewer {
             opts.qualityLevel !== undefined &&
                 (viewOpts.qualityLevel = opts.qualityLevel) &&
                 this.splatMesh.options({ qualityLevel: opts.qualityLevel } as any);
+            opts.sortType !== undefined && (viewOpts.sortType = opts.sortType) && this.splatMesh.options({ sortType: opts.sortType } as any);
 
             opts.markType !== undefined && (viewOpts.markType = opts.markType);
             if (opts.markVisible !== undefined) {
@@ -500,13 +518,16 @@ export class Reall3dViewer {
             }
         }
 
-        meta.qualityLevel = meta.qualityLevel || DefaultQualityLevel;
+        // 优先顺序： meta -> opts -> default
+        meta.qualityLevel = meta.qualityLevel || opts.qualityLevel || DefaultQualityLevel;
+        meta.sortType = meta.sortType || opts.sortType || SortTypes.Default;
+
         on(GetMeta, () => meta);
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;
 
         // 按元数据调整更新相机、标注等信息
         fire(LoadSmallSceneMetaData, meta);
-        this.options({ qualityLevel: meta.qualityLevel }); // 允许根据具体模型特点在meta中定义渲染质量级别，均衡质量性能资源
+        this.options({ qualityLevel: meta.qualityLevel, sortType: meta.sortType }); // 允许根据具体模型特点在meta中定义渲染质量级别，均衡质量性能资源
 
         // 加载模型
         if (modelOpts.format === 'obj') {

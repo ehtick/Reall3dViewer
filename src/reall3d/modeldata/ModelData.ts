@@ -236,6 +236,8 @@ export interface MetaData {
 
     /** render quality level */
     qualityLevel?: number;
+    /** sort type */
+    sortType?: number;
 
     /** Enable particle loading effect (small scenes) */
     particleMode?: boolean;

@@ -31,7 +31,7 @@ import {
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { loadFile } from '../modeldata/loaders/FileLoader';
-import { DefaultQualityLevel } from './consts/GlobalConstants';
+import { DefaultQualityLevel, SortTypes } from './consts/GlobalConstants';
 
 export function setupViewerUtils(events: Events) {
     let disposed: boolean = false;
@@ -147,6 +147,7 @@ export function initGsViewerOptions(options: Reall3dViewerOptions): Reall3dViewe
     opts.minDistance ??= 0.1;
     opts.maxDistance ??= 1000;
     opts.qualityLevel ??= DefaultQualityLevel;
+    opts.sortType ??= SortTypes.Default;
 
     return opts;
 }
@@ -213,6 +214,7 @@ export function copyGsViewerOptions(gsViewerOptions: Reall3dViewerOptions): Spla
     opts.lightFactor = gsViewerOptions.lightFactor;
     opts.shDegree = gsViewerOptions.shDegree;
     opts.qualityLevel = gsViewerOptions.qualityLevel;
+    opts.sortType = gsViewerOptions.sortType;
 
     return opts;
 }
