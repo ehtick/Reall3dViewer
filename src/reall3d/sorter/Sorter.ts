@@ -132,27 +132,28 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
     const dataCount = renderSplatCount - watermarkCount;
     const fnCalcDepth = sortType === 1 ? (qualityLevel > DefaultQualityLevel ? calcDepthByViewProjPlus : calcDepthByViewProj) : calcDepthByCameraDir;
     const sortVpOrDir = sortType === 1 ? sortViewProj : sortCameraDir;
+    const dotPos = sortCameraDir[0] * cameraPos[0] + sortCameraDir[1] * cameraPos[1] + sortCameraDir[2] * cameraPos[2];
 
-    let { maxDepth, minDepth } = calcMinMaxDepth(texture, sortVpOrDir, fnCalcDepth);
+    let { maxDepth, minDepth } = calcMinMaxDepth(texture, sortVpOrDir, fnCalcDepth, dotPos);
     if (maxDepth - minDepth <= 0.00001) {
         // 都挤一起了没必要排序
         depthIndex = new Uint32Array(renderSplatCount);
         for (let i = 0; i < dataCount; ++i) depthIndex[i] = i;
     } else if (sortType === SortTypes.DirWithPruneTwoSort) {
         // 按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量）
-        ({ depthIndex, bucketBits } = sortDirWithPruneTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir }));
+        ({ depthIndex, bucketBits } = sortDirWithPruneTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
     } else if (sortType === SortTypes.DirWithPruneOnlyNear) {
         // 按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
-        ({ depthIndex, bucketBits } = sortDirWithPruneOnlyNear({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir }));
+        ({ depthIndex, bucketBits } = sortDirWithPruneOnlyNear({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
     } else if (sortType === SortTypes.DirWithPrune) {
         // 按相机方向（剔除相机背面数据提高渲染性能）
-        ({ depthIndex, bucketBits } = sortDirWithPrune({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir }));
+        ({ depthIndex, bucketBits } = sortDirWithPrune({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
     } else if (sortType === SortTypes.DirWithTwoSort) {
         // 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量）
-        ({ depthIndex, bucketBits } = sortDirWithTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir }));
+        ({ depthIndex, bucketBits } = sortDirWithTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
     } else {
         // 默认，按视图投影矩阵排序（全量渲染）
-        ({ depthIndex, bucketBits } = sortByViewProjDefault({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir }));
+        ({ depthIndex, bucketBits } = sortByViewProjDefault({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj }));
     }
 
     // 水印，按视图投影矩阵排序
@@ -178,7 +179,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
 
 /** 按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量） */
 function sortDirWithPruneTwoSort(oArg: any) {
-    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir } = oArg;
+    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
 
     // console.time('深度计算');
     const maxDepth1 = Math.min(maxDepth, 0);
@@ -187,7 +188,7 @@ function sortDirWithPruneTwoSort(oArg: any) {
     const minDepth2 = minDepth;
     const cnts = [0, 0, 0];
     for (let i = 0; i < dataCount; ++i) {
-        depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
+        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
         tags[i] = depths[i] > 0 ? 0 : depths[i] < minDepth1 ? 2 : 1;
         cnts[tags[i]]++;
     }
@@ -233,13 +234,13 @@ function sortDirWithPruneTwoSort(oArg: any) {
 
 /** 按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能） */
 function sortDirWithPruneOnlyNear(oArg: any) {
-    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir } = oArg;
+    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
 
     const maxDepth1 = Math.min(maxDepth, 0);
     const minDepth1 = depthNearValue ? maxDepth1 - Math.abs(depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * depthNearRate;
     let nearCnt = 0;
     for (let i = 0; i < dataCount; ++i) {
-        depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
+        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
         tags[i] = ((depths[i] < 0 && depths[i] >= minDepth1) as any) | 0;
         nearCnt += tags[i];
     }
@@ -265,13 +266,13 @@ function sortDirWithPruneOnlyNear(oArg: any) {
 
 /** 按相机方向（剔除相机背面数据提高渲染性能） */
 function sortDirWithPrune(oArg: any) {
-    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir } = oArg;
+    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
 
     const maxDepth1 = Math.min(maxDepth, 0);
     const minDepth1 = minDepth;
     let frontCnt = 0;
     for (let i = 0, idx = 0; i < dataCount; ++i) {
-        depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
+        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
         tags[i] = ((depths[i] < 0) as any) | 0;
         frontCnt += tags[i];
     }
@@ -316,13 +317,13 @@ function sortDirWithPrune(oArg: any) {
 
 /** 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量） */
 function sortDirWithTwoSort(oArg: any) {
-    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir } = oArg;
+    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
 
     const maxDepth1 = Math.min(maxDepth, 0);
     const minDepth1 = depthNearValue ? maxDepth1 - Math.abs(depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * depthNearRate;
     let nearCnt = 0;
     for (let i = 0; i < dataCount; ++i) {
-        depths[i] = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
+        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
         tags[i] = ((depths[i] < 0 && depths[i] >= minDepth1) as any) | 0;
         nearCnt += tags[i];
     }
@@ -360,14 +361,14 @@ function sortDirWithTwoSort(oArg: any) {
 
 /** 默认，按视图投影矩阵排序（全量渲染） */
 function sortByViewProjDefault(oArg: any) {
-    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortVpOrDir } = oArg;
+    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj } = oArg;
 
     const depthIndex = new Uint32Array(dataCount + watermarkCount);
     let { bucketBits, bucketCnt } = getBucketCount(dataCount);
     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
     counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
     for (let i = 0, idx = 0; i < dataCount; ++i) {
-        idx = ((fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
+        idx = ((fnCalcDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
@@ -411,36 +412,36 @@ function calcDepthByViewProj(svp: number[], x: number, y: number, z: number): nu
 function calcDepthByViewProjPlus(svp: number[], x: number, y: number, z: number): number {
     return svp[2] * x + svp[6] * y + svp[10] * z + svp[14]; // 高于默认级别时使用
 }
-function calcDepthByCameraDir(dir: number[], x: number, y: number, z: number): number {
-    return dir[0] * (cameraPos[0] - x) + dir[1] * (cameraPos[1] - y) + dir[2] * (cameraPos[2] - z); // 大于0为在相机背后
+function calcDepthByCameraDir(dir: number[], x: number, y: number, z: number, dotPos: number): number {
+    return dotPos - dir[0] * x - dir[1] * y - dir[2] * z; // 大于0为在相机背后
 }
 
-function calcMinMaxDepth(texture: SplatTexdata, viewProjOrCameraDir: number[], fnDepth: Function): any {
+function calcMinMaxDepth(texture: SplatTexdata, viewProjOrCameraDir: number[], fnDepth: Function, dotPos: number): any {
     let maxDepth = -Infinity;
     let minDepth = Infinity;
     let dep = 0;
-    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.minY, texture.minZ);
+    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.minY, texture.minZ, dotPos);
     maxDepth = Math.max(maxDepth, dep);
     minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.minY, texture.maxZ);
+    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.minY, texture.maxZ, dotPos);
     maxDepth = Math.max(maxDepth, dep);
     minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.maxY, texture.minZ);
+    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.maxY, texture.minZ, dotPos);
     maxDepth = Math.max(maxDepth, dep);
     minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.maxY, texture.maxZ);
+    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.maxY, texture.maxZ, dotPos);
     maxDepth = Math.max(maxDepth, dep);
     minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.minY, texture.minZ);
+    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.minY, texture.minZ, dotPos);
     maxDepth = Math.max(maxDepth, dep);
     minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.minY, texture.maxZ);
+    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.minY, texture.maxZ, dotPos);
     maxDepth = Math.max(maxDepth, dep);
     minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.maxY, texture.minZ);
+    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.maxY, texture.minZ, dotPos);
     maxDepth = Math.max(maxDepth, dep);
     minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.maxY, texture.maxZ);
+    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.maxY, texture.maxZ, dotPos);
     maxDepth = Math.max(maxDepth, dep);
     minDepth = Math.min(minDepth, dep);
     return { maxDepth, minDepth };
