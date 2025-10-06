@@ -41,19 +41,21 @@ let texture0: SplatTexdata = { index: 0, version: 0 };
 let texture1: SplatTexdata = { index: 1, version: 0 };
 let isSorterReady: boolean = false;
 let qualityLevel: number = DefaultQualityLevel; // 1~9,默认5
+let sortType: number = SortTypes.Default;
+let maxRenderCount: number = 0;
 
 let sortRunning: boolean;
 let Epsilon: number = isMobile ? 0.5 : 0.2;
 let viewProj: number[];
 let lastViewProj: number[] = [];
-let distances: Int32Array | number[] = [];
-let depths: Float32Array | number[] = [];
-let tags: Uint8Array | number[] = [];
-let int32Tmp1: Int32Array;
-let counters: Int32Array | number[] = [];
+let distances: Int32Array = new Int32Array(0);
+let depths: Float32Array = new Float32Array(0);
+let tags: Uint8Array = new Uint8Array(0);
+let int32Tmp1: Int32Array = new Int32Array(0);
+let counters: Int32Array = new Int32Array(0);
 let cameraDir: number[];
 let cameraPos: number[];
-let sortType: number = SortTypes.Default;
+
 // let lastCameraDir: number[];
 // let lastCameraPos: number[];
 
@@ -61,30 +63,6 @@ let lastSortVersion: number = 0;
 let isBigSceneMode: boolean;
 let depthNearRate = 0.4; // 按比例计算分段(近端占比0.4是为了调试看到效果，实际应用应根据模型尺寸具体调整)
 let depthNearValue = 0; // 按设定值计算分段(设定时优先)
-
-function getBucketCount(splatCnt: number, useLevel: number = 0) {
-    // 没有数据无排序，简单返回
-    if (!splatCnt) return { bucketBits: 1, bucketCnt: 1 };
-
-    // 水印等情景允许通过参数指定级别
-    let level = useLevel ? Math.min(useLevel, qualityLevel) : qualityLevel;
-    // 按级别确定精度，达到允许自定义调整的目的，手机降低1级并控制不低于1级
-    let bucketBits = 11 + (isMobile ? Math.max(level - 1, 1) : level);
-    // 低级别时，根据数据量计算，进一步降低精度，确保至少8位不失控
-    if (level < 3) {
-        bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 32))), 8);
-    } else if (level < 4) {
-        bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 16))), 8);
-    } else if (level < 5) {
-        bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 8))), 8);
-    }
-    // 高级别时，根据数据量计算控制，避免不必要的浪费
-    if (level >= 5) {
-        bucketBits = Math.min(bucketBits, Math.round(Math.log2(splatCnt / 4)));
-    }
-
-    return { bucketBits, bucketCnt: 2 ** bucketBits };
-}
 
 function runSort(sortViewProj: number[], sortCameraDir: number[]) {
     if (!isSorterReady) return; // 尚未就绪
@@ -140,25 +118,35 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
         // 都挤一起了没必要排序
         depthIndex = new Uint32Array(renderSplatCount);
         for (let i = 0; i < dataCount; ++i) depthIndex[i] = i;
-    } else if (sortType === SortTypes.DirWithPruneTwoSort) {
-        // 按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量）
-        ({ depthIndex, bucketBits } = sortDirWithPruneTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
-    } else if (sortType === SortTypes.DirWithPruneOnlyNear) {
-        // 按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
-        let maxCnt = getBucketCount(dataCount).bucketCnt;
-        counters.length < maxCnt ? (counters = new Int32Array(maxCnt)) : counters.fill(0);
-        // prettier-ignore
-        const arg = { depths, distances, tags, counters, int32Tmp1, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
-        ({ depthIndex, bucketBits } = sortDirWithPruneOnlyNear2010(arg));
-    } else if (sortType === SortTypes.DirWithPrune) {
-        // 按相机方向（剔除相机背面数据提高渲染性能）
-        ({ depthIndex, bucketBits } = sortDirWithPrune({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
-    } else if (sortType === SortTypes.DirWithTwoSort) {
-        // 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量）
-        ({ depthIndex, bucketBits } = sortDirWithTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
     } else {
-        // 默认，按视图投影矩阵排序（全量渲染）
-        ({ depthIndex, bucketBits } = sortByViewProjDefault({ xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj }));
+        let maxCnt = getBucketCount(maxRenderCount).bucketCnt;
+        counters.length < maxCnt ? (counters = new Int32Array(maxCnt)) : counters.fill(0);
+        distances.length < maxRenderCount && (distances = new Int32Array(maxRenderCount));
+        if (sortType !== SortTypes.Default) {
+            depths.length < maxRenderCount && (depths = new Float32Array(maxRenderCount));
+            tags.length < maxRenderCount && (tags = new Uint8Array(maxRenderCount));
+        }
+
+        if (sortType === SortTypes.DirWithPruneTwoSort) {
+            // 按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量）
+            ({ depthIndex, bucketBits } = sortDirWithPruneTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
+        } else if (sortType === SortTypes.DirWithPruneOnlyNear) {
+            // 按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
+            int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
+            // prettier-ignore
+            const arg = { depths, distances, tags, counters, int32Tmp1, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
+            ({ depthIndex, bucketBits } = sortDirWithPruneOnlyNear2010(arg));
+        } else if (sortType === SortTypes.DirWithPrune) {
+            // 按相机方向（剔除相机背面数据提高渲染性能）
+            ({ depthIndex, bucketBits } = sortDirWithPrune({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
+        } else if (sortType === SortTypes.DirWithTwoSort) {
+            // 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量）
+            ({ depthIndex, bucketBits } = sortDirWithTwoSort({ xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
+        } else {
+            // 默认，按视图投影矩阵排序（全量渲染）
+            const arg = { distances, counters, xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj };
+            ({ depthIndex, bucketBits } = sortByViewProjDefault(arg));
+        }
     }
 
     // 水印，按视图投影矩阵排序
@@ -254,7 +242,7 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
     const { bucketBits, bucketCnt } = getBucketCount(nearCnt);
     const depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
     for (let i = 0, idx = 0; i < nearCnt; ++i) {
-        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
+        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0; // TODO
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
@@ -358,63 +346,19 @@ function sortDirWithTwoSort(oArg: any) {
 }
 
 /** 默认，按视图投影矩阵排序（全量渲染） */
-// function sortByViewProjDefault2(oArg: any) {
-//     const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj } = oArg;
-
-//     const depthIndex = new Uint32Array(dataCount + watermarkCount);
-//     let { bucketBits, bucketCnt } = getBucketCount(dataCount);
-//     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-//     counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
-//     for (let i = 0, idx = 0; i < dataCount; ++i) {
-//         idx = ((fnCalcDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
-//         counters[(distances[i] = idx)]++;
-//     }
-//     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-//     for (let i = 0; i < dataCount; ++i) depthIndex[--counters[distances[i]]] = i;
-
-//     return { depthIndex, bucketBits };
-// }
-
 function sortByViewProjDefault(oArg: any) {
-    const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj } = oArg;
-
+    const { distances, counters, xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj } = oArg;
     const depthIndex = new Uint32Array(dataCount + watermarkCount);
     let { bucketBits, bucketCnt } = getBucketCount(dataCount);
     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
-
-    const doSort = (objArg: any) => {
-        const { dataCount, fnCalcDepth, sortViewProj, xyz, minDepth, depthInv, counters, distances, bucketCnt, depthIndex } = objArg;
-        for (let i = 0, idx = 0; i < dataCount; ++i) {
-            idx = ((fnCalcDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
-            counters[(distances[i] = idx)]++;
-        }
-        for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-        for (let i = 0; i < dataCount; ++i) depthIndex[--counters[distances[i]]] = i;
-    };
-    doSort({ dataCount, fnCalcDepth, sortViewProj, xyz, minDepth, depthInv, counters, distances, bucketCnt, depthIndex });
-
+    for (let i = 0, idx = 0; i < dataCount; ++i) {
+        idx = ((fnCalcDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
+        counters[(distances[i] = idx)]++;
+    }
+    for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
+    for (let i = 0; i < dataCount; ++i) depthIndex[--counters[distances[i]]] = i;
     return { depthIndex, bucketBits };
 }
-
-// function sortByViewProjDefault(oArg: any) {
-//     const { xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj } = oArg;
-//     const depthIndex = new Uint32Array(dataCount + watermarkCount);
-//     let { bucketBits, bucketCnt } = getBucketCount(dataCount);
-//     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-//     counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
-//     fnSortDefault({ dataCount, fnCalcDepth, sortViewProj, xyz, minDepth, depthInv, counters, distances, bucketCnt, depthIndex });
-//     return { depthIndex, bucketBits };
-// }
-// function fnSortDefault(oArg: any) {
-//     const { dataCount, fnCalcDepth, sortViewProj, xyz, minDepth, depthInv, counters, distances, bucketCnt, depthIndex } = oArg;
-//     for (let i = 0, idx = 0; i < dataCount; ++i) {
-//         idx = ((fnCalcDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
-//         counters[(distances[i] = idx)]++;
-//     }
-//     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-//     for (let i = 0; i < dataCount; ++i) depthIndex[--counters[distances[i]]] = i;
-// }
 
 /** 水印，按视图投影矩阵排序 */
 function sortWatermark(oArg: any) {
@@ -496,6 +440,30 @@ const throttledSort = () => {
     }
 };
 
+function getBucketCount(splatCnt: number, useLevel: number = 0) {
+    // 没有数据无排序，简单返回
+    if (!splatCnt) return { bucketBits: 1, bucketCnt: 1 };
+
+    // 水印等情景允许通过参数指定级别
+    let level = useLevel ? Math.min(useLevel, qualityLevel) : qualityLevel;
+    // 按级别确定精度，达到允许自定义调整的目的，手机降低1级并控制不低于1级
+    let bucketBits = 11 + (isMobile ? Math.max(level - 1, 1) : level);
+    // 低级别时，根据数据量计算，进一步降低精度，确保至少8位不失控
+    if (level < 3) {
+        bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 32))), 8);
+    } else if (level < 4) {
+        bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 16))), 8);
+    } else if (level < 5) {
+        bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 8))), 8);
+    }
+    // 高级别时，根据数据量计算控制，避免不必要的浪费
+    if (level >= 5) {
+        bucketBits = Math.min(bucketBits, Math.round(Math.log2(splatCnt / 4)));
+    }
+
+    return { bucketBits, bucketCnt: 2 ** bucketBits };
+}
+
 worker.onmessage = (e: any) => {
     const data: any = e.data;
     if (data[WkTextureReady]) {
@@ -533,11 +501,7 @@ worker.onmessage = (e: any) => {
         depthNearValue = data[WkDepthNearValue] || depthNearValue;
     } else if (data[WkInit]) {
         isBigSceneMode = data[WkIsBigSceneMode];
-        distances = new Int32Array(data[WkMaxRenderCount]);
-        depths = new Float32Array(data[WkMaxRenderCount]);
-        tags = new Uint8Array(data[WkMaxRenderCount]);
-        int32Tmp1 = new Int32Array(data[WkMaxRenderCount]);
-        counters = new Int32Array(data[WkMaxRenderCount]);
+        maxRenderCount = data[WkMaxRenderCount];
         qualityLevel = Math.max(MinQualityLevel, Math.min(data[WkQualityLevel] || DefaultQualityLevel, MaxQualityLevel)); // 限制1~9,默认5
         sortType = data[WkSortType] || sortType;
         depthNearRate = data[WkDepthNearRate] || depthNearRate;
