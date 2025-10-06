@@ -4,6 +4,7 @@
 import { PerspectiveCamera, Renderer, Scene } from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Events } from '../events/Events';
+import { TransitionEffects } from '../meshs/splatmesh/SplatMeshOptions';
 
 /**
  * Configuration options for Reall3dViewer
@@ -198,4 +199,19 @@ export interface Reall3dViewerOptions {
      * Sort type (default to SortTypes.Default)
      */
     sortType?: number;
+
+    /**
+     * disable transition effect on load; defaults to false
+     */
+    disableTransitionEffectOnLoad?: boolean;
+
+    /**
+     * transition effect type; defaults to ModelCenterCirccle
+     */
+    transitionEffect?: TransitionEffects;
+
+    /**
+     * Auto play background audio (defaults to false)
+     */
+    autoPlayBgAudio?: boolean;
 }

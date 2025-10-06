@@ -73,19 +73,35 @@ void main() {
 
         if (!bigSceneMode && currentLightRadius > 0.0) {
             // 仅小场景支持光圈过渡效果
-            if (currentRadius < currentLightRadius && currentRadius > currentLightRadius * 0.9) {
-                eigenValue1 = eigenValueOrig1;
-                eigenValue2 = eigenValueOrig2;
-                isLightColor = true;
-            }
-            if (currentRadius < currentLightRadius * 0.9) {
-                if (pointMode) {
+            if (transitionEffect == 1) {
+                if (currentRadius < currentLightRadius && currentRadius > currentLightRadius * 0.9) {
                     eigenValue1 = eigenValueOrig1;
                     eigenValue2 = eigenValueOrig2;
-                } else {
-                    eigenValue1 = eigenValue2 = 0.5;
+                    isLightColor = true;
                 }
+                if (currentRadius < currentLightRadius * 0.9) {
+                    if (pointMode) {
+                        eigenValue1 = eigenValueOrig1;
+                        eigenValue2 = eigenValueOrig2;
+                    } else {
+                        eigenValue1 = eigenValue2 = 0.5;
+                    }
+                }
+            } else {
+                vec4 p = projectionMatrix * (modelViewMatrix * vec4(v3Cen, 1.0));
+                float currentRatio = transitionEffect == 2 ? length(p.xy / p.w) : (transitionEffect == 3 ? length(p.xx / p.w) : length(p.yy / p.w));        // 到中心距离（NDC单位）
+                float currentLightRatio = (performanceNow - performanceAct) / 500.0;
+                if (currentRatio < currentLightRatio) {
+                    if (pointMode) {
+                        eigenValue1 = eigenValueOrig1;
+                        eigenValue2 = eigenValueOrig2;
+                    } else {
+                        eigenValue1 = eigenValue2 = 0.5;
+                    }
+                }
+
             }
+
         }
     }
 

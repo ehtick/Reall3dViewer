@@ -96,4 +96,22 @@ export interface SplatMeshOptions {
      * map mode, defaults to false
      */
     mapMode?: boolean;
+
+    /**
+     * disable transition effect on load; defaults to false
+     */
+    disableTransitionEffectOnLoad?: boolean;
+
+    /**
+     * transition effect type; defaults to ModelCenterCirccle
+     */
+    transitionEffect?: TransitionEffects;
+}
+
+/** 过渡效果 */
+export enum TransitionEffects {
+    ModelCenterCirccle = 1,
+    ScreenCenterCircle = 2,
+    ScreenMiddleToLeftRight = 3,
+    ScreenMiddleToTopBottom = 4,
 }

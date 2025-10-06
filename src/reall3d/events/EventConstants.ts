@@ -438,6 +438,8 @@ export const UpdateSortType = i++;
 export const UpdateQualityLevel = i++;
 /** 更新Worker相关参数 */
 export const WorkerUpdateParams = i++;
+/** Splat更新特效类型 */
+export const SplatUpdateTransitionEffect = i++;
 
 // 以下全局单例事件对象使用
 /** 取背景音乐对象 */

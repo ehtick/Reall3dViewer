@@ -268,6 +268,7 @@ export class Reall3dViewer {
             opts.autoRotate = format !== 'obj';
             opts.maxRenderCountOfPc = 1024 * 10000;
             opts.qualityLevel = 9; // 主要目的为确认模型质量，按最高级别设置
+            opts.disableTransitionEffectOnLoad = false;
             that.reset(opts);
             if (isSceneJson) {
                 await that.addScene(url);

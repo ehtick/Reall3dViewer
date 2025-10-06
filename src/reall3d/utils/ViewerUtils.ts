@@ -28,7 +28,7 @@ import {
     OnFetchStop,
     OnLoadAndRenderObj,
 } from '../events/EventConstants';
-import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
+import { SplatMeshOptions, TransitionEffects } from '../meshs/splatmesh/SplatMeshOptions';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { loadFile } from '../modeldata/loaders/FileLoader';
 import { DefaultQualityLevel, SortTypes } from './consts/GlobalConstants';
@@ -148,6 +148,7 @@ export function initGsViewerOptions(options: Reall3dViewerOptions): Reall3dViewe
     opts.maxDistance ??= 1000;
     opts.qualityLevel ??= DefaultQualityLevel;
     opts.sortType ??= SortTypes.Default;
+    opts.transitionEffect ??= TransitionEffects.ModelCenterCirccle;
 
     return opts;
 }
@@ -215,6 +216,8 @@ export function copyGsViewerOptions(gsViewerOptions: Reall3dViewerOptions): Spla
     opts.shDegree = gsViewerOptions.shDegree;
     opts.qualityLevel = gsViewerOptions.qualityLevel;
     opts.sortType = gsViewerOptions.sortType;
+    opts.disableTransitionEffectOnLoad = !!gsViewerOptions.disableTransitionEffectOnLoad;
+    opts.transitionEffect = gsViewerOptions.transitionEffect || TransitionEffects.ModelCenterCirccle;
 
     return opts;
 }

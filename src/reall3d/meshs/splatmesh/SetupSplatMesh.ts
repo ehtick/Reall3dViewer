@@ -73,8 +73,9 @@ import {
     SplatUpdatePerformanceAct,
     OnSmallSceneShowDone,
     SplatUpdateParticleMode,
+    SplatUpdateTransitionEffect,
 } from '../../events/EventConstants';
-import { SplatMeshOptions } from './SplatMeshOptions';
+import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
     VarBigSceneMode,
     VarCurrentLightRadius,
@@ -97,6 +98,7 @@ import {
     VarSplatTexture0,
     VarSplatTexture1,
     VarTopY,
+    VarTransitionEffect,
     VarUsingIndex,
     VarViewport,
     VarWaterMarkColor,
@@ -334,6 +336,11 @@ export function setupSplatMesh(events: Events) {
             material.uniformsNeedUpdate = true;
             fire(NotifyViewerNeedUpdate);
         });
+        on(SplatUpdateTransitionEffect, (value: number) => {
+            material.uniforms[VarTransitionEffect].value = value;
+            material.uniformsNeedUpdate = true;
+            fire(NotifyViewerNeedUpdate);
+        });
         on(SplatUpdatePointMode, (isPointcloudMode: boolean) => {
             const opts: SplatMeshOptions = fire(GetOptions);
             isPointcloudMode === undefined && (isPointcloudMode = !opts.pointcloudMode);
@@ -467,6 +474,10 @@ export function setupSplatMesh(events: Events) {
     on(SplatMeshCycleZoom, async () => {
         if (fire(IsBigSceneMode)) return; // 大场景模式不支持
 
+        // 不需要这个特效时跳过
+        const opts: SplatMeshOptions = fire(GetOptions);
+        if (opts.disableTransitionEffectOnLoad) return fire(SplatUpdateCurrentVisibleRadius, 0);
+
         let stepRate = 0.01;
         let currentVisibleRadius = 0.01;
 
@@ -507,34 +518,46 @@ export function setupSplatMesh(events: Events) {
     on(SplatMeshSwitchDisplayMode, (showMark: boolean = false) => {
         if (fire(IsBigSceneMode)) return; // 大场景模式下不响应光圈过渡效果
 
-        while (arySwitchProcess.length) arySwitchProcess.pop().stop = true; // 已有的都停掉
         const opts: SplatMeshOptions = fire(GetOptions);
-        const currentLightRadius = maxRadius * 0.001;
-        let switchProcess = { currentPointMode: opts.pointcloudMode, stepRate: 0.0015, currentLightRadius, stop: false };
-        arySwitchProcess.push(switchProcess);
+        fire(SplatUpdateTransitionEffect, opts.transitionEffect); // 设定特效类型
+        if (opts.transitionEffect === TransitionEffects.ModelCenterCirccle) {
+            // 以模型中心过渡
 
-        fire(
-            RunLoopByFrame,
-            () => {
-                if (disposed) return;
-                switchProcess.currentLightRadius += maxRadius * switchProcess.stepRate; // 动态增量
-                fire(SplatUpdateCurrentLightRadius, switchProcess.currentLightRadius);
+            while (arySwitchProcess.length) arySwitchProcess.pop().stop = true; // 已有的都停掉
+            const currentLightRadius = maxRadius * 0.001;
+            let switchProcess = { currentPointMode: opts.pointcloudMode, stepRate: 0.0015, currentLightRadius, stop: false };
+            arySwitchProcess.push(switchProcess);
 
-                if (switchProcess.currentLightRadius > maxRadius) {
-                    fire(SplatUpdatePointMode, !switchProcess.currentPointMode); // 根据开始时的点云显示模式进行切换
-                    fire(SplatUpdateCurrentLightRadius, 0); // 光圈停止
-                    switchProcess.stop = true; // 主动完成
-                    arySwitchProcess.length === 1 && arySwitchProcess[0] === switchProcess && arySwitchProcess.pop();
-
-                    fire(OnSmallSceneShowDone, showMark);
-                } else if (switchProcess.currentLightRadius / maxRadius < 0.4) {
-                    switchProcess.stepRate = Math.min(switchProcess.stepRate * 1.02, 0.03); // 前半圈提速并限速
-                } else {
-                    switchProcess.stepRate *= 1.04; // 后半圈加速
-                }
-            },
-            () => !disposed && !switchProcess.stop,
-        );
+            fire(
+                RunLoopByFrame,
+                () => {
+                    if (disposed) return;
+                    switchProcess.currentLightRadius += maxRadius * switchProcess.stepRate; // 动态增量
+                    fire(SplatUpdateCurrentLightRadius, switchProcess.currentLightRadius);
+                    if (switchProcess.currentLightRadius > maxRadius) {
+                        fire(SplatUpdatePointMode, !switchProcess.currentPointMode); // 根据开始时的点云显示模式进行切换
+                        fire(SplatUpdateCurrentLightRadius, 0); // 光圈停止
+                        switchProcess.stop = true; // 主动完成
+                        arySwitchProcess.length === 1 && arySwitchProcess[0] === switchProcess && arySwitchProcess.pop();
+                        fire(OnSmallSceneShowDone, showMark);
+                    } else if (switchProcess.currentLightRadius / maxRadius < 0.4) {
+                        switchProcess.stepRate = Math.min(switchProcess.stepRate * 1.02, 0.03); // 前半圈提速并限速
+                    } else {
+                        switchProcess.stepRate *= 1.04; // 后半圈加速
+                    }
+                },
+                () => !disposed && !switchProcess.stop,
+            );
+        } else {
+            // 以屏幕中心过渡
+            fire(SplatUpdatePerformanceAct, performance.now());
+            fire(SplatUpdateCurrentLightRadius, 0.1);
+            setTimeout(() => {
+                fire(SplatUpdatePointMode); // 根据开始时的点云显示模式进行切换
+                fire(SplatUpdateCurrentLightRadius, 0); // 停止过渡
+                fire(OnSmallSceneShowDone, showMark);
+            }, 500);
+        }
     });
 
     on(OnSmallSceneShowDone, (showMark: boolean = false) => {
@@ -552,6 +575,7 @@ export function setupSplatMesh(events: Events) {
             [VarFocal]: { type: 'v2', value: new Vector2() },
             [VarViewport]: { type: 'v2', value: new Vector2() },
             [VarUsingIndex]: { type: 'int', value: 0 },
+            [VarTransitionEffect]: { type: 'int', value: 1 },
             [VarPointMode]: { type: 'bool', value: false },
             [VarDebugEffect]: { type: 'bool', value: true },
             [VarBigSceneMode]: { type: 'bool', value: false },

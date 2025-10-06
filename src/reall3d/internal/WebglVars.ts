@@ -3,6 +3,7 @@
 // ==============================================
 export const VarCurrentVisibleRadius = 'currentVisibleRadius';
 export const VarCurrentLightRadius = 'currentLightRadius';
+export const VarTransitionEffect = 'transitionEffect';
 export const VarSplatShTexture12 = 'splatShTexture12';
 export const VarSplatShTexture3 = 'splatShTexture3';
 export const VarPerformanceNow = 'performanceNow';

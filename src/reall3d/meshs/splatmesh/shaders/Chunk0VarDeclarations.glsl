@@ -9,7 +9,7 @@ precision highp int;
 
 uniform highp usampler2D splatTexture0, splatTexture1, splatShTexture12, splatShTexture3;
 uniform vec2 focal, viewport;
-uniform int usingIndex, shDegree, particleMode;
+uniform int usingIndex, shDegree, particleMode, transitionEffect;
 uniform bool pointMode, bigSceneMode, showWaterMark, debugEffect;
 uniform float topY, maxRadius, currentVisibleRadius, currentLightRadius, performanceNow, performanceAct;
 uniform vec4 markPoint, waterMarkColor;
