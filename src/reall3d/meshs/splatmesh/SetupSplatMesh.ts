@@ -123,6 +123,7 @@ import {
     WkWatermarkCount,
     WkBucketBits,
     WkSortType,
+    WkSplatIndexDone,
 } from '../../utils/consts/Index';
 import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
@@ -601,7 +602,9 @@ export function setupSplatMesh(events: Events) {
         if (data[WkSplatIndex]) {
             bucketBits = data[WkBucketBits];
             sortType = data[WkSortType];
-            fire(SplatUpdateSplatIndex, data[WkSplatIndex], data[WkIndex], data[WkSortTime], data[WkSortStartTime], data[WkRenderSplatCount]);
+            const ui32s: Uint32Array = data[WkSplatIndex];
+            fire(SplatUpdateSplatIndex, ui32s, data[WkIndex], data[WkSortTime], data[WkSortStartTime], data[WkRenderSplatCount]);
+            ui32s.length && worker.postMessage({ [WkSplatIndexDone]: ui32s }, [ui32s.buffer]);
         }
     };
 

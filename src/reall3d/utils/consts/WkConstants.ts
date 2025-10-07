@@ -7,6 +7,8 @@ let n: number = 0;
 export const WkTexdata = `$${n++}`;
 /** Splat索引 */
 export const WkSplatIndex = `$${n++}`;
+/** Splat索引传递完成 */
+export const WkSplatIndexDone = `$${n++}`;
 /** 当前模型已下载数据的最大半径 */
 export const WkCurrentMaxRadius = `$${n++}`;
 /** 模型的最大半径（小场景bin格式用） */
