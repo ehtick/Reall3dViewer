@@ -7,6 +7,7 @@
 #include ./Chunk9GetFvAlpha
 
 void main() {
+    gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
     uvec4 cen, cov3d;
     if (bigSceneMode) {
         if (usingIndex == 0) {
@@ -38,13 +39,11 @@ void main() {
     vec4 pos2d = projectionMatrix * cam;
     float clip = 1.2 * pos2d.w;
     if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip || isWatermark && (!showWaterMark || pointMode)) {
-        gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
         return;
     }
 
     float currentRadius = length(vec3(0.0, topY, 0.0) - v3Cen);
     if (currentVisibleRadius > 0.0 && currentRadius > currentVisibleRadius) {
-        gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
         return;
     }
 
@@ -123,9 +122,15 @@ void main() {
         }
     }
 
+    float diameter1 = min(sqrt(2.0 * eigenValue1), MaxPixelDiameter);
+    float diameter2 = min(sqrt(2.0 * eigenValue2), MaxPixelDiameter);
+    if (!pointMode && diameter1 < MinPixelDiameter && diameter2 < MinPixelDiameter) {
+        return;
+    }
+
     vec2 eigenVector2 = vec2(eigenVector1.y, -eigenVector1.x);
-    vec2 majorAxis = eigenVector1 * min(sqrt(2.0 * eigenValue1), 1024.0);
-    vec2 minorAxis = eigenVector2 * min(sqrt(2.0 * eigenValue2), 1024.0);
+    vec2 majorAxis = eigenVector1 * diameter1;
+    vec2 minorAxis = eigenVector2 * diameter2;
 
     vec2 v2Center = vec2(pos2d) / pos2d.w;  // NDC坐标
     gl_Position = vec4(v2Center + vPosition.x * majorAxis / viewport + vPosition.y * minorAxis / viewport, 1.0, 1.0);

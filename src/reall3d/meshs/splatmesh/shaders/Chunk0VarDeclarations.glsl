@@ -19,3 +19,6 @@ attribute uint splatIndex;
 
 varying vec4 vColor;
 varying vec3 vPosition;
+
+const float MaxPixelDiameter = 512.0; // 1024.0
+const float MinPixelDiameter = 1.0;
