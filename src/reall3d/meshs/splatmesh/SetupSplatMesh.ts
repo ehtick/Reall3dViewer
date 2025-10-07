@@ -485,10 +485,13 @@ export function setupSplatMesh(events: Events) {
     on(SplatMeshCycleZoom, async () => {
         const opts: SplatMeshOptions = fire(GetOptions);
         if (isMobile) {
-            const mobileMins = [4, 3, 3, 2, 2, 2, 1, 1, 1]; // MinPixelDiameter
-            const mobileShls = [0, 1, 2, 3, 3, 3, 3, 3, 3]; // ShDegree
-            fire(SplatUpdateMinMaxPixelDiameter, mobileMins[opts.qualityLevel - 1], 256.0);
-            fire(SplatUpdateShDegree, mobileShls[opts.qualityLevel - 1]);
+            const pixs = [4, 3, 3, 2, 2, 2, 1, 1, 1]; // MinPixelDiameter
+            const shls = [0, 1, 2, 3, 3, 3, 3, 3, 3]; // ShDegree
+            fire(SplatUpdateMinMaxPixelDiameter, pixs[opts.qualityLevel - 1], 256.0);
+            fire(SplatUpdateShDegree, shls[opts.qualityLevel - 1]);
+        } else {
+            const pixs = [128, 256, 256, 512, 512, 1024, 1024, 1024, 1024]; // MinPixelDiameter
+            fire(SplatUpdateMinMaxPixelDiameter, 1.0, pixs[opts.qualityLevel - 1]);
         }
 
         if (fire(IsBigSceneMode)) return; // 大场景模式不支持
