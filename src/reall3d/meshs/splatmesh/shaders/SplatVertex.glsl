@@ -122,9 +122,9 @@ void main() {
         }
     }
 
-    float diameter1 = min(sqrt(2.0 * eigenValue1), MaxPixelDiameter);
-    float diameter2 = min(sqrt(2.0 * eigenValue2), MaxPixelDiameter);
-    if (!pointMode && diameter1 < MinPixelDiameter && diameter2 < MinPixelDiameter) {
+    float diameter1 = min(sqrt(2.0 * eigenValue1), maxPixelDiameter);
+    float diameter2 = min(sqrt(2.0 * eigenValue2), maxPixelDiameter);
+    if (diameter1 < minPixelDiameter && diameter2 < minPixelDiameter && (pointMode && currentRadius < currentLightRadius || !pointMode && currentRadius > currentLightRadius)) {
         return;
     }
 

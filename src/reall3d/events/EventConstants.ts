@@ -374,6 +374,8 @@ export const SplatUpdatePerformanceAct = i++;
 export const OnSmallSceneShowDone = i++;
 /** 小场景粒子效果加载模式（0，1，2） */
 export const SplatUpdateParticleMode = i++;
+/** 更新最小最大像素直径限制 */
+export const SplatUpdateMinMaxPixelDiameter = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;

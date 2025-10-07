@@ -74,6 +74,7 @@ import {
     OnSmallSceneShowDone,
     SplatUpdateParticleMode,
     SplatUpdateTransitionEffect,
+    SplatUpdateMinMaxPixelDiameter,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -85,7 +86,9 @@ import {
     VarFocal,
     VarLightFactor,
     VarMarkPoint,
+    VarMaxPixelDiameter,
     VarMaxRadius,
+    VarMinPixelDiameter,
     VarParticleMode,
     VarPerformanceAct,
     VarPerformanceNow,
@@ -124,6 +127,7 @@ import {
     WkBucketBits,
     WkSortType,
     WkSplatIndexDone,
+    isMobile,
 } from '../../utils/consts/Index';
 import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
@@ -408,6 +412,12 @@ export function setupSplatMesh(events: Events) {
             material.uniformsNeedUpdate = true;
             fire(NotifyViewerNeedUpdate);
         });
+        on(SplatUpdateMinMaxPixelDiameter, (minPix: number, maxPix: number) => {
+            material.uniforms[VarMinPixelDiameter].value = minPix;
+            material.uniforms[VarMaxPixelDiameter].value = maxPix;
+            material.uniformsNeedUpdate = true;
+            fire(NotifyViewerNeedUpdate);
+        });
         on(SplatUpdateParticleMode, (value: number) => {
             material.uniforms[VarParticleMode].value = value;
             material.uniformsNeedUpdate = true;
@@ -473,10 +483,17 @@ export function setupSplatMesh(events: Events) {
 
     // 小场景圆圈扩大渐进渲染
     on(SplatMeshCycleZoom, async () => {
+        const opts: SplatMeshOptions = fire(GetOptions);
+        if (isMobile) {
+            const mobileMins = [4, 3, 3, 2, 2, 2, 1, 1, 1]; // MinPixelDiameter
+            const mobileShls = [0, 1, 2, 3, 3, 3, 3, 3, 3]; // ShDegree
+            fire(SplatUpdateMinMaxPixelDiameter, mobileMins[opts.qualityLevel - 1], 256.0);
+            fire(SplatUpdateShDegree, mobileShls[opts.qualityLevel - 1]);
+        }
+
         if (fire(IsBigSceneMode)) return; // 大场景模式不支持
 
         // 不需要这个特效时跳过
-        const opts: SplatMeshOptions = fire(GetOptions);
         if (opts.disableTransitionEffectOnLoad) return fire(SplatUpdateCurrentVisibleRadius, 0);
 
         let stepRate = 0.01;
@@ -590,6 +607,8 @@ export function setupSplatMesh(events: Events) {
             [VarParticleMode]: { type: 'int', value: 0 },
             [VarPerformanceNow]: { type: 'float', value: performance.now() },
             [VarPerformanceAct]: { type: 'float', value: 0 },
+            [VarMinPixelDiameter]: { type: 'float', value: 1.0 },
+            [VarMaxPixelDiameter]: { type: 'float', value: 1024.0 },
             [VarWaterMarkColor]: { type: 'v4', value: new Vector4(1, 1, 0, 0.5) },
             [VarShowWaterMark]: { type: 'bool', value: true },
             [VarFlagValue]: { type: 'uint', value: 1 },
