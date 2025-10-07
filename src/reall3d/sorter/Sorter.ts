@@ -51,8 +51,8 @@ let viewProj: number[];
 let lastViewProj: number[] = [];
 let distances: Int32Array = new Int32Array(0);
 let depths: Float32Array = new Float32Array(0);
-let tags: Uint8Array = new Uint8Array(0);
 let int32Tmp1: Int32Array = new Int32Array(0);
+let int32Tmp2: Int32Array = new Int32Array(0);
 let counters: Int32Array = new Int32Array(0);
 let splatIndexPool: Uint32Array[] = [];
 let cameraDir: number[];
@@ -118,34 +118,39 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
         // 都挤一起了没必要排序
         for (let i = 0; i < dataCount; ++i) depthIndex[i] = i;
     } else {
-        let maxCnt = getBucketCount(maxRenderCount).bucketCnt;
-        counters.length < maxCnt ? (counters = new Int32Array(maxCnt)) : counters.fill(0);
+        let maxBucketCnt = getBucketCount(maxRenderCount).bucketCnt;
+        counters.length < maxBucketCnt ? (counters = new Int32Array(maxBucketCnt)) : counters.fill(0);
         distances.length < maxRenderCount && (distances = new Int32Array(maxRenderCount));
-        if (sortType !== SortTypes.Default) {
-            depths.length < maxRenderCount && (depths = new Float32Array(maxRenderCount));
-            tags.length < maxRenderCount && (tags = new Uint8Array(maxRenderCount));
-        }
+        sortType !== SortTypes.Default && depths.length < maxRenderCount && (depths = new Float32Array(maxRenderCount));
 
-        if (sortType === SortTypes.DirWithPruneTwoSort) {
-            // 按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量）
-            ({ renderCount, bucketBits } = sortDirWithPruneTwoSort({ depthIndex, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
-        } else if (sortType === SortTypes.DirWithPruneOnlyNear) {
-            // 按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
+        if (sortType === SortTypes.DirWithPruneOnlyNear) {
+            // 【2010】按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
             int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
             // prettier-ignore
-            const arg = { depthIndex, depths, distances, tags, counters, int32Tmp1, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
+            const arg = { depthIndex, depths, distances, counters, int32Tmp1, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
             ({ renderCount, bucketBits } = sortDirWithPruneOnlyNear2010(arg));
         } else if (sortType === SortTypes.DirWithPrune) {
-            // 按相机方向（剔除相机背面数据提高渲染性能）
+            // 【2011】按相机方向（剔除相机背面数据提高渲染性能）
             int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
             // prettier-ignore
-            const arg = { depthIndex, depths, distances, tags, counters, int32Tmp1, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
+            const arg = { depthIndex, depths, distances, counters, int32Tmp1, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
             ({ renderCount, bucketBits } = sortDirWithPrune2011(arg));
+        } else if (sortType === SortTypes.DirWithPruneTwoSort) {
+            // 【2012】按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量）
+            int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
+            int32Tmp2.length < maxRenderCount && (int32Tmp2 = new Int32Array(maxRenderCount));
+            // prettier-ignore
+            const arg = { depthIndex, depths, distances, counters, int32Tmp1, int32Tmp2, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
+            ({ renderCount, bucketBits } = sortDirWithPruneTwoSort2012(arg));
         } else if (sortType === SortTypes.DirWithTwoSort) {
-            // 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量）
-            ({ renderCount, bucketBits } = sortDirWithTwoSort({ depthIndex, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir }));
+            // 【2112】按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量）
+            int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
+            int32Tmp2.length < maxRenderCount && (int32Tmp2 = new Int32Array(maxRenderCount));
+            // prettier-ignore
+            const arg = { depthIndex, depths, distances, counters, int32Tmp1, int32Tmp2, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
+            ({ renderCount, bucketBits } = sortDirWithTwoSort2112(arg));
         } else {
-            // 默认，按视图投影矩阵排序（全量渲染）
+            // 【1】默认，按视图投影矩阵排序（全量渲染）
             const arg = { depthIndex, distances, counters, xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj };
             ({ renderCount, bucketBits } = sortByViewProjDefault(arg));
         }
@@ -172,73 +177,16 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
     );
 }
 
-/** 按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量） */
-function sortDirWithPruneTwoSort(oArg: any) {
-    const { depthIndex, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
-
-    // console.time('深度计算');
-    const maxDepth1 = Math.min(maxDepth, 0);
-    const minDepth1 = depthNearValue ? maxDepth1 - Math.abs(depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * depthNearRate;
-    const maxDepth2 = minDepth1;
-    const minDepth2 = minDepth;
-    const cnts = [0, 0, 0];
-    for (let i = 0; i < dataCount; ++i) {
-        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
-        tags[i] = depths[i] > 0 ? 0 : depths[i] < minDepth1 ? 2 : 1;
-        cnts[tags[i]]++;
-    }
-    // console.timeEnd('深度计算');
-    // 分段
-    // console.time('分段');
-    const cnt1 = cnts[1];
-    const cnt2 = cnts[2];
-    const dataIdx1 = new Uint32Array(cnt1);
-    const dataIdx2 = new Uint32Array(cnt2);
-    const fns = [() => {}, (i: number, v: number) => (dataIdx1[i] = v), (i: number, v: number) => (dataIdx2[i] = v)];
-    const idxs: number[] = [0, 0, 0];
-    for (let i = 0; i < dataCount; ++i) fns[tags[i]](idxs[tags[i]]++, i);
-    // console.timeEnd('分段');
-    // 远端排序
-    // console.time('远端排序');
-    const renderCount = cnt1 + cnt2 + watermarkCount;
-    let { bucketBits, bucketCnt } = getBucketCount(cnt2);
-    let depthInv: number = (bucketCnt - 1) / (maxDepth2 - minDepth2);
-    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
-    for (let i = 0, idx = 0; i < cnt2; ++i) {
-        idx = ((depths[dataIdx2[i]] - minDepth2) * depthInv) | 0;
-        counters[(distances[i] = idx)]++;
-    }
-    for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < cnt2; ++i) depthIndex[--counters[distances[i]]] = dataIdx2[i];
-    // console.timeEnd('远端排序');
-    // 近端排序
-    // console.time('近端排序');
-    ({ bucketCnt } = getBucketCount(cnt1));
-    depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
-    for (let i = 0, idx = 0; i < cnt1; ++i) {
-        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
-        counters[(distances[i] = idx)]++;
-    }
-    for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < cnt1; ++i) depthIndex[--counters[distances[i]] + cnt2] = dataIdx1[i];
-    // console.timeEnd('近端排序');
-
-    return { renderCount, bucketBits };
-}
-
 /** 按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能） */
 function sortDirWithPruneOnlyNear2010(oArg: any) {
-    const { depthIndex, depths, distances, tags, counters, int32Tmp1: dataIdx1, xyz, dataCount, watermarkCount, minDepth, dotPos, sortCameraDir } = oArg;
+    const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, xyz, dataCount, watermarkCount, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(oArg.maxDepth, 0);
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
     let nearCnt = 0;
-    for (let i = 0, tag = 0; i < dataCount; ++i) {
+    for (let i = 0; i < dataCount; ++i) {
         depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
-        tag = ((depths[i] < 0 && depths[i] >= minDepth1) as any) | 0;
-        tags[i] = tag;
         dataIdx1[nearCnt] = i;
-        nearCnt += tag;
+        nearCnt += ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
     }
     const renderCount = nearCnt + watermarkCount;
     const { bucketBits, bucketCnt } = getBucketCount(nearCnt);
@@ -254,90 +202,98 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
 
 /** 按相机方向（剔除相机背面数据提高渲染性能） */
 function sortDirWithPrune2011(oArg: any) {
-    const { depthIndex, depths, distances, tags, counters, int32Tmp1: dataIdx1, xyz, dataCount, watermarkCount, minDepth, dotPos, sortCameraDir } = oArg;
+    const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, xyz, dataCount, watermarkCount, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(oArg.maxDepth, 0);
-    const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
     let frontCnt = 0;
-    for (let i = 0, tag = 0; i < dataCount; ++i) {
+    for (let i = 0; i < dataCount; ++i) {
         depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
-        tag = ((depths[i] < 0) as any) | 0;
-        tags[i] = tag;
         dataIdx1[frontCnt] = i;
-        frontCnt += tag;
+        frontCnt += ((depths[i] <= 0) as any) | 0;
     }
     const renderCount = frontCnt + watermarkCount;
     const { bucketBits, bucketCnt } = getBucketCount(frontCnt);
-    const depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
+    const depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth);
     for (let i = 0, idx = 0; i < frontCnt; ++i) {
-        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0; // TODO
+        idx = ((depths[dataIdx1[i]] - minDepth) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
     for (let i = 0; i < frontCnt; ++i) depthIndex[--counters[distances[i]]] = dataIdx1[i];
     return { renderCount, bucketBits };
-
-    // maxDepth = Math.min(maxDepth, 0);
-    // let obucket = getBucketCount(dataCount);
-    // bucketBits = obucket.bucketBits;
-    // let bucketCnt = obucket.bucketCnt;
-    // let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-    // counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
-    // let pruneCnt = 0;
-    // for (let i = 0, idx = 0, depth = 0; i < dataCount; ++i) {
-    //     depth = fnCalcDepth(sortVpOrDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
-    //     idx = ((depth - minDepth) * depthInv) | 0;
-    //     counters[(distances[i] = idx)]++;
-    //     tags[i] = ((depth > 0) as any) | 0;
-    //     pruneCnt += tags[i];
-    // }
-    // for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    // depthIndex = new Uint32Array(dataCount - pruneCnt + watermarkCount);
-    // const tgts: Uint32Array[] = [depthIndex, new Uint32Array(0)];
-    // for (let i = 0; i < dataCount; ++i) tgts[tags[i]][--counters[distances[i]]] = i;
-    // return { renderCount, bucketBits };
 }
 
-/** 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量） */
-function sortDirWithTwoSort(oArg: any) {
-    const { depthIndex, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
-
+/** 按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量） */
+function sortDirWithPruneTwoSort2012(oArg: any) {
+    // prettier-ignore
+    const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, int32Tmp2: dataIdx2, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(maxDepth, 0);
-    const minDepth1 = depthNearValue ? maxDepth1 - Math.abs(depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * depthNearRate;
-    let nearCnt = 0;
-    for (let i = 0; i < dataCount; ++i) {
+    const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
+    let cnt1 = 0;
+    let cnt2 = 0;
+    for (let i = 0, tag1 = 0, tag2 = 0; i < dataCount; ++i) {
         depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
-        tags[i] = ((depths[i] < 0 && depths[i] >= minDepth1) as any) | 0;
-        nearCnt += tags[i];
+        dataIdx1[cnt1] = i;
+        dataIdx2[cnt2] = i;
+        tag1 = ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
+        tag2 = ((depths[i] < minDepth1) as any) | 0;
+        cnt1 += tag1;
+        cnt2 += tag2;
     }
-    // 分段
-    const cnt2 = dataCount - nearCnt;
-    const dataIdx1 = new Uint32Array(nearCnt);
-    const dataIdx2 = new Uint32Array(cnt2);
-    const dataIdxs = [dataIdx2, dataIdx1];
-    const idxs: number[] = [0, 0];
-    for (let i = 0; i < dataCount; ++i) dataIdxs[tags[i]][idxs[tags[i]]++] = i;
-    const renderCount = dataCount + watermarkCount;
-    // 远端排序
+    const renderCount = cnt1 + cnt2 + watermarkCount;
     let { bucketBits, bucketCnt } = getBucketCount(cnt2);
-    let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
+    let depthInv: number = (bucketCnt - 1) / (minDepth1 - minDepth);
     for (let i = 0, idx = 0; i < cnt2; ++i) {
         idx = ((depths[dataIdx2[i]] - minDepth) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
     for (let i = 0; i < cnt2; ++i) depthIndex[--counters[distances[i]]] = dataIdx2[i];
-    // 近端排序
-    bucketCnt = getBucketCount(nearCnt).bucketCnt; // 按配置级别
+    counters.fill(0);
+    bucketCnt = getBucketCount(cnt1).bucketCnt;
     depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
-    for (let i = 0, idx = 0; i < nearCnt; ++i) {
+    for (let i = 0, idx = 0; i < cnt1; ++i) {
         idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < nearCnt; ++i) depthIndex[--counters[distances[i]] + cnt2] = dataIdx1[i];
+    for (let i = 0; i < cnt1; ++i) depthIndex[--counters[distances[i]] + cnt2] = dataIdx1[i];
+    return { renderCount, bucketBits };
+}
 
+/** 按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量） */
+function sortDirWithTwoSort2112(oArg: any) {
+    // prettier-ignore
+    const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, int32Tmp2: dataIdx2, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
+    const maxDepth1 = Math.min(maxDepth, 0);
+    const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
+    let cnt1 = 0;
+    let cnt2 = 0;
+    for (let i = 0, tag1 = 0; i < dataCount; ++i) {
+        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
+        dataIdx1[cnt1] = i;
+        dataIdx2[cnt2] = i;
+        tag1 = ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
+        cnt1 += tag1;
+        cnt2 += tag1 ^ 1;
+    }
+    const renderCount = cnt1 + cnt2 + watermarkCount;
+    let { bucketBits, bucketCnt } = getBucketCount(cnt2);
+    let depthInv: number = (bucketCnt - 1) / (minDepth1 - minDepth);
+    for (let i = 0, idx = 0; i < cnt2; ++i) {
+        idx = ((depths[dataIdx2[i]] - minDepth) * depthInv) | 0;
+        counters[(distances[i] = idx)]++;
+    }
+    for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
+    for (let i = 0; i < cnt2; ++i) depthIndex[--counters[distances[i]]] = dataIdx2[i];
+    counters.fill(0);
+    bucketCnt = getBucketCount(cnt1).bucketCnt;
+    depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
+    for (let i = 0, idx = 0; i < cnt1; ++i) {
+        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
+        counters[(distances[i] = idx)]++;
+    }
+    for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
+    for (let i = 0; i < cnt1; ++i) depthIndex[--counters[distances[i]] + cnt2] = dataIdx1[i];
     return { renderCount, bucketBits };
 }
 
