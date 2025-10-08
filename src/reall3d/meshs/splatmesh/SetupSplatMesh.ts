@@ -80,6 +80,7 @@ import {
     WorkerUpdateParams,
     GetSplatMesh,
     IsSplatMeshCreated,
+    SplatUpdateUseProfileExp,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -108,6 +109,7 @@ import {
     VarSplatTexture1,
     VarTopY,
     VarTransitionEffect,
+    VarUseProfileExp,
     VarUsingIndex,
     VarViewport,
     VarWaterMarkColor,
@@ -431,6 +433,11 @@ export function setupSplatMesh(events: Events) {
             material.uniformsNeedUpdate = true;
             fire(NotifyViewerNeedUpdate);
         });
+        on(SplatUpdateUseProfileExp, (useProfileExp: boolean = false) => {
+            material.uniforms[VarUseProfileExp].value = useProfileExp;
+            material.uniformsNeedUpdate = true;
+            fire(NotifyViewerNeedUpdate);
+        });
         on(SplatUpdateParticleMode, (value: number) => {
             material.uniforms[VarParticleMode].value = value;
             material.uniformsNeedUpdate = true;
@@ -509,6 +516,7 @@ export function setupSplatMesh(events: Events) {
             const maxPix = meta.maxPixelDiameter || (level < 4 ? 128 : level > 6 ? 512 : 256);
             fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
             fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
+            fire(SplatUpdateUseProfileExp, false);
         } else {
             const maxPixs = [128, 256, 256, 512, 512, 1024, 1024, 1024, 1024];
             const minAlphas = [5, 4, 3, 2, 2, 1, 1, 1, 1];
@@ -516,6 +524,7 @@ export function setupSplatMesh(events: Events) {
             const maxPix = meta.maxPixelDiameter || maxPixs[level - 1];
             fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
             fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
+            fire(SplatUpdateUseProfileExp, level > 6);
         }
         fire(WorkerUpdateParams);
     });
@@ -644,6 +653,7 @@ export function setupSplatMesh(events: Events) {
             [VarMinAlpha]: { type: 'float', value: 2 / 255 },
             [VarWaterMarkColor]: { type: 'v4', value: new Vector4(1, 1, 0, 0.5) },
             [VarShowWaterMark]: { type: 'bool', value: true },
+            [VarUseProfileExp]: { type: 'bool', value: true },
             [VarFlagValue]: { type: 'uint', value: 1 },
         };
     });

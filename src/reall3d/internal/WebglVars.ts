@@ -12,6 +12,7 @@ export const VarPerformanceNow = 'performanceNow';
 export const VarPerformanceAct = 'performanceAct';
 export const VarWaterMarkColor = 'waterMarkColor';
 export const VarShowWaterMark = 'showWaterMark';
+export const VarUseProfileExp = 'useProfileExp';
 export const VarSplatTexture0 = 'splatTexture0';
 export const VarSplatTexture1 = 'splatTexture1';
 export const VarParticleMode = 'particleMode';
