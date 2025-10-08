@@ -75,6 +75,7 @@ import {
     SplatUpdateParticleMode,
     SplatUpdateTransitionEffect,
     SplatUpdateMinMaxPixelDiameter,
+    SplatUpdateMinAlpha,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -88,6 +89,7 @@ import {
     VarMarkPoint,
     VarMaxPixelDiameter,
     VarMaxRadius,
+    VarMinAlpha,
     VarMinPixelDiameter,
     VarParticleMode,
     VarPerformanceAct,
@@ -418,6 +420,11 @@ export function setupSplatMesh(events: Events) {
             material.uniformsNeedUpdate = true;
             fire(NotifyViewerNeedUpdate);
         });
+        on(SplatUpdateMinAlpha, (minAlpha: number) => {
+            material.uniforms[VarMinAlpha].value = Math.min(Math.max(0, minAlpha), 255) / 255;
+            material.uniformsNeedUpdate = true;
+            fire(NotifyViewerNeedUpdate);
+        });
         on(SplatUpdateParticleMode, (value: number) => {
             material.uniforms[VarParticleMode].value = value;
             material.uniformsNeedUpdate = true;
@@ -484,14 +491,18 @@ export function setupSplatMesh(events: Events) {
     // 小场景圆圈扩大渐进渲染
     on(SplatMeshCycleZoom, async () => {
         const opts: SplatMeshOptions = fire(GetOptions);
+        const maxShDegrees = [0, 1, 2, 3, 3, 3, 3, 3, 3];
+        fire(SplatUpdateShDegree, maxShDegrees[opts.qualityLevel - 1]);
         if (isMobile) {
-            const pixs = [4, 3, 3, 2, 2, 2, 1, 1, 1]; // MinPixelDiameter
-            const shls = [0, 1, 2, 3, 3, 3, 3, 3, 3]; // ShDegree
-            fire(SplatUpdateMinMaxPixelDiameter, pixs[opts.qualityLevel - 1], 256.0);
-            fire(SplatUpdateShDegree, shls[opts.qualityLevel - 1]);
+            const minPixs = [4, 3, 3, 2, 2, 2, 1, 1, 1];
+            const minAlphas = [7, 6, 5, 4, 4, 3, 2, 2, 2];
+            fire(SplatUpdateMinMaxPixelDiameter, minPixs[opts.qualityLevel - 1], 256.0);
+            fire(SplatUpdateMinAlpha, minAlphas[opts.qualityLevel - 1]);
         } else {
-            const pixs = [128, 256, 256, 512, 512, 1024, 1024, 1024, 1024]; // MinPixelDiameter
-            fire(SplatUpdateMinMaxPixelDiameter, 1.0, pixs[opts.qualityLevel - 1]);
+            const maxPixs = [128, 256, 256, 512, 512, 1024, 1024, 1024, 1024];
+            const minAlphas = [5, 4, 3, 2, 2, 1, 1, 1, 1];
+            fire(SplatUpdateMinMaxPixelDiameter, 1.0, maxPixs[opts.qualityLevel - 1]);
+            fire(SplatUpdateMinAlpha, minAlphas[opts.qualityLevel - 1]);
         }
 
         if (fire(IsBigSceneMode)) return; // 大场景模式不支持
@@ -612,6 +623,7 @@ export function setupSplatMesh(events: Events) {
             [VarPerformanceAct]: { type: 'float', value: 0 },
             [VarMinPixelDiameter]: { type: 'float', value: 1.0 },
             [VarMaxPixelDiameter]: { type: 'float', value: 1024.0 },
+            [VarMinAlpha]: { type: 'float', value: 2 / 255 },
             [VarWaterMarkColor]: { type: 'v4', value: new Vector4(1, 1, 0, 0.5) },
             [VarShowWaterMark]: { type: 'bool', value: true },
             [VarFlagValue]: { type: 'uint', value: 1 },

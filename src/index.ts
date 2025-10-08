@@ -27,7 +27,6 @@ if (url) {
 } else {
     viewer = new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
     viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.spx`);
-    // viewer.addModel(`https://reall3d.com/demo-models/tijerin-hobbit-2.5m.spx`);
 
     // viewer.addModel(`https://reall3d.com/demo-models/sogv1/v1.sog`);
     // viewer.addModel(`https://reall3d.com/demo-models/sogv1/meta.json`);

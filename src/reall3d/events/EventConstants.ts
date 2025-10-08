@@ -376,6 +376,8 @@ export const OnSmallSceneShowDone = i++;
 export const SplatUpdateParticleMode = i++;
 /** 更新最小最大像素直径限制 */
 export const SplatUpdateMinMaxPixelDiameter = i++;
+/** 更新最低可渲染透明度(0~255) */
+export const SplatUpdateMinAlpha = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;

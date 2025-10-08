@@ -22,9 +22,10 @@ void main() {
         cov3d = texelFetch(splatTexture0, ivec2(((splatIndex & 0x3ffu) << 1) | 1u, splatIndex >> 10), 0);
     }
 
-    float fvAlpha = getFvAlpha(cen);
-    if (fvAlpha <= 0.0)
+    float colorA = (float(cov3d.w >> 24) / 255.0) * getFvAlpha(cen);
+    if (colorA < minAlpha) {
         return;
+    }
 
     bool isWatermark = (cen.w & 65536u) > 0u;
     vec3 v3Cen = uintBitsToFloat(cen.xyz);
@@ -37,7 +38,7 @@ void main() {
 
     vec4 cam = modelViewMatrix * vec4(v3Cen, 1.0);
     vec4 pos2d = projectionMatrix * cam;
-    float clip = 1.2 * pos2d.w;
+    float clip = 1.0 * pos2d.w;
     if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip || isWatermark && (!showWaterMark || pointMode)) {
         return;
     }
@@ -116,7 +117,7 @@ void main() {
     } else if (isWatermark) {
         vColor = waterMarkColor;
     } else {
-        vColor = vec4(float(cov3d.w & 0xFFu) / 255.0, float((cov3d.w >> 8) & 0xFFu) / 255.0, float((cov3d.w >> 16) & 0xFFu) / 255.0, (float(cov3d.w >> 24) / 255.0) * fvAlpha);
+        vColor = vec4(float(cov3d.w & 0xFFu) / 255.0, float((cov3d.w >> 8) & 0xFFu) / 255.0, float((cov3d.w >> 16) & 0xFFu) / 255.0, colorA);
         if (shDegree > 0) {
             vColor.rgb += splatEvalSH(v3Cen);
         }
