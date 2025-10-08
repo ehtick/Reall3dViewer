@@ -15,7 +15,6 @@ float getFvAlpha(uvec4 cen) {
         } else if (fvSplat == fvHide) {
             fvAlpha = 1.0 - clamp((performanceNow - performanceAct) / 2000.0, 0.0, 1.0);
         } else {
-            gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
             fvAlpha = 0.0;
         }
     }

@@ -7,7 +7,6 @@
 #include ./Chunk9GetFvAlpha
 
 void main() {
-    gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
     uvec4 cen, cov3d;
     if (bigSceneMode) {
         if (usingIndex == 0) {
@@ -24,6 +23,7 @@ void main() {
 
     float colorA = (float(cov3d.w >> 24) / 255.0) * getFvAlpha(cen);
     if (colorA < minAlpha) {
+        vColor = vec4(0.0);
         return;
     }
 
@@ -40,11 +40,13 @@ void main() {
     vec4 pos2d = projectionMatrix * cam;
     float clip = 1.05 * pos2d.w;
     if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip || isWatermark && (!showWaterMark || pointMode)) {
+        vColor = vec4(0.0);
         return;
     }
 
     float currentRadius = length(vec3(0.0, topY, 0.0) - v3Cen);
     if (currentVisibleRadius > 0.0 && currentRadius > currentVisibleRadius) {
+        vColor = vec4(0.0);
         return;
     }
 
@@ -60,8 +62,9 @@ void main() {
     cov2d[0][0] += 0.3;
     cov2d[1][1] += 0.3;
     vec3 cov2Dv = vec3(cov2d[0][0], cov2d[0][1], cov2d[1][1]);
-    float eigenValue1 = 0.5 * (cov2Dv.x + cov2Dv.z) + sqrt((cov2Dv.x + cov2Dv.z) * (cov2Dv.x + cov2Dv.z) / 4.0 - (cov2Dv.x * cov2Dv.z - cov2Dv.y * cov2Dv.y));
-    float eigenValue2 = max(0.5 * (cov2Dv.x + cov2Dv.z) - sqrt((cov2Dv.x + cov2Dv.z) * (cov2Dv.x + cov2Dv.z) / 4.0 - (cov2Dv.x * cov2Dv.z - cov2Dv.y * cov2Dv.y)), 0.0);
+    float disc = max(0.0, (cov2Dv.x + cov2Dv.z) * (cov2Dv.x + cov2Dv.z) / 4.0 - (cov2Dv.x * cov2Dv.z - cov2Dv.y * cov2Dv.y));
+    float eigenValue1 = 0.5 * (cov2Dv.x + cov2Dv.z) + sqrt(disc);
+    float eigenValue2 = max(0.5 * (cov2Dv.x + cov2Dv.z) - sqrt(disc), 0.0);
     float eigenValueOrig1 = eigenValue1;
     float eigenValueOrig2 = eigenValue2;
 
@@ -126,6 +129,7 @@ void main() {
     float diameter1 = min(sqrt(2.0 * eigenValue1), maxPixelDiameter);
     float diameter2 = min(sqrt(2.0 * eigenValue2), maxPixelDiameter);
     if (diameter1 < minPixelDiameter && diameter2 < minPixelDiameter && (pointMode && currentRadius < currentLightRadius || !pointMode && currentRadius > currentLightRadius)) {
+        vColor = vec4(0.0);
         return;
     }
 
