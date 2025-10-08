@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { AudioLoader, AudioListener, Audio } from 'three';
-import { GetBgAudio, PlaytBgAudio, SetBgAudioVolumeDown, SetBgAudioVolumeUp } from '../events/EventConstants';
+import { GetBgAudio, PlaytBgAudio, SetBgAudioVolumeDown, SetBgAudioVolumeUp, StopBgAudio } from '../events/EventConstants';
 import { loadFile } from '../modeldata/loaders/FileLoader';
 import { loopByTime } from '../utils/CommonUtils';
 import { Events } from './Events';
@@ -34,6 +34,12 @@ export const globalEv: Events = (() => {
             },
             () => reslove(false),
         );
+    });
+
+    ev.on(StopBgAudio, () => {
+        const audioBg = getBackgroundAudio();
+        if (!audioBg.isPlaying) return;
+        audioBg.stop();
     });
 
     ev.on(SetBgAudioVolumeDown, () => {

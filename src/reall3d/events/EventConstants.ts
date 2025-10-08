@@ -460,3 +460,5 @@ export const PlaytBgAudio = i++;
 export const SetBgAudioVolumeDown = i++;
 /** 背景音乐音量渐进调大 */
 export const SetBgAudioVolumeUp = i++;
+/** 停止背景音乐 */
+export const StopBgAudio = i++;
