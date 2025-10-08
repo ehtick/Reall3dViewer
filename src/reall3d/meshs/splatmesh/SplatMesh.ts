@@ -37,6 +37,7 @@ import {
     GetRenderQualityLevel,
     WorkerUpdateParams,
     GetSortType,
+    OnQualityLevelChanged,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -147,7 +148,7 @@ export class SplatMesh extends Mesh {
             opts.lightFactor !== undefined && fire(SplatUpdateLightFactor, opts.lightFactor);
             opts.maxRenderCountOfMobile !== undefined && (thisOpts.maxRenderCountOfMobile = opts.maxRenderCountOfMobile);
             opts.maxRenderCountOfPc !== undefined && (thisOpts.maxRenderCountOfPc = opts.maxRenderCountOfPc);
-            opts.qualityLevel !== undefined && (thisOpts.qualityLevel = opts.qualityLevel) && fire(WorkerUpdateParams);
+            opts.qualityLevel !== undefined && (thisOpts.qualityLevel = opts.qualityLevel) && fire(OnQualityLevelChanged);
             !thisOpts.mapMode && opts.sortType !== undefined && (thisOpts.sortType = opts.sortType) && fire(WorkerUpdateParams);
 
             fire(NotifyViewerNeedUpdate);

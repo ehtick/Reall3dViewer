@@ -76,6 +76,8 @@ import {
     SplatUpdateTransitionEffect,
     SplatUpdateMinMaxPixelDiameter,
     SplatUpdateMinAlpha,
+    OnQualityLevelChanged,
+    WorkerUpdateParams,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -488,26 +490,32 @@ export function setupSplatMesh(events: Events) {
         fire(SplatMaterialDispose);
     });
 
-    // 小场景圆圈扩大渐进渲染
-    on(SplatMeshCycleZoom, async () => {
+    on(OnQualityLevelChanged, () => {
         const opts: SplatMeshOptions = fire(GetOptions);
+        const level: number = opts.qualityLevel;
         const maxShDegrees = [0, 1, 2, 3, 3, 3, 3, 3, 3];
-        fire(SplatUpdateShDegree, maxShDegrees[opts.qualityLevel - 1]);
+        fire(SplatUpdateShDegree, maxShDegrees[level - 1]);
         if (isMobile) {
             const minPixs = [4, 3, 3, 2, 2, 2, 1, 1, 1];
             const minAlphas = [7, 6, 5, 4, 4, 3, 2, 2, 2];
-            fire(SplatUpdateMinMaxPixelDiameter, minPixs[opts.qualityLevel - 1], 256.0);
-            fire(SplatUpdateMinAlpha, minAlphas[opts.qualityLevel - 1]);
+            fire(SplatUpdateMinMaxPixelDiameter, minPixs[level - 1], level < 4 ? 128 : level > 6 ? 512 : 256);
+            fire(SplatUpdateMinAlpha, minAlphas[level - 1]);
         } else {
             const maxPixs = [128, 256, 256, 512, 512, 1024, 1024, 1024, 1024];
             const minAlphas = [5, 4, 3, 2, 2, 1, 1, 1, 1];
-            fire(SplatUpdateMinMaxPixelDiameter, 1.0, maxPixs[opts.qualityLevel - 1]);
-            fire(SplatUpdateMinAlpha, minAlphas[opts.qualityLevel - 1]);
+            fire(SplatUpdateMinMaxPixelDiameter, level < 4 ? 2 : 1, maxPixs[level - 1]);
+            fire(SplatUpdateMinAlpha, minAlphas[level - 1]);
         }
+        fire(WorkerUpdateParams);
+    });
 
+    // 小场景圆圈扩大渐进渲染
+    on(SplatMeshCycleZoom, async () => {
+        fire(OnQualityLevelChanged);
         if (fire(IsBigSceneMode)) return; // 大场景模式不支持
 
         // 不需要这个特效时跳过
+        const opts: SplatMeshOptions = fire(GetOptions);
         if (opts.disableTransitionEffectOnLoad) return fire(SplatUpdateCurrentVisibleRadius, 0);
 
         let stepRate = 0.01;
