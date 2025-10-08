@@ -38,7 +38,7 @@ void main() {
 
     vec4 cam = modelViewMatrix * vec4(v3Cen, 1.0);
     vec4 pos2d = projectionMatrix * cam;
-    float clip = 1.0 * pos2d.w;
+    float clip = 1.05 * pos2d.w;
     if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip || isWatermark && (!showWaterMark || pointMode)) {
         return;
     }

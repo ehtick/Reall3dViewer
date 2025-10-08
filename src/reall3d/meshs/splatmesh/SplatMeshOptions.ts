@@ -106,6 +106,21 @@ export interface SplatMeshOptions {
      * transition effect type; defaults to ModelCenterCirccle
      */
     transitionEffect?: TransitionEffects;
+
+    /**
+     * 最小可渲染直径像素
+     */
+    minPixelDiameter?: number;
+
+    /**
+     * 最大直径像素
+     */
+    maxPixelDiameter?: number;
+
+    /**
+     * 最小可渲染透明度
+     */
+    minAlpha?: number;
 }
 
 /** 过渡效果 */

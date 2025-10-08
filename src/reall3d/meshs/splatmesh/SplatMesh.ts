@@ -38,6 +38,7 @@ import {
     WorkerUpdateParams,
     GetSortType,
     OnQualityLevelChanged,
+    IsSplatMeshCreated,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -73,6 +74,7 @@ export class SplatMesh extends Mesh {
         const events = new Events();
         const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
         const fire = (key: number, ...args: any): any => events.fire(key, ...args);
+        let isSplatMeshCreated = false;
 
         const opts: SplatMeshOptions = initSplatMeshOptions(options); // 默认参数校验设定
         const camera = opts.controls.object as PerspectiveCamera;
@@ -92,6 +94,7 @@ export class SplatMesh extends Mesh {
         on(GetSplatMesh, () => that);
         on(GetRenderQualityLevel, () => opts.qualityLevel || DefaultQualityLevel);
         on(GetSortType, () => opts.sortType || SortTypes.Default);
+        on(IsSplatMeshCreated, () => isSplatMeshCreated);
 
         on(NotifyViewerNeedUpdate, () => opts.viewerEvents?.fire(ViewerNeedUpdate));
 
@@ -118,6 +121,9 @@ export class SplatMesh extends Mesh {
             that.onAfterRender = () => {
                 fire(SplatTexdataManagerDataChanged, 10000) && fire(NotifyViewerNeedUpdate); // 纹理数据更新后10秒内总是要刷新
             };
+
+            isSplatMeshCreated = true;
+            fire(OnQualityLevelChanged);
         })();
 
         // 包围盒

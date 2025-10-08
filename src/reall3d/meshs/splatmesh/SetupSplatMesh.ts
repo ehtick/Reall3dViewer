@@ -78,6 +78,8 @@ import {
     SplatUpdateMinAlpha,
     OnQualityLevelChanged,
     WorkerUpdateParams,
+    GetSplatMesh,
+    IsSplatMeshCreated,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -135,6 +137,8 @@ import {
 } from '../../utils/consts/Index';
 import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
+import { MetaData } from '../../modeldata/ModelData';
+import { SplatMesh } from './SplatMesh';
 
 export function setupSplatMesh(events: Events) {
     let disposed = false;
@@ -491,27 +495,33 @@ export function setupSplatMesh(events: Events) {
     });
 
     on(OnQualityLevelChanged, () => {
+        if (!fire(IsSplatMeshCreated)) return;
+
         const opts: SplatMeshOptions = fire(GetOptions);
+        const meta: MetaData = (fire(GetSplatMesh) as SplatMesh)?.meta || {};
         const level: number = opts.qualityLevel;
         const maxShDegrees = [0, 1, 2, 3, 3, 3, 3, 3, 3];
         fire(SplatUpdateShDegree, maxShDegrees[level - 1]);
         if (isMobile) {
             const minPixs = [4, 3, 3, 2, 2, 2, 1, 1, 1];
             const minAlphas = [7, 6, 5, 4, 4, 3, 2, 2, 2];
-            fire(SplatUpdateMinMaxPixelDiameter, minPixs[level - 1], level < 4 ? 128 : level > 6 ? 512 : 256);
-            fire(SplatUpdateMinAlpha, minAlphas[level - 1]);
+            const minPix = meta.minPixelDiameter || minPixs[level - 1];
+            const maxPix = meta.maxPixelDiameter || (level < 4 ? 128 : level > 6 ? 512 : 256);
+            fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
+            fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
         } else {
             const maxPixs = [128, 256, 256, 512, 512, 1024, 1024, 1024, 1024];
             const minAlphas = [5, 4, 3, 2, 2, 1, 1, 1, 1];
-            fire(SplatUpdateMinMaxPixelDiameter, level < 4 ? 2 : 1, maxPixs[level - 1]);
-            fire(SplatUpdateMinAlpha, minAlphas[level - 1]);
+            const minPix = meta.minPixelDiameter || (level < 4 ? 2 : 1);
+            const maxPix = meta.maxPixelDiameter || maxPixs[level - 1];
+            fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
+            fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
         }
         fire(WorkerUpdateParams);
     });
 
     // 小场景圆圈扩大渐进渲染
     on(SplatMeshCycleZoom, async () => {
-        fire(OnQualityLevelChanged);
         if (fire(IsBigSceneMode)) return; // 大场景模式不支持
 
         // 不需要这个特效时跳过

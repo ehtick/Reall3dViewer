@@ -446,6 +446,8 @@ export const UpdateQualityLevel = i++;
 export const WorkerUpdateParams = i++;
 /** Splat更新特效类型 */
 export const SplatUpdateTransitionEffect = i++;
+/** SplatMesh是否已创建 */
+export const IsSplatMeshCreated = i++;
 
 // 以下全局单例事件对象使用
 /** 取背景音乐对象 */
