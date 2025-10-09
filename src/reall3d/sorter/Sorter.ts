@@ -48,6 +48,7 @@ let maxRenderCount: number = 0;
 let sortRunning: boolean;
 let Epsilon: number = isMobile ? 0.5 : 0.2;
 let viewProj: number[];
+let lastCameraPos: number[];
 let lastViewProj: number[] = [];
 let distances: Int32Array = new Int32Array(0);
 let depths: Float32Array = new Float32Array(0);
@@ -80,7 +81,8 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
             return;
         }
     }
-    lastViewProj = sortViewProj;
+    lastViewProj = [...sortViewProj];
+    lastCameraPos = [...cameraPos];
     lastSortVersion = version;
 
     let startTime = Date.now();
@@ -111,7 +113,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
     const dataCount = renderSplatCount - watermarkCount;
     const fnCalcDepth = sortType === 1 ? (qualityLevel > DefaultQualityLevel ? calcDepthByViewProjPlus : calcDepthByViewProj) : calcDepthByCameraDir;
     const sortVpOrDir = sortType === 1 ? sortViewProj : sortCameraDir;
-    const dotPos = sortCameraDir[0] * cameraPos[0] + sortCameraDir[1] * cameraPos[1] + sortCameraDir[2] * cameraPos[2];
+    const dotPos = sortCameraDir[0] * lastCameraPos[0] + sortCameraDir[1] * lastCameraPos[1] + sortCameraDir[2] * lastCameraPos[2];
 
     let { maxDepth, minDepth } = calcMinMaxDepth(texture, sortVpOrDir, fnCalcDepth, dotPos);
     if (maxDepth - minDepth <= 0.00001) {
@@ -123,7 +125,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
         distances.length < maxRenderCount && (distances = new Int32Array(maxRenderCount));
         sortType !== SortTypes.Default && depths.length < maxRenderCount && (depths = new Float32Array(maxRenderCount));
 
-        if (sortType === SortTypes.ZdepthNearest2010) {
+        if (sortType === SortTypes.ZdepthFrontNearest2010) {
             // 【2010】按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
             int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
             // prettier-ignore
@@ -142,7 +144,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
             // prettier-ignore
             const arg = { depthIndex, depths, distances, counters, int32Tmp1, int32Tmp2, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
             ({ renderCount, bucketBits } = sortDirWithPruneTwoSort2012(arg));
-        } else if (sortType === SortTypes.ZdepthNearFar2112) {
+        } else if (sortType === SortTypes.ZdepthFullNearFar2112) {
             // 【2112】按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量）
             int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
             int32Tmp2.length < maxRenderCount && (int32Tmp2 = new Int32Array(maxRenderCount));

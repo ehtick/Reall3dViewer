@@ -326,7 +326,7 @@ export class Reall3dViewer {
                 const types = [1, 2010, 2011, 2012, 2112];
                 const sortType: number = (that.events.fire(GetOptions) as Reall3dViewerOptions).sortType;
                 let idx = types.indexOf(sortType) + p1;
-                idx = Math.max(0, Math.min(idx, 4));
+                idx = Math.max(0, Math.min(idx, types.length - 1));
                 that.events.fire(UpdateSortType, types[idx]);
             }
         }
