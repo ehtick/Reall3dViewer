@@ -123,26 +123,26 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
         distances.length < maxRenderCount && (distances = new Int32Array(maxRenderCount));
         sortType !== SortTypes.Default && depths.length < maxRenderCount && (depths = new Float32Array(maxRenderCount));
 
-        if (sortType === SortTypes.DirWithPruneOnlyNear) {
+        if (sortType === SortTypes.ZdepthNearest2010) {
             // 【2010】按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
             int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
             // prettier-ignore
             const arg = { depthIndex, depths, distances, counters, int32Tmp1, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
             ({ renderCount, bucketBits } = sortDirWithPruneOnlyNear2010(arg));
-        } else if (sortType === SortTypes.DirWithPrune) {
+        } else if (sortType === SortTypes.ZdepthFront2011) {
             // 【2011】按相机方向（剔除相机背面数据提高渲染性能）
             int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
             // prettier-ignore
             const arg = { depthIndex, depths, distances, counters, int32Tmp1, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
             ({ renderCount, bucketBits } = sortDirWithPrune2011(arg));
-        } else if (sortType === SortTypes.DirWithPruneTwoSort) {
+        } else if (sortType === SortTypes.ZdepthFrontNearFar2012) {
             // 【2012】按相机方向（剔除相机背面数据提高渲染性能，按近远分2段排序提高近处渲染质量）
             int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
             int32Tmp2.length < maxRenderCount && (int32Tmp2 = new Int32Array(maxRenderCount));
             // prettier-ignore
             const arg = { depthIndex, depths, distances, counters, int32Tmp1, int32Tmp2, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir, depthNearRate, depthNearValue };
             ({ renderCount, bucketBits } = sortDirWithPruneTwoSort2012(arg));
-        } else if (sortType === SortTypes.DirWithTwoSort) {
+        } else if (sortType === SortTypes.ZdepthNearFar2112) {
             // 【2112】按相机方向（不剔除数据，按近远分2段排序提高近处渲染质量）
             int32Tmp1.length < maxRenderCount && (int32Tmp1 = new Int32Array(maxRenderCount));
             int32Tmp2.length < maxRenderCount && (int32Tmp2 = new Int32Array(maxRenderCount));
