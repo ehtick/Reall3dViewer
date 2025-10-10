@@ -119,6 +119,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
     if (maxDepth - minDepth <= 0.00001) {
         // 都挤一起了没必要排序
         for (let i = 0; i < dataCount; ++i) depthIndex[i] = i;
+        renderCount = dataCount + watermarkCount;
     } else {
         let maxBucketCnt = getBucketCount(maxRenderCount).bucketCnt;
         counters.length < maxBucketCnt ? (counters = new Int32Array(maxBucketCnt)) : counters.fill(0);
