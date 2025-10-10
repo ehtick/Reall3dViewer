@@ -188,13 +188,13 @@ export function setupSplatMesh(events: Events) {
             fire(SplatUpdateUsingIndex, index);
             indexArray.set(datas, 0);
             indexAttribute.clearUpdateRanges();
-            indexAttribute.addUpdateRange(0, datas.length);
+            indexAttribute.addUpdateRange(0, renderSplatCount);
             indexAttribute.needsUpdate = true;
             indexAttribute.onUpload(() => {
                 fire(UploadSplatTextureDone, index);
                 fire(Information, { renderSplatCount });
             });
-            geometry.instanceCount = datas.length;
+            geometry.instanceCount = renderSplatCount;
             fire(NotifyViewerNeedUpdate);
             fire(Information, { sortTime: `${sortTime} / ${Date.now() - sortStartTime}`, bucketBits, sortType });
         });
