@@ -379,7 +379,7 @@ export const SplatUpdateMinMaxPixelDiameter = i++;
 /** 更新最低可渲染透明度(0~255) */
 export const SplatUpdateMinAlpha = i++;
 /** 更新是否使用近似计算替代exp的标记 */
-export const SplatUpdateUseProfileExp = i++;
+export const SplatUpdateUseSimilarExp = i++;
 /** 更新质量级别 */
 export const OnQualityLevelChanged = i++;
 
