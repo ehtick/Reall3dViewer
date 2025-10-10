@@ -48,6 +48,7 @@ let maxRenderCount: number = 0;
 let sortRunning: boolean;
 let Epsilon: number = isMobile ? 0.5 : 0.2;
 let viewProj: number[];
+let lastCameraDir: number[];
 let lastCameraPos: number[];
 let lastViewProj: number[] = [];
 let distances: Int32Array = new Int32Array(0);
@@ -64,7 +65,7 @@ let isBigSceneMode: boolean;
 let depthNearRate = 0.4; // 按比例计算分段(近端占比0.4是为了调试看到效果，实际应用应根据模型尺寸具体调整)
 let depthNearValue = 0; // 按设定值计算分段(设定时优先)
 
-function runSort(sortViewProj: number[], sortCameraDir: number[]) {
+function runSort(sortViewProj: number[], sortCameraDir: number[], sortCameraPos: number[]) {
     if (!isSorterReady) return; // 尚未就绪
     let texture: SplatTexdata = texture0.version > texture1.version ? texture0 : texture1;
     if (!texture.version) return; // 初期还没有数据
@@ -81,8 +82,9 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
             return;
         }
     }
-    lastViewProj = [...sortViewProj];
-    lastCameraPos = [...cameraPos];
+    lastViewProj = sortViewProj;
+    lastCameraDir = sortCameraDir;
+    lastCameraPos = sortCameraPos;
     lastSortVersion = version;
 
     let startTime = Date.now();
@@ -113,7 +115,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[]) {
     const dataCount = renderSplatCount - watermarkCount;
     const fnCalcDepth = sortType === 1 ? (qualityLevel > DefaultQualityLevel ? calcDepthByViewProjPlus : calcDepthByViewProj) : calcDepthByCameraDir;
     const sortVpOrDir = sortType === 1 ? sortViewProj : sortCameraDir;
-    const dotPos = sortCameraDir[0] * lastCameraPos[0] + sortCameraDir[1] * lastCameraPos[1] + sortCameraDir[2] * lastCameraPos[2];
+    const dotPos = sortCameraDir[0] * sortCameraPos[0] + sortCameraDir[1] * sortCameraPos[1] + sortCameraDir[2] * sortCameraPos[2];
 
     let { maxDepth, minDepth } = calcMinMaxDepth(texture, sortVpOrDir, fnCalcDepth, dotPos);
     if (maxDepth - minDepth <= 0.00001) {
@@ -390,7 +392,8 @@ const throttledSort = () => {
         sortRunning = true;
         const sortViewProj = viewProj;
         const sortCameraDir = cameraDir;
-        runSort(sortViewProj, sortCameraDir);
+        const sortCameraPos = cameraPos;
+        runSort(sortViewProj, sortCameraDir, sortCameraPos);
         setTimeout(() => !(sortRunning = false) && (sortType === 1 ? sortViewProj !== viewProj : sortCameraDir != cameraDir) && throttledSort());
     }
 };
