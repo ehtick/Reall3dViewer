@@ -21,17 +21,15 @@ void main() {
         cov3d = texelFetch(splatTexture0, ivec2(((splatIndex & 0x3ffu) << 1) | 1u, splatIndex >> 10), 0);
     }
 
+    bool isWatermark = (cen.w & 65536u) > 0u;
     float colorA = (float(cov3d.w >> 24) / 255.0) * getFvAlpha(cen);
-    if (colorA < minAlpha) {
+    if (colorA < minAlpha && !isWatermark) {
         vColor = vec4(0.0);
         return;
     }
 
-    bool isWatermark = (cen.w & 65536u) > 0u;
     vec3 v3Cen = uintBitsToFloat(cen.xyz);
-
     v3Cen = animateParticle(v3Cen);
-
     if (isWatermark && debugEffect) {
         v3Cen.y += sin(performanceNow * 0.002 + v3Cen.x) * 0.1; // 水印动画
     }

@@ -321,7 +321,6 @@ function sortByViewProjDefault(oArg: any) {
 function sortWatermark(oArg: any) {
     let { xyz, dataCount, watermarkCount, maxDepth, minDepth, sortViewProj, depthIndex } = oArg;
     const renderSplatCount = dataCount + watermarkCount;
-    const offset = depthIndex.length - watermarkCount;
 
     let { bucketCnt } = getBucketCount(watermarkCount, 1); // 水印数据很少精度要求低，按最低1级计算，范围值重新计算避免太大误差
     // TODO 考虑传入包围盒点进行计算
@@ -342,7 +341,7 @@ function sortWatermark(oArg: any) {
             counters[(distances[i - dataCount] = idx)]++;
         }
         for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-        for (let i = 0; i < watermarkCount; ++i) depthIndex[offset + --counters[distances[i]]] = dataCount + i;
+        for (let i = 0; i < watermarkCount; ++i) depthIndex[dataCount + --counters[distances[i]]] = dataCount + i;
     }
 }
 
@@ -359,31 +358,21 @@ function calcDepthByCameraDir(dir: number[], x: number, y: number, z: number, do
 function calcMinMaxDepth(texture: SplatTexdata, viewProjOrCameraDir: number[], fnDepth: Function, dotPos: number): any {
     let maxDepth = -Infinity;
     let minDepth = Infinity;
-    let dep = 0;
-    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.minY, texture.minZ, dotPos);
-    maxDepth = Math.max(maxDepth, dep);
-    minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.minY, texture.maxZ, dotPos);
-    maxDepth = Math.max(maxDepth, dep);
-    minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.maxY, texture.minZ, dotPos);
-    maxDepth = Math.max(maxDepth, dep);
-    minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.minX, texture.maxY, texture.maxZ, dotPos);
-    maxDepth = Math.max(maxDepth, dep);
-    minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.minY, texture.minZ, dotPos);
-    maxDepth = Math.max(maxDepth, dep);
-    minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.minY, texture.maxZ, dotPos);
-    maxDepth = Math.max(maxDepth, dep);
-    minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.maxY, texture.minZ, dotPos);
-    maxDepth = Math.max(maxDepth, dep);
-    minDepth = Math.min(minDepth, dep);
-    dep = fnDepth(viewProjOrCameraDir, texture.maxX, texture.maxY, texture.maxZ, dotPos);
-    maxDepth = Math.max(maxDepth, dep);
-    minDepth = Math.min(minDepth, dep);
+    const vertices = [
+        [texture.minX, texture.minY, texture.minZ],
+        [texture.minX, texture.minY, texture.maxZ],
+        [texture.minX, texture.maxY, texture.minZ],
+        [texture.minX, texture.maxY, texture.maxZ],
+        [texture.maxX, texture.minY, texture.minZ],
+        [texture.maxX, texture.minY, texture.maxZ],
+        [texture.maxX, texture.maxY, texture.minZ],
+        [texture.maxX, texture.maxY, texture.maxZ],
+    ];
+    for (const vertex of vertices) {
+        const dep = fnDepth(viewProjOrCameraDir, vertex[0], vertex[1], vertex[2], dotPos);
+        maxDepth = Math.max(maxDepth, dep);
+        minDepth = Math.min(minDepth, dep);
+    }
     return { maxDepth, minDepth };
 }
 
