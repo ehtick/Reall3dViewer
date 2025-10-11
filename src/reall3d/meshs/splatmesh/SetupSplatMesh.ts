@@ -136,6 +136,7 @@ import {
     WkSortType,
     WkSplatIndexDone,
     isMobile,
+    DefaultQualityLevel,
 } from '../../utils/consts/Index';
 import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
@@ -506,7 +507,7 @@ export function setupSplatMesh(events: Events) {
 
         const opts: SplatMeshOptions = fire(GetOptions);
         const meta: MetaData = (fire(GetSplatMesh) as SplatMesh)?.meta || {};
-        const level: number = opts.qualityLevel;
+        const level: number = opts.qualityLevel || DefaultQualityLevel;
         const maxShDegrees = [0, 1, 2, 3, 3, 3, 3, 3, 3];
         fire(SplatUpdateShDegree, maxShDegrees[level - 1]);
         if (isMobile) {
