@@ -73,20 +73,19 @@ export function setupCommonUtils(events: Events) {
     on(OnFetchStart, () => {
         loading = true;
 
-        if (fire(GetOptions).debugMode) {
-            (async () => {
-                const wrap: HTMLElement = document.querySelector('#gsviewer #progressBarWrap');
-                if (wrap) {
-                    wrap.style.display = 'block';
-                    const dom: HTMLElement = document.querySelector('#gsviewer #progressBar');
-                    dom && (dom.style.width = `0%`);
-                }
-            })();
-            (async () => document.querySelector('#gsviewer .logo')?.classList.add('loading'))();
-        } else {
-            // @ts-ignore
-            parent?.onProgress && parent.onProgress(0.001, '0.001%');
-        }
+        (async () => {
+            const wrap: HTMLElement = document.querySelector('#gsviewer #progressBarWrap');
+            if (wrap) {
+                wrap.style.display = 'block';
+                const dom: HTMLElement = document.querySelector('#gsviewer #progressBar');
+                dom && (dom.style.width = `0%`);
+            }
+        })();
+        (async () => document.querySelector('#gsviewer .logo')?.classList.add('loading'))();
+        // @ts-ignore
+        parent?.onProgress && parent.onProgress(0.001, '0.001%');
+        // @ts-ignore
+        window.onProgress && window.onProgress(0.001, '0.001%');
     });
     on(OnFetchStop, (totalRenderSplatCount: number) => {
         totalRenderSplatCount && (renderSplatCount = totalRenderSplatCount);
@@ -101,20 +100,20 @@ export function setupCommonUtils(events: Events) {
 
             // @ts-ignore
             parent?.onProgress && parent.onProgress(0, '100%', 9); // 用自定义的 9 代表完全加载完成
+            // @ts-ignore
+            window.onProgress && window.onProgress(0, '100%', 9); // 用自定义的 9 代表完全加载完成
         }
     });
     on(OnFetching, (per: number) => {
         loading = true;
-
-        if (fire(GetOptions).debugMode) {
-            (async () => {
-                const dom: HTMLElement = document.querySelector('#gsviewer #progressBar');
-                dom && (dom.style.width = `${per}%`);
-            })();
-        } else {
-            // @ts-ignore
-            parent?.onProgress && parent.onProgress(per, `${per}%`);
-        }
+        (async () => {
+            const dom: HTMLElement = document.querySelector('#gsviewer #progressBar');
+            dom && (dom.style.width = `${per}%`);
+        })();
+        // @ts-ignore
+        parent?.onProgress && parent.onProgress(per, `${per}%`);
+        // @ts-ignore
+        window.onProgress && window.onProgress(per, `${per}%`);
     });
     on(IsFetching, () => loading);
     on(OnTextureReadySplatCount, (renderCount: number) => {
