@@ -83,12 +83,12 @@ export interface SplatMeshOptions {
     depthTest?: boolean;
 
     /**
-     * Render quality level (1~9, default to 5)
+     * Render quality level (1~9, default to QualityLevels.Default5)
      */
     qualityLevel?: number;
 
     /**
-     * Sort type (default to SortTypes.Default)
+     * Sort type (default to SortTypes.Default1)
      */
     sortType?: number;
 
