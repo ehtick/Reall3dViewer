@@ -49,6 +49,7 @@ import {
     FocusAabbCenter,
     GetAabbCenter,
     FlySavePositions,
+    StopBgAudio,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -59,6 +60,7 @@ import { MarkMultiLines } from '../meshs/mark/MarkMultiLines';
 import { MarkSinglePoint } from '../meshs/mark/MarkSinglePoint';
 import { MarkMultiPlans } from '../meshs/mark/MarkMulitPlans';
 import { MarkCirclePlan } from '../meshs/mark/MarkCirclePlan';
+import { globalEv } from './SetupGlobalEV';
 
 class MouseState {
     public down: number = 0;
@@ -145,6 +147,9 @@ export function setupEventListener(events: Events) {
 
         if (keySet.has('Space')) {
             opts.bigSceneMode ? fire(SplatSetPointcloudMode) : fire(SplatSwitchDisplayMode);
+            keySet.clear();
+        } else if (keySet.has('Escape')) {
+            globalEv.fire(StopBgAudio);
             keySet.clear();
         } else if (keySet.has('KeyR')) {
             opts.autoRotate ? fire(StopAutoRotate) : fire(StartAutoRotate);

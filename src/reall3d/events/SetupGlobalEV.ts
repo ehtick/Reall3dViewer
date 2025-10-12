@@ -37,8 +37,8 @@ export const globalEv: Events = (() => {
     });
 
     ev.on(StopBgAudio, () => {
-        const audioBg = getBackgroundAudio();
-        if (!audioBg.isPlaying) return;
+        const audioBg = getBackgroundAudio(false);
+        if (!audioBg?.isPlaying) return;
         audioBg.stop();
     });
 
@@ -63,9 +63,9 @@ export const globalEv: Events = (() => {
         );
     });
 
-    function getBackgroundAudio(): Audio {
+    function getBackgroundAudio(autoCreate = true): Audio {
         let audioBg: Audio = ev.fire(GetBgAudio);
-        if (!audioBg) {
+        if (!audioBg && autoCreate) {
             audioBg = new Audio(new AudioListener());
             ev.on(GetBgAudio, () => audioBg);
         }
