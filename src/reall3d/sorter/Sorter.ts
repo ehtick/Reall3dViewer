@@ -113,7 +113,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[], sortCameraPos:
     let bucketBits = 0;
     let depthIndex: Uint32Array = poolSplatIndexPop();
     const dataCount = renderSplatCount - watermarkCount;
-    const fnCalcDepth = sortType === 1 ? (qualityLevel > DefaultQualityLevel ? calcDepthByViewProjPlus : calcDepthByViewProj) : calcDepthByCameraDir;
+    const fnCalcDepth = sortType === 1 ? calcDepthByViewProj : calcDepthByCameraDir;
     const sortVpOrDir = sortType === 1 ? sortViewProj : sortCameraDir;
     const dotPos = sortCameraDir[0] * sortCameraPos[0] + sortCameraDir[1] * sortCameraPos[1] + sortCameraDir[2] * sortCameraPos[2];
 
@@ -156,7 +156,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[], sortCameraPos:
             ({ renderCount, bucketBits } = sortDirWithTwoSort2112(arg));
         } else {
             // 【1】默认，按视图投影矩阵排序（全量渲染）
-            const arg = { depthIndex, distances, counters, xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj };
+            const arg = { depthIndex, distances, counters, xyz, dataCount, watermarkCount, maxDepth, minDepth, sortViewProj };
             ({ renderCount, bucketBits } = sortByViewProjDefault(arg));
         }
     }
@@ -188,8 +188,9 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
     const maxDepth1 = Math.min(oArg.maxDepth, 0);
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
     let nearCnt = 0;
-    for (let i = 0; i < dataCount; ++i) {
-        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
+    for (let i = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
+        offset = i * 3;
+        depths[i] = dotPos - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
         dataIdx1[nearCnt] = i;
         nearCnt += ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
     }
@@ -197,7 +198,7 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
     const { bucketBits, bucketCnt } = getBucketCount(nearCnt);
     const depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
     for (let i = 0, idx = 0; i < nearCnt; ++i) {
-        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0; // TODO
+        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
@@ -304,12 +305,17 @@ function sortDirWithTwoSort2112(oArg: any) {
 
 /** 默认，按视图投影矩阵排序（全量渲染） */
 function sortByViewProjDefault(oArg: any) {
-    const { depthIndex, distances, counters, xyz, dataCount, watermarkCount, maxDepth, minDepth, fnCalcDepth, sortViewProj } = oArg;
+    const { depthIndex, distances, counters, xyz, dataCount, watermarkCount, maxDepth, minDepth, sortViewProj } = oArg;
     const renderCount = dataCount + watermarkCount;
     let { bucketBits, bucketCnt } = getBucketCount(dataCount);
     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-    for (let i = 0, idx = 0; i < dataCount; ++i) {
-        idx = ((fnCalcDepth(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
+    const vp2 = sortViewProj[2];
+    const vp6 = sortViewProj[6];
+    const vp10 = sortViewProj[10];
+    const minBase = minDepth - sortViewProj[14];
+    for (let i = 0, idx = 0, offset = 0; i < dataCount; ++i) {
+        offset = 3 * i;
+        idx = ((vp2 * xyz[offset] + vp6 * xyz[offset + 1] + vp10 * xyz[offset + 2] - minBase) * depthInv) | 0; // 同 calcDepthByViewProj
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
@@ -346,10 +352,7 @@ function sortWatermark(oArg: any) {
 }
 
 function calcDepthByViewProj(svp: number[], x: number, y: number, z: number): number {
-    return svp[2] * x + svp[6] * y + svp[10] * z; // 默认质量级别及以下时使用
-}
-function calcDepthByViewProjPlus(svp: number[], x: number, y: number, z: number): number {
-    return svp[2] * x + svp[6] * y + svp[10] * z + svp[14]; // 高于默认级别时使用
+    return svp[2] * x + svp[6] * y + svp[10] * z + svp[14];
 }
 function calcDepthByCameraDir(dir: number[], x: number, y: number, z: number, dotPos: number): number {
     return dotPos - dir[0] * x - dir[1] * y - dir[2] * z; // 大于0为在相机背后
