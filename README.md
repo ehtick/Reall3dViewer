@@ -20,14 +20,27 @@
 
 ## Features
 - [x] Support formats: `.ply`, `.splat`, `.spx`, `.spz(v2,v3)`, `.sog(v1,v2)`
-- [x] Support mark and measurement
-- [x] Support text watermark
+- [x] Support mark and measurement tools
+- [x] Support text watermarking
 - [x] Support 1st to 3rd degree spherical harmonics
-- [x] Support rendering models within maps
+- [x] Support map-integrated model rendering
+- [x] Support per-model settings via `*.meta.json` file
+- [x] Built-in rendering quality levels with adaptive optimization (v2.0.0+ 🌟)
+- [x] Built-in optimized sorting types to fine-tune performance for diverse scenarios (v2.0.0+ 🌟)
 
 
 ## Live demo
 - https://reall3d.com/reall3dviewer/index.html
+
+
+## Key Configuration Parameters
+
+| Name                         | Note                               |
+|------------------------------|------------------------------------|
+| `maxRenderCountOfMobile`     | Low-end devices have rendering limits. Adjust from default if needed. Recommended.    |
+| `maxRenderCountOfPc`         | High-end devices also have rendering limits. Adjust from default if needed. Recommended.   |
+| `qualityLevel`               | Choose based on target device and model for optimal performance/quality. Adaptive adjustment supported. Recommended.    |
+| `sortType`                   | No single algorithm is optimal for all scenarios. Choose the most suitable one from built-in types for your case. Recommended.  |
 
 
 ## `.spx`
