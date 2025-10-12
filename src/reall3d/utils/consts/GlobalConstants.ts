@@ -18,9 +18,6 @@ export const WasmBlockSize: number = 64 * 1024;
 export const MobileDownloadLimitSplatCount = 1024 * 10000; // 移动端高斯点数下载限制
 export const PcDownloadLimitSplatCount = 10240 * 10000; // PC端高斯点数下载限制
 export const SH_C0 = 0.28209479177387814;
-export const MinQualityLevel = 1;
-export const DefaultQualityLevel = 5;
-export const MaxQualityLevel = 9;
 
 /** 【官方创建者Reall3d】Creater: Reall3d */
 export const SpxCreaterReall3d = 0;
@@ -46,6 +43,33 @@ export const SpxBlockFormatSH4 = 4;
 export const SpxExclusiveFormatReall3d = 3141592653;
 
 /**
+ * 【质量级别】
+ * 从1-9共9个级别，默认第5级，级别越高渲染质量越好，资源利用越高，越影响性能。
+ * 根据选用的级别，渲染器会自适应调整各种相关影响因素以达成效果，也可尽量避免人工调整错误所带来的影响。
+ * （自动调整的相关因素，包括球谐系数级别、渲染像素阈值、渲染透明度阈值、近似计算、排序桶数量限制等等）
+ */
+export enum QualityLevels {
+    /** Level 1，渲染质量最低，性能最好，应用于低端设备时更适用 */
+    L1 = 1,
+    /** Level 2 渲染质量偏低 */
+    L2 = 2,
+    /** Level 3 渲染质量较低 */
+    L3 = 3,
+    /** Level 4，渲染质量略低 */
+    L4 = 4,
+    /** Level 5，默认级别，渲染质量及性能综合表现良好 */
+    Default5 = 5,
+    /** Level 4，渲染质量略高 */
+    L6 = 6,
+    /** Level 4，渲染质量较高 */
+    L7 = 7,
+    /** Level 4，渲染质量偏高 */
+    L8 = 8,
+    /** Level 4，渲染质量最高，性能最差，应用于高端设备时更适用 */
+    L9 = 9,
+}
+
+/**
  * 【排序类型】
  * 并不存在一种即性能高效又普遍适用的排序方法，这里提供默认方式作为普适性使用，以及其他多种方式供个性化场景选择使用。
  *
@@ -58,7 +82,7 @@ export const SpxExclusiveFormatReall3d = 3141592653;
  */
 export enum SortTypes {
     /** 默认，按视图投影矩阵计算z-depth进行全量排序 */
-    Default = 1,
+    Default1 = 1,
     /** 按相机方向计算z-depth进行排序，剔除背后和远端数据，仅渲染近端，有遮挡只能看到近端场景时适用 */
     ZdepthFrontNearest2010 = 2010,
     /** 按相机方向计算z-depth进行排序，剔除背后数据 */

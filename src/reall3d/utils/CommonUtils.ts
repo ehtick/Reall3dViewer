@@ -26,7 +26,7 @@ import {
     CommonUtilsDispose,
 } from '../events/EventConstants';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
-import { DefaultQualityLevel, ViewerVersion } from './consts/GlobalConstants';
+import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
 import { unzip, unzipSync } from 'fflate';
 
@@ -221,9 +221,8 @@ export function setupCommonUtils(events: Events) {
             // renderModels !== undefined && setInfo('renderModels', renderModels);
             fps !== undefined && setInfo('fps', fps);
             realFps !== undefined && setInfo('realFps', `raw ${realFps}`);
-            // sortTime !== undefined && setInfo('sort', `${sortTime} ms （quality level ${fire(GetOptions).qualityLevel || DefaultQualityLevel}）`);
             sortTime !== undefined &&
-                setInfo('sort', `${sortTime} ms （L ${fire(GetOptions).qualityLevel || DefaultQualityLevel}, ${bucketBits} B, T ${sortType}）`);
+                setInfo('sort', `${sortTime} ms （L ${fire(GetOptions).qualityLevel || QualityLevels.Default5}, ${bucketBits} B, T ${sortType}）`);
             cuts !== undefined && setInfo('cuts', cuts === '' ? '' : `（${cuts} cuts）`);
             worker && setInfo('worker', `${worker}`);
             // updateSceneData && setInfo('updateSceneData', `（up ${updateSceneData} ms）`);

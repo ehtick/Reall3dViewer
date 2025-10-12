@@ -51,7 +51,7 @@ import { setupCommonUtils } from '../../utils/CommonUtils';
 import { MetaData } from '../../modeldata/ModelData';
 import { setupSorter } from '../../sorter/SetupSorter';
 import { BoundBox } from '../boundbox/BoundBox';
-import { DefaultQualityLevel, SortTypes } from '../../utils/consts/GlobalConstants';
+import { QualityLevels, SortTypes } from '../../utils/consts/GlobalConstants';
 
 /**
  * Gaussian splatting mesh
@@ -92,8 +92,8 @@ export class SplatMesh extends Mesh {
         on(IsBigSceneMode, () => opts.bigSceneMode);
         on(IsPointcloudMode, () => opts.pointcloudMode);
         on(GetSplatMesh, () => that);
-        on(GetRenderQualityLevel, () => opts.qualityLevel || DefaultQualityLevel);
-        on(GetSortType, () => opts.sortType || SortTypes.Default);
+        on(GetRenderQualityLevel, () => opts.qualityLevel || QualityLevels.Default5);
+        on(GetSortType, () => opts.sortType || SortTypes.Default1);
         on(IsSplatMeshCreated, () => isSplatMeshCreated);
 
         on(NotifyViewerNeedUpdate, () => opts.viewerEvents?.fire(ViewerNeedUpdate));

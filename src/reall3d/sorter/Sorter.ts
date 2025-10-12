@@ -35,14 +35,14 @@ import {
     WkMaxZ,
     WkXyz,
 } from '../utils/consts/WkConstants';
-import { DefaultQualityLevel, isMobile, MaxQualityLevel, MinQualityLevel, SortTypes } from '../utils/consts/GlobalConstants';
+import { isMobile, QualityLevels, SortTypes } from '../utils/consts/GlobalConstants';
 
 const worker: Worker = self as any;
 let texture0: SplatTexdata = { index: 0, version: 0 };
 let texture1: SplatTexdata = { index: 1, version: 0 };
 let isSorterReady: boolean = false;
-let qualityLevel: number = DefaultQualityLevel; // 1~9,默认5
-let sortType: number = SortTypes.Default;
+let qualityLevel: number = QualityLevels.Default5; // 1~9,默认5
+let sortType: number = SortTypes.Default1;
 let maxRenderCount: number = 0;
 
 let sortRunning: boolean;
@@ -122,7 +122,7 @@ function runSort(sortViewProj: number[], sortCameraDir: number[], sortCameraPos:
         let maxBucketCnt = getBucketCount(maxRenderCount).bucketCnt;
         counters.length < maxBucketCnt ? (counters = new Int32Array(maxBucketCnt)) : counters.fill(0);
         distances.length < maxRenderCount && (distances = new Int32Array(maxRenderCount));
-        sortType !== SortTypes.Default && depths.length < maxRenderCount && (depths = new Float32Array(maxRenderCount));
+        sortType !== SortTypes.Default1 && depths.length < maxRenderCount && (depths = new Float32Array(maxRenderCount));
 
         if (sortType === SortTypes.ZdepthFrontNearest2010) {
             // 【2010】按相机方向（剔除背后和远端数据，仅留近端数据提高渲染性能）
@@ -362,7 +362,7 @@ function getBucketCount(splatCnt: number, useLevel: number = 0) {
     // 没有数据无排序，简单返回
     if (!splatCnt) return { bucketBits: 1, bucketCnt: 1 };
 
-    // 水印等情景允许通过参数指定级别
+    // 允许通过参数指定级别
     let level = useLevel ? Math.min(useLevel, qualityLevel) : qualityLevel;
     // 按级别确定精度，达到允许自定义调整的目的，手机降低1级并控制不低于1级
     let bucketBits = 11 + (isMobile ? Math.max(level - 1, 1) : level);
@@ -416,7 +416,7 @@ worker.onmessage = (e: any) => {
         cameraPos = data[WkCameraPosition];
         throttledSort();
     } else if (data[WkUpdateParams]) {
-        qualityLevel = Math.max(MinQualityLevel, Math.min(data[WkQualityLevel] || DefaultQualityLevel, MaxQualityLevel)); // 限制1~9,默认5
+        qualityLevel = Math.max(QualityLevels.L1, Math.min(data[WkQualityLevel] || QualityLevels.Default5, QualityLevels.L9)); // 限制1~9,默认5
         sortType = data[WkSortType] || sortType;
         depthNearRate = data[WkDepthNearRate] || depthNearRate;
         depthNearValue = data[WkDepthNearValue] || depthNearValue;
@@ -425,7 +425,7 @@ worker.onmessage = (e: any) => {
     } else if (data[WkInit]) {
         isBigSceneMode = data[WkIsBigSceneMode];
         maxRenderCount = data[WkMaxRenderCount];
-        qualityLevel = Math.max(MinQualityLevel, Math.min(data[WkQualityLevel] || DefaultQualityLevel, MaxQualityLevel)); // 限制1~9,默认5
+        qualityLevel = Math.max(QualityLevels.L1, Math.min(data[WkQualityLevel] || QualityLevels.Default5, QualityLevels.L9)); // 限制1~9,默认5
         sortType = data[WkSortType] || sortType;
         depthNearRate = data[WkDepthNearRate] || depthNearRate;
         depthNearValue = data[WkDepthNearValue] || depthNearValue;

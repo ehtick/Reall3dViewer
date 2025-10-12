@@ -81,7 +81,7 @@ import { setupApi } from '../api/SetupApi';
 import { MarkData } from '../meshs/mark/data/MarkData';
 import { setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
-import { DefaultQualityLevel, isMobile, MaxQualityLevel, MinQualityLevel, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
+import { isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/ModelData';
 
 /**
@@ -313,15 +313,15 @@ export class Reall3dViewer {
         }
         if (n === 9) {
             if (!p1) {
-                that.events.fire(UpdateQualityLevel, DefaultQualityLevel);
+                that.events.fire(UpdateQualityLevel, QualityLevels.Default5);
             } else {
                 const level: number = (that.events.fire(GetOptions) as Reall3dViewerOptions).qualityLevel;
-                that.events.fire(UpdateQualityLevel, Math.max(MinQualityLevel, Math.min(level + p1, MaxQualityLevel)));
+                that.events.fire(UpdateQualityLevel, Math.max(QualityLevels.L1, Math.min(level + p1, QualityLevels.L9)));
             }
         }
         if (n === 10) {
             if (!p1) {
-                that.events.fire(UpdateSortType, SortTypes.Default);
+                that.events.fire(UpdateSortType, SortTypes.Default1);
             } else {
                 const types = [1, 2010, 2011, 2012, 2112];
                 const sortType: number = (that.events.fire(GetOptions) as Reall3dViewerOptions).sortType;
@@ -520,8 +520,8 @@ export class Reall3dViewer {
         }
 
         // 优先顺序： meta -> opts -> default
-        meta.qualityLevel = meta.qualityLevel || opts.qualityLevel || DefaultQualityLevel;
-        meta.sortType = meta.sortType || opts.sortType || SortTypes.Default;
+        meta.qualityLevel = meta.qualityLevel || opts.qualityLevel || QualityLevels.Default5;
+        meta.sortType = meta.sortType || opts.sortType || SortTypes.Default1;
 
         on(GetMeta, () => meta);
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;

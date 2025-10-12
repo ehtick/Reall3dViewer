@@ -31,7 +31,7 @@ import {
 import { SplatMeshOptions, TransitionEffects } from '../meshs/splatmesh/SplatMeshOptions';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { loadFile } from '../modeldata/loaders/FileLoader';
-import { DefaultQualityLevel, SortTypes } from './consts/GlobalConstants';
+import { QualityLevels, SortTypes } from './consts/GlobalConstants';
 
 export function setupViewerUtils(events: Events) {
     let disposed: boolean = false;
@@ -146,8 +146,8 @@ export function initGsViewerOptions(options: Reall3dViewerOptions): Reall3dViewe
     opts.background ??= '#000000';
     opts.minDistance ??= 0.1;
     opts.maxDistance ??= 1000;
-    opts.qualityLevel ??= DefaultQualityLevel;
-    opts.sortType ??= SortTypes.Default;
+    opts.qualityLevel ??= QualityLevels.Default5;
+    opts.sortType ??= SortTypes.Default1;
     opts.transitionEffect ??= TransitionEffects.ModelCenterCirccle;
 
     return opts;

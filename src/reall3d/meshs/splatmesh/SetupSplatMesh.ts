@@ -136,7 +136,7 @@ import {
     WkSortType,
     WkSplatIndexDone,
     isMobile,
-    DefaultQualityLevel,
+    QualityLevels,
 } from '../../utils/consts/Index';
 import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
@@ -507,25 +507,25 @@ export function setupSplatMesh(events: Events) {
 
         const opts: SplatMeshOptions = fire(GetOptions);
         const meta: MetaData = (fire(GetSplatMesh) as SplatMesh)?.meta || {};
-        const level: number = opts.qualityLevel || DefaultQualityLevel;
+        const level: number = opts.qualityLevel || QualityLevels.Default5;
         const maxShDegrees = [0, 1, 2, 3, 3, 3, 3, 3, 3];
         fire(SplatUpdateShDegree, maxShDegrees[level - 1]);
         if (isMobile) {
             const minPixs = [4, 3, 3, 2, 2, 2, 1, 1, 1];
             const minAlphas = [7, 6, 5, 4, 4, 3, 2, 2, 2];
             const minPix = meta.minPixelDiameter || minPixs[level - 1];
-            const maxPix = meta.maxPixelDiameter || (level < 4 ? 128 : level > 6 ? 512 : 256);
+            const maxPix = meta.maxPixelDiameter || (level < QualityLevels.L4 ? 128 : level > QualityLevels.L6 ? 512 : 256);
             fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
             fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
             fire(SplatUpdateUseSimilarExp, false);
         } else {
             const maxPixs = [128, 256, 256, 512, 512, 1024, 1024, 1024, 1024];
             const minAlphas = [5, 4, 3, 2, 2, 1, 1, 1, 1];
-            const minPix = meta.minPixelDiameter || (level < 4 ? 2 : 1);
+            const minPix = meta.minPixelDiameter || (level < QualityLevels.L4 ? 2 : 1);
             const maxPix = meta.maxPixelDiameter || maxPixs[level - 1];
             fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
             fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
-            fire(SplatUpdateUseSimilarExp, level > 6);
+            fire(SplatUpdateUseSimilarExp, level > QualityLevels.L6);
         }
         fire(WorkerUpdateParams);
     });
