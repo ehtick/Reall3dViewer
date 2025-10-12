@@ -48,8 +48,6 @@ let maxRenderCount: number = 0;
 let sortRunning: boolean;
 let Epsilon: number = isMobile ? 0.5 : 0.2;
 let viewProj: number[];
-let lastCameraDir: number[];
-let lastCameraPos: number[];
 let lastViewProj: number[] = [];
 let distances: Int32Array = new Int32Array(0);
 let depths: Float32Array = new Float32Array(0);
@@ -83,8 +81,6 @@ function runSort(sortViewProj: number[], sortCameraDir: number[], sortCameraPos:
         }
     }
     lastViewProj = sortViewProj;
-    lastCameraDir = sortCameraDir;
-    lastCameraPos = sortCameraPos;
     lastSortVersion = version;
 
     let startTime = Date.now();
@@ -161,8 +157,8 @@ function runSort(sortViewProj: number[], sortCameraDir: number[], sortCameraPos:
         }
     }
 
-    // 水印，按视图投影矩阵排序
-    watermarkCount && sortWatermark({ xyz, dataCount, watermarkCount, maxDepth, minDepth, sortViewProj, depthIndex });
+    // 水印
+    for (let i = 0; i < watermarkCount; ++i) depthIndex[dataCount + i] = dataCount + i;
 
     sortTime = Date.now() - startTime;
     worker.postMessage(
@@ -211,8 +207,9 @@ function sortDirWithPrune2011(oArg: any) {
     const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, xyz, dataCount, watermarkCount, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(oArg.maxDepth, 0);
     let frontCnt = 0;
-    for (let i = 0; i < dataCount; ++i) {
-        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
+    for (let i = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
+        offset = i * 3;
+        depths[i] = dotPos - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
         dataIdx1[frontCnt] = i;
         frontCnt += ((depths[i] <= 0) as any) | 0;
     }
@@ -236,8 +233,9 @@ function sortDirWithPruneTwoSort2012(oArg: any) {
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
     let cnt1 = 0;
     let cnt2 = 0;
-    for (let i = 0, tag1 = 0, tag2 = 0; i < dataCount; ++i) {
-        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
+    for (let i = 0, tag1 = 0, tag2 = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
+        offset = i * 3;
+        depths[i] = dotPos - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
         dataIdx1[cnt1] = i;
         dataIdx2[cnt2] = i;
         tag1 = ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
@@ -274,8 +272,9 @@ function sortDirWithTwoSort2112(oArg: any) {
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
     let cnt1 = 0;
     let cnt2 = 0;
-    for (let i = 0, tag1 = 0; i < dataCount; ++i) {
-        depths[i] = calcDepthByCameraDir(sortCameraDir, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2], dotPos);
+    for (let i = 0, tag1 = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
+        offset = i * 3;
+        depths[i] = dotPos - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
         dataIdx1[cnt1] = i;
         dataIdx2[cnt2] = i;
         tag1 = ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
@@ -309,13 +308,10 @@ function sortByViewProjDefault(oArg: any) {
     const renderCount = dataCount + watermarkCount;
     let { bucketBits, bucketCnt } = getBucketCount(dataCount);
     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
-    const vp2 = sortViewProj[2];
-    const vp6 = sortViewProj[6];
-    const vp10 = sortViewProj[10];
-    const minBase = minDepth - sortViewProj[14];
-    for (let i = 0, idx = 0, offset = 0; i < dataCount; ++i) {
+    const minBase = -minDepth - sortViewProj[14];
+    for (let i = 0, idx = 0, offset = 0, vp2 = sortViewProj[2], vp6 = sortViewProj[6], vp10 = sortViewProj[10]; i < dataCount; ++i) {
         offset = 3 * i;
-        idx = ((vp2 * xyz[offset] + vp6 * xyz[offset + 1] + vp10 * xyz[offset + 2] - minBase) * depthInv) | 0; // 同 calcDepthByViewProj
+        idx = ((minBase - vp2 * xyz[offset] - vp6 * xyz[offset + 1] - vp10 * xyz[offset + 2]) * depthInv) | 0; // 同 calcDepthByViewProj
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
@@ -323,36 +319,8 @@ function sortByViewProjDefault(oArg: any) {
     return { renderCount, bucketBits };
 }
 
-/** 水印，按视图投影矩阵排序 */
-function sortWatermark(oArg: any) {
-    let { xyz, dataCount, watermarkCount, maxDepth, minDepth, sortViewProj, depthIndex } = oArg;
-    const renderSplatCount = dataCount + watermarkCount;
-
-    let { bucketCnt } = getBucketCount(watermarkCount, 1); // 水印数据很少精度要求低，按最低1级计算，范围值重新计算避免太大误差
-    // TODO 考虑传入包围盒点进行计算
-    maxDepth = minDepth = calcDepthByViewProj(sortViewProj, xyz[3 * dataCount], xyz[3 * dataCount + 1], xyz[3 * dataCount + 2]);
-    for (let i = dataCount, dpt = 0; i < renderSplatCount; ++i) {
-        dpt = calcDepthByViewProj(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]);
-        maxDepth = Math.max(dpt, maxDepth);
-        minDepth = Math.min(dpt, minDepth);
-    }
-
-    if (maxDepth - minDepth <= 0.00001) {
-        for (let i = 0; i < watermarkCount; ++i) depthIndex[dataCount + i] = dataCount + i;
-    } else {
-        let depthInv = (bucketCnt - 1) / (maxDepth - minDepth);
-        counters.length < bucketCnt ? (counters = new Int32Array(bucketCnt)) : counters.fill(0);
-        for (let i = dataCount, idx = 0; i < renderSplatCount; ++i) {
-            idx = ((calcDepthByViewProj(sortViewProj, xyz[3 * i], xyz[3 * i + 1], xyz[3 * i + 2]) - minDepth) * depthInv) | 0;
-            counters[(distances[i - dataCount] = idx)]++;
-        }
-        for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-        for (let i = 0; i < watermarkCount; ++i) depthIndex[dataCount + --counters[distances[i]]] = dataCount + i;
-    }
-}
-
 function calcDepthByViewProj(svp: number[], x: number, y: number, z: number): number {
-    return svp[2] * x + svp[6] * y + svp[10] * z + svp[14];
+    return -(svp[2] * x + svp[6] * y + svp[10] * z + svp[14]);
 }
 function calcDepthByCameraDir(dir: number[], x: number, y: number, z: number, dotPos: number): number {
     return dotPos - dir[0] * x - dir[1] * y - dir[2] * z; // 大于0为在相机背后
@@ -386,7 +354,7 @@ const throttledSort = () => {
         const sortCameraDir = cameraDir;
         const sortCameraPos = cameraPos;
         runSort(sortViewProj, sortCameraDir, sortCameraPos);
-        setTimeout(() => !(sortRunning = false) && (sortType === 1 ? sortViewProj !== viewProj : sortCameraDir != cameraDir) && throttledSort());
+        setTimeout(() => !(sortRunning = false) && sortViewProj !== viewProj && throttledSort());
     }
 };
 
@@ -443,14 +411,9 @@ worker.onmessage = (e: any) => {
         texture.textureReady = true;
         texture.textureReadyTime = Date.now();
     } else if (data[WkViewProjection]) {
-        const vp: number[] = data[WkViewProjection];
+        viewProj = data[WkViewProjection];
         cameraDir = data[WkCameraDirection];
         cameraPos = data[WkCameraPosition];
-        vp[2] *= -1;
-        vp[6] *= -1;
-        vp[10] *= -1;
-        vp[14] *= -1;
-        viewProj = vp;
         throttledSort();
     } else if (data[WkUpdateParams]) {
         qualityLevel = Math.max(MinQualityLevel, Math.min(data[WkQualityLevel] || DefaultQualityLevel, MaxQualityLevel)); // 限制1~9,默认5
