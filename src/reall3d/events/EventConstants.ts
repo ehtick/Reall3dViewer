@@ -357,6 +357,8 @@ export const OnLoadAndRenderObj = i++;
 export const GetMeta = i++;
 /** Splat更新标记 */
 export const SplatUpdateFlagValue = i++;
+/** Splat更新活动标记 */
+export const SplatUpdateActiveFlagValue = i++;
 /** 小场景开始时间变迁效果 */
 export const OnSmallSceneTimeChange = i++;
 

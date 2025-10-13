@@ -4,7 +4,6 @@
 #include ./Chunk0VarDeclarations
 #include ./Chunk9AnimateParticle
 #include ./Chunk9SpaltEvalSH
-#include ./Chunk9GetFvAlpha
 
 void main() {
     uvec4 cen, cov3d;
@@ -22,7 +21,7 @@ void main() {
     }
 
     bool isWatermark = (cen.w & 65536u) > 0u;
-    float colorA = (float(cov3d.w >> 24) / 255.0) * getFvAlpha(cen);
+    float colorA = (float(cov3d.w >> 24) / 255.0);
     if (colorA < minAlpha && !isWatermark) {
         vColor = vec4(0.0);
         return;
@@ -122,6 +121,7 @@ void main() {
         if (shDegree > 0) {
             vColor.rgb += splatEvalSH(v3Cen);
         }
+        FvEffect(cen, vColor, activeFlagValue, performanceNow);
     }
 
     float diameter1 = min(sqrt(2.0 * eigenValue1), maxPixelDiameter);

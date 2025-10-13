@@ -81,9 +81,11 @@ import {
     GetSplatMesh,
     IsSplatMeshCreated,
     SplatUpdateUseSimilarExp,
+    SplatUpdateActiveFlagValue,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
+    VarActiveFlagValue,
     VarBigSceneMode,
     VarCurrentLightRadius,
     VarCurrentVisibleRadius,
@@ -142,6 +144,9 @@ import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
 import { MetaData } from '../../modeldata/ModelData';
 import { SplatMesh } from './SplatMesh';
+import { shaderChunk } from '../../utils/CommonUtils';
+import CmnFns from './shaders/chunks/CmnFns.glsl';
+import FvEffect from './shaders/chunks/FvEffect.glsl';
 
 export function setupSplatMesh(events: Events) {
     let disposed = false;
@@ -222,8 +227,8 @@ export function setupSplatMesh(events: Events) {
 
         const material: ShaderMaterial = new ShaderMaterial({
             uniforms: fire(CreateSplatUniforms),
-            vertexShader,
-            fragmentShader,
+            vertexShader: genShaderSource(vertexShader),
+            fragmentShader: genShaderSource(fragmentShader),
             transparent: true,
             alphaTest: 1.0,
             blending: NormalBlending,
@@ -465,6 +470,13 @@ export function setupSplatMesh(events: Events) {
             material.uniformsNeedUpdate = true;
             fire(NotifyViewerNeedUpdate);
         });
+        on(SplatUpdateActiveFlagValue, (activeFlagValue: number = -1) => {
+            if (activeFlagValue < 0) return material.uniforms[VarActiveFlagValue].value;
+            material.uniforms[VarActiveFlagValue].value = activeFlagValue;
+            material.uniforms[VarPerformanceAct].value = performance.now();
+            material.uniformsNeedUpdate = true;
+            fire(NotifyViewerNeedUpdate);
+        });
         on(
             SplatMaterialDispose,
             () => {
@@ -479,6 +491,12 @@ export function setupSplatMesh(events: Events) {
 
         return material;
     });
+
+    function genShaderSource(src: string) {
+        shaderChunk['cmn'] = CmnFns.trim();
+        shaderChunk['FvEffect'] = (shaderChunk['custom-FvEffect'] || FvEffect).trim();
+        return '#include <cmn>\n#include <FvEffect>\n' + src;
+    }
 
     on(CreateSplatMesh, async () => {
         const mesh = new Mesh(await fire(CreateSplatGeometry), await fire(CreateSplatMaterial));
@@ -656,6 +674,7 @@ export function setupSplatMesh(events: Events) {
             [VarShowWaterMark]: { type: 'bool', value: true },
             [VarUseSimilarExp]: { type: 'bool', value: true },
             [VarFlagValue]: { type: 'uint', value: 1 },
+            [VarActiveFlagValue]: { type: 'uint', value: 0 },
         };
     });
 
