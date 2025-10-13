@@ -10,7 +10,6 @@ import { Reall3dMapViewer } from './reall3d/mapviewer/Reall3dMapViewer';
 import { globalEv } from './reall3d/events/SetupGlobalEV';
 import { PlaytBgAudio, StopBgAudio } from './reall3d/events/EventConstants';
 import { TransitionEffects } from './reall3d/meshs/splatmesh/SplatMeshOptions';
-import { shaderChunk } from './reall3d/utils/CommonUtils';
 
 const params: URLSearchParams = new URLSearchParams(location.search);
 let url = params.get('url');
@@ -96,13 +95,6 @@ function fnClick(className: string) {
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/bzg.spx`), 50); // Let it GC
-        globalEv.fire(StopBgAudio);
-    } else if (className == 'ppt') {
-        viewer?.dispose();
-        mapViewer?.dispose();
-        viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
-        viewer.reset({ debugMode: true });
-        setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/ppt.spx`), 50); // Let it GC
         globalEv.fire(StopBgAudio);
     } else if (className == 'lff-house') {
         viewer?.dispose();
