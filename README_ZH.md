@@ -30,12 +30,13 @@
 
 
 
-### 文档(By Zread AI)
+#### 在线演示
+- https://reall3d.com/reall3dviewer/index.html
+
+
+#### 文档(By Zread AI)
 - https://zread.ai/reall3d-com/Reall3dViewer
 
-
-### 在线演示
-- https://reall3d.com/reall3dviewer/index.html
 
 
 ## 重要选项参数

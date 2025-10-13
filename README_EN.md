@@ -29,11 +29,12 @@
 - [x] Built-in optimized sorting types to fine-tune performance for diverse scenarios (v2.0.0+ 🌟)
 
 
-### Docs(By Zread AI)
-- https://zread.ai/reall3d-com/Reall3dViewer
-
-### Live demo
+#### Live demo
 - https://reall3d.com/reall3dviewer/index.html
+
+
+#### Docs(By Zread AI)
+- https://zread.ai/reall3d-com/Reall3dViewer
 
 
 ## Key Configuration Parameters
