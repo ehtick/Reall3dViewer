@@ -29,7 +29,10 @@
 - [x] Built-in optimized sorting types to fine-tune performance for diverse scenarios (v2.0.0+ 🌟)
 
 
-## Live demo
+### Docs(By Zread AI)
+- https://zread.ai/reall3d-com/Reall3dViewer
+
+### Live demo
 - https://reall3d.com/reall3dviewer/index.html
 
 
@@ -79,9 +82,6 @@ const splatMesh = new SplatMesh({ renderer, scene, controls});
 splatMesh.addModel({ url: 'https://reall3d.com/demo-models/yz.spx' });
 scene.add(splatMesh);
 ```
-
-## Docs(By Zread)
-- https://zread.ai/reall3d-com/Reall3dViewer
 
 
 ## TODO

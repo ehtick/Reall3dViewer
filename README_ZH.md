@@ -30,7 +30,11 @@
 
 
 
-## 在线演示
+### 文档(By Zread AI)
+- https://zread.ai/reall3d-com/Reall3dViewer
+
+
+### 在线演示
 - https://reall3d.com/reall3dviewer/index.html
 
 
@@ -82,9 +86,6 @@ const splatMesh = new SplatMesh({ renderer, scene, controls});
 splatMesh.addModel({ url: 'https://reall3d.com/demo-models/yz.spx' });
 scene.add(splatMesh);
 ```
-
-## 文档(By Zread)
-- https://zread.ai/reall3d-com/Reall3dViewer
 
 
 ## TODO
