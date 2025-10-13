@@ -7,7 +7,9 @@ import { loadFile } from '../modeldata/loaders/FileLoader';
 import { loopByTime } from '../utils/CommonUtils';
 import { Events } from './Events';
 
-// global event
+/**
+ * 全局性的单例事件对象，在此写全局性的通用控制，可在 UI、Viewer、SplatMesh 之间自由穿梭畅通无阻，简洁高效的实现各种功能。
+ */
 export const globalEv: Events = (() => {
     const ev = new Events();
     ev.on(PlaytBgAudio, async (urlAudio: string = '', isLoop: boolean = false, volume: number = 0.5): Promise<boolean> => {
