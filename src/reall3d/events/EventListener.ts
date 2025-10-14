@@ -60,7 +60,7 @@ import { MarkMultiLines } from '../meshs/mark/MarkMultiLines';
 import { MarkSinglePoint } from '../meshs/mark/MarkSinglePoint';
 import { MarkMultiPlans } from '../meshs/mark/MarkMulitPlans';
 import { MarkCirclePlan } from '../meshs/mark/MarkCirclePlan';
-import { globalEv } from './SetupGlobalEV';
+import { globalEv } from './GlobalEV';
 
 class MouseState {
     public down: number = 0;
