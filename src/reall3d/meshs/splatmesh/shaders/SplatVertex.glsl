@@ -121,7 +121,7 @@ void main() {
         if (shDegree > 0) {
             vColor.rgb += splatEvalSH(v3Cen);
         }
-        FvEffect(cen, vColor, activeFlagValue, performanceNow);
+        vColor = FvEffect(cen, vColor, activeFlagValue, performanceNow);
     }
 
     float diameter1 = min(sqrt(2.0 * eigenValue1), maxPixelDiameter);
