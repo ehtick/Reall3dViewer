@@ -359,8 +359,6 @@ export const GetMeta = i++;
 export const SplatUpdateFlagValue = i++;
 /** Splat更新活动标记 */
 export const SplatUpdateActiveFlagValue = i++;
-/** 小场景开始时间变迁效果 */
-export const OnSmallSceneTimeChange = i++;
 
 /** 取元数据中配置的矩阵 */
 export const GetMetaMatrix = i++;
@@ -382,8 +380,19 @@ export const SplatUpdateMinMaxPixelDiameter = i++;
 export const SplatUpdateMinAlpha = i++;
 /** 更新是否使用近似计算替代exp的标记 */
 export const SplatUpdateUseSimilarExp = i++;
+
 /** 更新质量级别 */
 export const OnQualityLevelChanged = i++;
+/** 小场景开始时间变迁效果 */
+export const OnSmallSceneTimeChange = i++;
+/** 更新渲染质量级别 */
+export const UpdateQualityLevel = i++;
+/** 更新Worker相关参数 */
+export const WorkerUpdateParams = i++;
+/** Splat更新特效类型 */
+export const SplatUpdateTransitionEffect = i++;
+/** SplatMesh是否已创建 */
+export const IsSplatMeshCreated = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;
@@ -393,6 +402,7 @@ export const MapCreateScene = i++;
 export const MapCreateCamera = i++;
 /** 创建地图控制器 */
 export const MapCreateControls = i++;
+
 /** 创建光源 */
 export const MapCreateDirLight = i++;
 /** 取一个活动的splatMesh实例(仅用于地图单个高斯模型调整) */
@@ -413,6 +423,7 @@ export const MapSplatMeshMoveZ = i++;
 export const MapSplatMeshSetPosition = i++;
 /** 缩放 */
 export const MapSplatMeshScale = i++;
+
 /** 切换显示隐藏 */
 export const MapSplatMeshShowHide = i++;
 /** 保存模型矩阵 */
@@ -434,6 +445,7 @@ export const TweenFlyEnable = i++;
 export const TweenFlyDisable = i++;
 /** 飞行暂停 */
 export const FlyingPause = i++;
+
 /** 飞行继续 */
 export const FlyingContinue = i++;
 /** 飞行播放 */
@@ -444,14 +456,6 @@ export const GetRenderQualityLevel = i++;
 export const GetSortType = i++;
 /** 更新排序类型 */
 export const UpdateSortType = i++;
-/** 更新渲染质量级别 */
-export const UpdateQualityLevel = i++;
-/** 更新Worker相关参数 */
-export const WorkerUpdateParams = i++;
-/** Splat更新特效类型 */
-export const SplatUpdateTransitionEffect = i++;
-/** SplatMesh是否已创建 */
-export const IsSplatMeshCreated = i++;
 
 // 以下全局单例事件对象使用
 /** 取背景音乐对象 */

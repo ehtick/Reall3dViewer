@@ -66,7 +66,7 @@ export const globalEv: Events = (() => {
     });
 
     function getBackgroundAudio(autoCreate = true): Audio {
-        let audioBg: Audio = ev.fire(GetBgAudio);
+        let audioBg: Audio = ev.tryFire(GetBgAudio);
         if (!audioBg && autoCreate) {
             audioBg = new Audio(new AudioListener());
             ev.on(GetBgAudio, () => audioBg);

@@ -1,9 +1,9 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-#include ./Chunk0VarDeclarations
-#include ./Chunk9AnimateParticle
-#include ./Chunk9SpaltEvalSH
+#include ./chunks/Chunk0VarDeclarations
+#include ./chunks/Chunk9AnimateParticle
+#include ./chunks/Chunk9SpaltEvalSH
 
 void main() {
     uvec4 cen, cov3d;
