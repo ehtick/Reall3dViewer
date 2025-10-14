@@ -147,6 +147,7 @@ import { SplatMesh } from './SplatMesh';
 import { shaderChunk } from '../../utils/CommonUtils';
 import CmnFns from './shaders/chunks/CmnFns.glsl';
 import FvEffect from './shaders/chunks/FvEffect.glsl';
+import WatermarkEffect from './shaders/chunks/WatermarkEffect.glsl';
 
 export function setupSplatMesh(events: Events) {
     let disposed = false;
@@ -495,7 +496,8 @@ export function setupSplatMesh(events: Events) {
     function genShaderSource(src: string) {
         shaderChunk['cmn'] = CmnFns.trim();
         shaderChunk['FvEffect'] = (shaderChunk['custom-FvEffect'] || FvEffect).trim();
-        return '#include <cmn>\n#include <FvEffect>\n' + src;
+        shaderChunk['WatermarkEffect'] = (shaderChunk['custom-WatermarkEffect'] || WatermarkEffect).trim();
+        return '#include <cmn>\n#include <FvEffect>\n#include <WatermarkEffect>\n' + src;
     }
 
     on(CreateSplatMesh, async () => {

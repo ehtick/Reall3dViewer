@@ -29,9 +29,7 @@ void main() {
 
     vec3 v3Cen = uintBitsToFloat(cen.xyz);
     v3Cen = animateParticle(v3Cen);
-    if (isWatermark && debugEffect) {
-        v3Cen.y += sin(performanceNow * 0.002 + v3Cen.x) * 0.1; // 水印动画
-    }
+    v3Cen = WatermarkEffect(v3Cen, isWatermark, debugEffect, performanceNow);
 
     vec4 cam = modelViewMatrix * vec4(v3Cen, 1.0);
     vec4 pos2d = projectionMatrix * cam;
