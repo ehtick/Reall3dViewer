@@ -468,3 +468,5 @@ export const SetBgAudioVolumeDown = i++;
 export const SetBgAudioVolumeUp = i++;
 /** 停止背景音乐 */
 export const StopBgAudio = i++;
+/** 禁止背景音乐 */
+export const DisableBgAudio = i++;

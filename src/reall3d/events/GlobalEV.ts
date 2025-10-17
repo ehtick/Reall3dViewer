@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { AudioLoader, AudioListener, Audio } from 'three';
-import { GetBgAudio, PlaytBgAudio, SetBgAudioVolumeDown, SetBgAudioVolumeUp, StopBgAudio } from './EventConstants';
+import { DisableBgAudio, GetBgAudio, PlaytBgAudio, SetBgAudioVolumeDown, SetBgAudioVolumeUp, StopBgAudio } from './EventConstants';
 import { loadFile } from '../modeldata/loaders/FileLoader';
 import { loopByTime } from '../utils/CommonUtils';
 import { Events } from './Events';
@@ -12,6 +12,8 @@ import { Events } from './Events';
  */
 export const globalEv: Events = (() => {
     const ev = new Events();
+    let disableBgAudio = false;
+
     ev.on(PlaytBgAudio, async (urlAudio: string = '', isLoop: boolean = false, volume: number = 0.5): Promise<boolean> => {
         const audioBg = getBackgroundAudio();
 
@@ -19,7 +21,12 @@ export const globalEv: Events = (() => {
         new Promise(rs => (reslove = rs));
 
         if (audioBg.isPlaying) {
-            reslove(true);
+            if (disableBgAudio) {
+                audioBg?.stop();
+                reslove(false);
+            } else {
+                reslove(true);
+            }
             return;
         }
 
@@ -28,11 +35,13 @@ export const globalEv: Events = (() => {
         new AudioLoader().load(
             mp3Url,
             buf => {
-                audioBg.setBuffer(buf);
-                audioBg.setLoop(isLoop);
-                audioBg.setVolume(volume);
-                audioBg.play();
-                reslove(true);
+                if (!disableBgAudio) {
+                    audioBg.setBuffer(buf);
+                    audioBg.setLoop(isLoop);
+                    audioBg.setVolume(volume);
+                    audioBg.play();
+                }
+                reslove(!disableBgAudio);
             },
             () => reslove(false),
         );
@@ -44,28 +53,53 @@ export const globalEv: Events = (() => {
         audioBg.stop();
     });
 
+    ev.on(DisableBgAudio, (disable = true) => {
+        if (disable === true || disable === false) {
+            disableBgAudio = disable;
+        }
+        return disableBgAudio;
+    });
+
     ev.on(SetBgAudioVolumeDown, () => {
         const audioBg = getBackgroundAudio();
-        if (!audioBg.isPlaying) return;
+        if (!audioBg?.isPlaying) return;
 
         let vol = audioBg.getVolume();
         loopByTime(
-            () => audioBg?.setVolume((vol = Math.max(vol * 0.99, 0.15))),
+            () => {
+                if (!audioBg) return;
+
+                if (disableBgAudio) {
+                    audioBg.stop();
+                } else {
+                    audioBg.setVolume((vol = Math.max(vol * 0.99, 0.15)));
+                }
+            },
             () => vol > 0.15,
         );
     });
     ev.on(SetBgAudioVolumeUp, () => {
         const audioBg = getBackgroundAudio();
-        if (!audioBg.isPlaying) return;
+        if (!audioBg?.isPlaying) return;
 
         let vol = audioBg.getVolume();
         loopByTime(
-            () => audioBg?.setVolume((vol = Math.min(vol * 1.01, 0.5))),
+            () => {
+                if (!audioBg) return;
+
+                if (disableBgAudio) {
+                    audioBg.stop();
+                } else {
+                    audioBg.setVolume((vol = Math.min(vol * 1.01, 0.5)));
+                }
+            },
             () => vol < 0.5,
         );
     });
 
     function getBackgroundAudio(autoCreate = true): Audio {
+        if (disableBgAudio) return null;
+
         let audioBg: Audio = ev.tryFire(GetBgAudio);
         if (!audioBg && autoCreate) {
             audioBg = new Audio(new AudioListener());
