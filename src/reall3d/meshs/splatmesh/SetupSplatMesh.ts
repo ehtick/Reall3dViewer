@@ -68,7 +68,6 @@ import {
     FlyOnce,
     SplatUpdateDebugEffect,
     SplatUpdateFlagValue,
-    OnSmallSceneTimeChange,
     SplatUpdateMaxRadius,
     SplatUpdatePerformanceAct,
     OnSmallSceneShowDone,
@@ -580,7 +579,6 @@ export function setupSplatMesh(events: Events) {
                     fire(IsPointcloudMode) && fire(SplatMeshSwitchDisplayMode, true);
                     fire(SplatUpdateCurrentVisibleRadius, 0);
                     stop = true;
-                    setTimeout(() => fire(GetOptions)?.viewerEvents?.fire(OnSmallSceneTimeChange), 5000);
                 } else if (isDataAllReay && visibleRate > 0.7) {
                     stepRate = Math.min(stepRate * 1.2, 0.3);
                 } else if (isDataAllReay && visibleRate > 0.5) {

@@ -383,8 +383,6 @@ export const SplatUpdateUseSimilarExp = i++;
 
 /** 更新质量级别 */
 export const OnQualityLevelChanged = i++;
-/** 小场景开始时间变迁效果 */
-export const OnSmallSceneTimeChange = i++;
 /** 更新渲染质量级别 */
 export const UpdateQualityLevel = i++;
 /** 更新Worker相关参数 */

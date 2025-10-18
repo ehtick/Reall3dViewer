@@ -57,8 +57,6 @@ import {
     GetSplatMesh,
     FlySavePositions,
     GetMeta,
-    OnSmallSceneTimeChange,
-    SplatUpdateFlagValue,
     OnLoadAndRenderObj,
     GetMetaMatrix,
     UpdateQualityLevel,
