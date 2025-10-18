@@ -67,7 +67,7 @@ export function setupMapUtils(events: Events) {
             now - key <= 1000 ? rs++ : dels.push(key);
         }
         dels.forEach(key => map.delete(key));
-        return Math.min(rs, 30);
+        return Math.min(rs, 60);
     });
 
     on(MapGetSplatMesh, () => {

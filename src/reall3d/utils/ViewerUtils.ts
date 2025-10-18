@@ -46,23 +46,8 @@ export function setupViewerUtils(events: Events) {
     on(GetFpsDefault, () => fire(IsDebugMode) && fire(ComputeFps, fpsMap));
     on(CountFpsReal, () => fire(IsDebugMode) && fpsRealMap.set(Date.now(), 1));
     on(GetFpsReal, () => fire(IsDebugMode) && fire(ComputeFps, fpsRealMap));
-    on(
-        OnViewerUpdate,
-        () => {
-            if (disposed) return;
-            fire(CountFpsReal);
-            fire(IsDebugMode) &&
-                fire(Information, {
-                    fov: fire(GetCameraFov),
-                    position: fire(Vector3ToString, fire(GetCameraPosition)),
-                    lookAt: fire(Vector3ToString, fire(GetCameraLookAt)),
-                    lookUp: fire(Vector3ToString, fire(GetCameraLookUp)),
-                });
-        },
-        true,
-    );
 
-    let iRender: number = 0;
+    let iRenderCnt: number = 0;
     on(
         OnViewerBeforeUpdate,
         () => {
@@ -70,7 +55,15 @@ export function setupViewerUtils(events: Events) {
             fire(ControlsUpdate);
             if (fire(IsDebugMode)) {
                 fire(CountFpsDefault);
-                !(iRender++ % 5) && fire(Information, { fps: fire(GetFpsDefault), realFps: fire(GetFpsReal) });
+                !(iRenderCnt++ % 5) &&
+                    fire(Information, {
+                        fps: fire(GetFpsDefault),
+                        realFps: fire(GetFpsReal),
+                        fov: fire(GetCameraFov),
+                        position: fire(Vector3ToString, fire(GetCameraPosition)),
+                        lookAt: fire(Vector3ToString, fire(GetCameraLookAt)),
+                        lookUp: fire(Vector3ToString, fire(GetCameraLookUp)),
+                    });
             }
         },
         true,
@@ -84,7 +77,7 @@ export function setupViewerUtils(events: Events) {
             now - key <= 1000 ? rs++ : dels.push(key);
         }
         dels.forEach(key => map.delete(key));
-        return Math.min(rs, 30);
+        return Math.min(rs, 60);
     });
 
     window.addEventListener('beforeunload', () => fire(ViewerDispose));

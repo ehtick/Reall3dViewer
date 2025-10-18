@@ -222,7 +222,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         const that = this;
         const fire = (key: number, ...args: any): any => that.events.fire(key, ...args);
         fire(CountFpsDefault);
-        if (Date.now() - that.updateTime > 30) {
+        if (Date.now() - that.updateTime > 17) {
             fire(OnViewerBeforeUpdate);
             fire(OnViewerUpdate);
             fire(OnViewerAfterUpdate);

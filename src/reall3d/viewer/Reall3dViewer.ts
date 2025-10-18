@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import '../style/style.less';
-import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4 } from 'three';
+import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4, Camera } from 'three';
 import {
     GetCurrentDisplayShDegree,
     GetModelShDegree,
@@ -63,6 +63,8 @@ import {
     GetMetaMatrix,
     UpdateQualityLevel,
     UpdateSortType,
+    CountFpsReal,
+    IsDebugMode,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -91,7 +93,6 @@ export class Reall3dViewer {
     private disposed: boolean = false;
     private splatMesh: SplatMesh;
     private events: Events;
-    private updateTime: number = 0;
     private metaMatrix: Matrix4;
 
     public needUpdate: boolean = true;
@@ -115,6 +116,7 @@ export class Reall3dViewer {
         initCamera(opts);
         const controls = (opts.controls = new CameraControls(opts));
         controls.updateByOptions(opts);
+        const camera = controls.object as Camera;
 
         const events = new Events();
         opts.viewerEvents = events;
@@ -128,7 +130,7 @@ export class Reall3dViewer {
         on(GetRenderer, () => renderer);
         on(GetScene, () => scene);
         on(GetControls, () => controls);
-        on(GetCamera, () => controls.object);
+        on(GetCamera, () => camera);
         on(IsBigSceneMode, () => opts.bigSceneMode);
         on(ViewerSetPointcloudMode, (pointMode: boolean) => (opts.pointcloudMode = pointMode));
 
@@ -185,18 +187,24 @@ export class Reall3dViewer {
         });
         on(OnViewerBeforeUpdate, () => fire(KeyActionCheckAndExecute), true);
         on(OnViewerBeforeUpdate, () => fire(ViewerCheckNeedUpdate), true);
+
+        let renterTime = performance.now();
         on(
             OnViewerUpdate,
             () => {
                 try {
-                    !(that.needUpdate = false) && renderer.render(scene, fire(GetCamera));
+                    const now = performance.now();
+                    if (!that.needUpdate || now - renterTime < 17) return;
+                    that.needUpdate = false;
+                    renterTime = now;
+                    renderer.render(scene, camera);
+                    fire(IsDebugMode) && fire(CountFpsReal);
                 } catch (e) {
                     console.warn(e.message);
                 }
             },
             true,
         );
-        on(OnViewerAfterUpdate, () => {}, true);
         on(ViewerDispose, () => that.dispose());
         on(PrintInfo, () => console.info(JSON.stringify(fire(GetSplatMesh).meta || {}, null, 2)));
 
@@ -209,20 +217,6 @@ export class Reall3dViewer {
         fire(Information, { scale: `1 : ${fire(GetOptions).meterScale} m` });
 
         that.initGsApi();
-
-        // -------- 以下动作应考虑支持自定义 --------
-        let handleSetTimeout: any;
-        on(OnSmallSceneTimeChange, (next: boolean = true, fvHide: number = 1, fvShow: number = 2) => {
-            handleSetTimeout && clearTimeout(handleSetTimeout);
-            handleSetTimeout = null;
-            const max = 16;
-            if (fvShow > max && next) return fire(OnSmallSceneTimeChange, next, max, 1);
-            if (fvShow < 1 && !next) return fire(OnSmallSceneTimeChange, !next, 1, max);
-
-            that.splatMesh.fire(SplatUpdateFlagValue, fvHide, fvShow);
-            handleSetTimeout = setTimeout(() => fire(OnSmallSceneTimeChange, next, fvShow, next ? fvShow * 2 : fvShow / 2), 6 * 1000);
-        });
-        // ------------------------------------------
     }
 
     /**
@@ -286,12 +280,9 @@ export class Reall3dViewer {
         const that = this;
         if (that.disposed) return;
         const fire = (key: number, ...args: any): any => that.events.fire(key, ...args);
-
-        if (Date.now() - that.updateTime > 30) {
-            fire(OnViewerBeforeUpdate);
-            that.needUpdate && fire(OnViewerUpdate);
-            fire(OnViewerAfterUpdate);
-        }
+        fire(OnViewerBeforeUpdate);
+        fire(OnViewerUpdate);
+        fire(OnViewerAfterUpdate);
     }
 
     // 开发调试用临时接口
