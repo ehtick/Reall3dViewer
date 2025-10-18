@@ -209,17 +209,19 @@ function sortDirWithPrune2011(oArg: any) {
     const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, xyz, dataCount, watermarkCount, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(oArg.maxDepth, 0);
     let frontCnt = 0;
+    const subMinDepth = -minDepth;
+    const dotPosSubMinDepth = dotPos - minDepth;
     for (let i = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
         offset = i * 3;
-        depths[i] = dotPos - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
+        depths[i] = dotPosSubMinDepth - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
         dataIdx1[frontCnt] = i;
-        frontCnt += ((depths[i] <= 0) as any) | 0;
+        frontCnt += ((depths[i] <= subMinDepth) as any) | 0;
     }
     const renderCount = frontCnt + watermarkCount;
     const { bucketBits, bucketCnt } = getBucketCount(frontCnt);
     const depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth);
     for (let i = 0, idx = 0; i < frontCnt; ++i) {
-        idx = ((depths[dataIdx1[i]] - minDepth) * depthInv) | 0;
+        idx = (depths[dataIdx1[i]] * depthInv) | 0;
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
