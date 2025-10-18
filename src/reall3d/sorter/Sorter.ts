@@ -184,17 +184,19 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
     const maxDepth1 = Math.min(oArg.maxDepth, 0);
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
     let nearCnt = 0;
+    const subMinDepth1 = -minDepth1;
+    const dotPosSubMinDepth1 = dotPos - minDepth1;
     for (let i = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
         offset = i * 3;
-        depths[i] = dotPos - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
+        depths[i] = dotPosSubMinDepth1 - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
         dataIdx1[nearCnt] = i;
-        nearCnt += ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
+        nearCnt += ((depths[i] <= subMinDepth1 && depths[i] >= 0) as any) | 0;
     }
     const renderCount = nearCnt + watermarkCount;
     const { bucketBits, bucketCnt } = getBucketCount(nearCnt);
     const depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
     for (let i = 0, idx = 0; i < nearCnt; ++i) {
-        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
+        idx = (depths[dataIdx1[i]] * depthInv) | 0;
         counters[(distances[i] = idx)]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
