@@ -188,13 +188,14 @@ export class Reall3dViewer {
         on(OnViewerBeforeUpdate, () => fire(KeyActionCheckAndExecute), true);
         on(OnViewerBeforeUpdate, () => fire(ViewerCheckNeedUpdate), true);
 
+        const minIntervalTime = isMobile ? 18 : opts.qualityLevel > 6 ? 1 : 17;
         let renterTime = performance.now();
         on(
             OnViewerUpdate,
             () => {
                 try {
                     const now = performance.now();
-                    if (!that.needUpdate || now - renterTime < 18) return;
+                    if (!that.needUpdate || now - renterTime < minIntervalTime) return;
                     that.needUpdate = false;
                     renterTime = now;
                     renderer.render(scene, camera);
