@@ -194,7 +194,7 @@ export class Reall3dViewer {
             () => {
                 try {
                     const now = performance.now();
-                    if (!that.needUpdate || now - renterTime < (isMobile ? 18 : opts.qualityLevel > 6 ? 1 : 17)) return;
+                    if (!that.needUpdate || now - renterTime < (isMobile ? 25 : opts.qualityLevel > 5 ? 1 : 18)) return;
                     that.needUpdate = false;
                     renterTime = now;
                     renderer.render(scene, camera);
