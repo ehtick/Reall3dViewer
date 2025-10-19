@@ -23,7 +23,6 @@ export const ComputePoint3Area = i++;
 export const GetWorker = i++;
 /** 取得相关对象 */
 export const GetCanvas = i++;
-
 /** 取得相关对象 */
 export const GetCamera = i++;
 /** 取得相关对象 */
@@ -65,7 +64,6 @@ export const StartAutoRotate = i++;
 export const StopAutoRotate = i++;
 /** 加载模型开始 */
 export const LoaderModelStart = i++;
-
 /** 渲染信息 */
 export const Information = i++;
 /** 当前时点限制渲染的的高斯点数(包含了附加的动态文字水印数) */
@@ -107,7 +105,6 @@ export const SplatUpdateTopY = i++;
 export const SplatUpdateCurrentVisibleRadius = i++;
 /** Splat更新光圈半径 */
 export const SplatUpdateCurrentLightRadius = i++;
-
 /** Splat更新标记点 */
 export const SplatUpdateMarkPoint = i++;
 /** Splat更新系统时间 */
@@ -149,7 +146,6 @@ export const ViewerDispose = i++;
 export const IsCameraChangedNeedUpdate = i++;
 /** 是否相机视角发生变化需要重新加载数据 */
 export const IsCameraChangedNeedLoadData = i++;
-
 /** 是否大场景模式 */
 export const IsBigSceneMode = i++;
 /** 是否点云模式 */
@@ -191,7 +187,6 @@ export const KeyActionCheckAndExecute = i++;
 export const RotateAt = i++;
 /** 视线轴左旋 */
 export const RotateLeft = i++;
-
 /** 视线轴右旋 */
 export const RotateRight = i++;
 /** 取活动点数据 */
@@ -233,7 +228,6 @@ export const OnViewerBeforeUpdate = i++;
 export const OnViewerUpdate = i++;
 /** 渲染后处理 */
 export const OnViewerAfterUpdate = i++;
-
 /** 设定水印文字 */
 export const OnSetWaterMark = i++;
 /** 取当前缓存的水印文字 */
@@ -275,7 +269,6 @@ export const MarkPoint = i++;
 export const MarkLine = i++;
 /** 标注面 */
 export const MarkPlan = i++;
-
 /** 标注距离 */
 export const MarkDistance = i++;
 /** 标注面积 */
@@ -317,7 +310,6 @@ export const FlySavePositions = i++;
 export const ClearFlyPosition = i++;
 /** 设定相机飞行轨迹 */
 export const OnSetFlyPositions = i++;
-
 /** 设定相机飞行视点轨迹 */
 export const OnSetFlyTargets = i++;
 /** 相机飞行控制 */
@@ -359,7 +351,6 @@ export const GetMeta = i++;
 export const SplatUpdateFlagValue = i++;
 /** Splat更新活动标记 */
 export const SplatUpdateActiveFlagValue = i++;
-
 /** 取元数据中配置的矩阵 */
 export const GetMetaMatrix = i++;
 /** 更新包围盒数据 */
@@ -391,6 +382,16 @@ export const WorkerUpdateParams = i++;
 export const SplatUpdateTransitionEffect = i++;
 /** SplatMesh是否已创建 */
 export const IsSplatMeshCreated = i++;
+/** 相机飞行控制 */
+export const TweenFly = i++;
+/** 相机飞行控制(仅一次) */
+export const TweenFlyOnce = i++;
+/** 允许相机飞行控制 */
+export const TweenFlyEnable = i++;
+/** 禁止相机飞行控制 */
+export const TweenFlyDisable = i++;
+/** 飞行暂停 */
+export const FlyingPause = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;
@@ -400,7 +401,6 @@ export const MapCreateScene = i++;
 export const MapCreateCamera = i++;
 /** 创建地图控制器 */
 export const MapCreateControls = i++;
-
 /** 创建光源 */
 export const MapCreateDirLight = i++;
 /** 取一个活动的splatMesh实例(仅用于地图单个高斯模型调整) */
@@ -413,6 +413,7 @@ export const MapSplatMeshRotateY = i++;
 export const MapSplatMeshRotateZ = i++;
 /** 按X轴平移 */
 export const MapSplatMeshMoveX = i++;
+
 /** 按Y轴平移 */
 export const MapSplatMeshMoveY = i++;
 /** 按Z轴平移 */
@@ -421,7 +422,6 @@ export const MapSplatMeshMoveZ = i++;
 export const MapSplatMeshSetPosition = i++;
 /** 缩放 */
 export const MapSplatMeshScale = i++;
-
 /** 切换显示隐藏 */
 export const MapSplatMeshShowHide = i++;
 /** 保存模型矩阵 */
@@ -432,17 +432,6 @@ export const MapSortSplatMeshRenderOrder = i++;
 export const MapSceneTraverseDispose = i++;
 /** 飞向目标 */
 export const MapFlyToTarget = i++;
-
-/** 相机飞行控制 */
-export const TweenFly = i++;
-/** 相机飞行控制(仅一次) */
-export const TweenFlyOnce = i++;
-/** 允许相机飞行控制 */
-export const TweenFlyEnable = i++;
-/** 禁止相机飞行控制 */
-export const TweenFlyDisable = i++;
-/** 飞行暂停 */
-export const FlyingPause = i++;
 
 /** 飞行继续 */
 export const FlyingContinue = i++;
@@ -455,7 +444,7 @@ export const GetSortType = i++;
 /** 更新排序类型 */
 export const UpdateSortType = i++;
 
-// 以下全局单例事件对象使用
+// ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */
 export const GetBgAudio = i++;
 /** 播放背景音乐 */
