@@ -77,13 +77,13 @@ export class SplatMesh extends Mesh {
         let isSplatMeshCreated = false;
 
         const opts: SplatMeshOptions = initSplatMeshOptions(options); // 默认参数校验设定
-        const camera = opts.controls.object as PerspectiveCamera;
+        const camera = (opts.camera || opts.controls?.object) as PerspectiveCamera;
         on(GetOptions, () => opts);
         on(GetCanvas, () => opts.renderer.domElement);
         on(GetCamera, () => camera);
         on(GetCameraFov, () => camera.fov);
         on(GetCameraPosition, (copy: boolean = false) => (copy ? camera.position.clone() : camera.position));
-        on(GetCameraLookAt, (copy: boolean = false) => (copy ? opts.controls.target.clone() : opts.controls.target));
+        on(GetCameraLookAt, (copy: boolean = false) => (opts.controls ? (copy ? opts.controls.target.clone() : opts.controls.target) : new Vector3()));
         on(GetViewProjectionMatrixArray, () => camera.projectionMatrix.clone().multiply(camera.matrixWorldInverse).multiply(that.matrix).toArray());
         on(GetViewProjectionMatrix, () => camera.projectionMatrix.clone().multiply(camera.matrixWorldInverse));
         on(GetCameraDirection, () => camera.getWorldDirection(new Vector3()).toArray());
@@ -167,11 +167,11 @@ export class SplatMesh extends Mesh {
      * @param opts 高斯模型选项
      * @param meta 元数据
      */
-    public async addModel(opts: ModelOptions, meta: MetaData = {}): Promise<void> {
+    public addModel(opts: ModelOptions, meta: MetaData = {}) {
         const that = this;
         if (that.disposed) return;
         that.meta = meta;
-        await that.events.fire(SplatTexdataManagerAddModel, opts, meta);
+        that.events.fire(SplatTexdataManagerAddModel, opts, meta);
     }
 
     public fire(key: number, ...args: any): any {

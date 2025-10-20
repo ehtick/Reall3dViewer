@@ -546,7 +546,7 @@ export function setupSplatTextureManager(events: Events) {
         return true;
     }
 
-    async function add(opts: ModelOptions, meta: MetaData) {
+    function add(opts: ModelOptions, meta: MetaData) {
         if (disposed) return;
         const splatMeshOptions: SplatMeshOptions = fire(GetOptions);
         const maxRenderCount: number = isMobile ? splatMeshOptions.maxRenderCountOfMobile : splatMeshOptions.maxRenderCountOfPc;
@@ -593,7 +593,7 @@ export function setupSplatTextureManager(events: Events) {
         fire(Information, { cuts: `` });
     }
 
-    on(SplatTexdataManagerAddModel, async (opts: ModelOptions, meta: MetaData) => await add(opts, meta));
+    on(SplatTexdataManagerAddModel, (opts: ModelOptions, meta: MetaData) => add(opts, meta));
     on(SplatTexdataManagerDataChanged, (msDuring: number = 10000) => Date.now() - lastPostDataTime < msDuring);
     on(SplatTexdataManagerDispose, () => dispose());
 
