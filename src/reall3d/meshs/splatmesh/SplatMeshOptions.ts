@@ -30,7 +30,7 @@ export interface SplatMeshOptions {
     controls?: OrbitControls;
 
     /**
-     * PerspectiveCamera
+     * In VR mode, when no controls is used, pass the camera instead.
      */
     camera?: PerspectiveCamera;
 
