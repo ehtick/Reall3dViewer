@@ -121,7 +121,7 @@ export function initGsViewerOptions(options: Reall3dViewerOptions): Reall3dViewe
     opts.lookAt = opts.lookAt ? [...opts.lookAt] : [0, 0, 0];
     opts.lookUp = opts.lookUp ? [...opts.lookUp] : [0, -1, 0];
     opts.fov ??= 45;
-    opts.near ??= 0.001;
+    opts.near ??= 0.1;
     opts.far ??= 1000;
     opts.enableDamping ??= true;
     opts.autoRotate ??= true;
