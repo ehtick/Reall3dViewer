@@ -444,6 +444,98 @@ export async function data190To19(data190: Uint8Array): Promise<Uint8Array> {
     return rs;
 }
 
+export async function data10190To10019(data10190: Uint8Array): Promise<Uint8Array> {
+    const ui32s = new Uint32Array(data10190.slice(0, 12).buffer);
+    const splatCount = ui32s[0];
+    const size1 = ui32s[2];
+    let offset = 8;
+    const data1: Uint8Array = data10190.slice(offset + 4, offset + 4 + size1);
+    const { rgba: rgba1 } = await webpToRgba(data1);
+    offset += 4 + size1;
+    const size2 = new Uint32Array(data10190.slice(offset, offset + 4).buffer)[0];
+    const data2: Uint8Array = data10190.slice(offset + 4, offset + 4 + size2);
+    const { rgba: rgba2 } = await webpToRgba(data2);
+    offset += 4 + size2;
+    const size3 = new Uint32Array(data10190.slice(offset, offset + 4).buffer)[0];
+    const data3: Uint8Array = data10190.slice(offset + 4, offset + 4 + size3);
+    const { rgba: rgba3 } = await webpToRgba(data3);
+    offset += 4 + size3;
+    const size4 = new Uint32Array(data10190.slice(offset, offset + 4).buffer)[0];
+    const data4: Uint8Array = data10190.slice(offset + 4, offset + 4 + size4);
+    const { rgba: rgba4 } = await webpToRgba(data4);
+
+    const rs = new Uint8Array(8 + splatCount * 19);
+    let n = 0;
+    rs[n] = data10190[n++];
+    rs[n] = data10190[n++];
+    rs[n] = data10190[n++];
+    rs[n] = data10190[n++];
+    rs[n++] = 35; // 10019[35, 39, 0, 0]
+    rs[n++] = 39;
+    rs[n++] = 0;
+    rs[n++] = 0;
+
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[i * 4 + 0]; // x0
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[i * 4 + 1]; // y0
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[i * 4 + 2]; // z0
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 4 + i * 4 + 0]; // x1
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 4 + i * 4 + 1]; // y1
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 4 + i * 4 + 2]; // z1
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 8 + i * 4 + 0]; // x2
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 8 + i * 4 + 1]; // y2
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba1[splatCount * 8 + i * 4 + 2]; // z2
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba2[i * 4 + 0]; // sx
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba2[i * 4 + 1]; // sy
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba2[i * 4 + 2]; // sz
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba3[i * 4 + 0]; // r
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba3[i * 4 + 1]; // g
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba3[i * 4 + 2]; // b
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba3[i * 4 + 3]; // a
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba4[i * 4 + 0]; // rx
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba4[i * 4 + 1]; // ry
+    }
+    for (let i = 0; i < splatCount; i++) {
+        rs[n++] = rgba4[i * 4 + 2]; // rz
+    }
+
+    return rs;
+}
+
 export async function sh123To1(data123: Uint8Array): Promise<Uint8Array> {
     const ui32s = new Uint32Array(data123.slice(0, 8).buffer);
     const splatCount = ui32s[0];

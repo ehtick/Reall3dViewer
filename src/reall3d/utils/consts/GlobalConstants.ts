@@ -1,9 +1,9 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-export const ViewerVersion = 'v2.0.0'; // Reall3dViewer 版本
+export const ViewerVersion = 'v2.1.0-dev'; // Reall3dViewer 版本
 
-export const isMobile = navigator.userAgent.includes('Mobi');
+export const isMobile = !navigator.userAgent.includes('cloudphone') && navigator.userAgent.includes('Mobi');
 export const HalfChars = 'QWERTYUIOPLKJHGFDSAZXCVBNM1234567890qwertyuioplkjhgfdsazxcvbnm`~!@#$%^&*()-_=+\\|]}[{\'";::,<.>//? \t';
 export const BlankingTimeOfSmallScene = isMobile ? 600 : 300;
 export const BlankingTimeOfLargeScene = isMobile ? 2000 : 300;
@@ -30,6 +30,8 @@ export const SpxBlockFormatData20 = 20;
 export const SpxBlockFormatData19 = 19;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 190, basic data */
 export const SpxBlockFormatData190 = 190;
+/** 【spx中定义的公开数据块格式】Open Block Content Format 10190, basic data */
+export const SpxBlockFormatData10190 = 10190;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 1, data of SH degree 1 （SH1 only） */
 export const SpxBlockFormatSH1 = 1;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 2, data of SH degree 2 （SH1 + SH2） */
