@@ -9,5 +9,18 @@
         "editor.defaultFormatter": "raczzalan.webgl-glsl-editor"
     },
     "webgl-glsl-editor.diagnostics": false,
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "files.associations": {
+        "bit": "cpp",
+        "cmath": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "type_traits": "cpp",
+        "limits": "cpp",
+        "new": "cpp",
+        "typeinfo": "cpp"
+    }
 }
