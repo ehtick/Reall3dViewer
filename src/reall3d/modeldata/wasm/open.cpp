@@ -225,47 +225,49 @@ int spxSplat20(void *o, void *b) {
 }
 
 /**
- * 把spx【19】格式的数据块解析为纹理
+ * 把spx【19,10019】格式的数据块解析为纹理
  * @param o: 输出用字节数组（纹理32*n）
  * @param b: 输入的块字节数组
  *           【19】splat19（点数4 + 格式4 + 数据19*n）
+ *           【10019】splat19（点数4 + 格式4 + log编码次数4 + 数据19*n）
  *           数据排列 [x0...]+[y0...]+[z0...]+[x1...]+[y1...]+[z1...]+[x2...]+[y2...]+[z2...]+[sx...]+[sy...]+[sz...]+[r...]+[g...]+[b...]+[a...]+[rx...]+[ry...]+[rz...]
+ * @param offsetBit: 块头字节偏移量(8或12)
  * @return: 0-成功
  */
-int spxSplat19(void *o, void *b, bool isLog3) {
+int spxSplat19(void *o, void *b, int offsetBit) {
     uint8_t *ui8sInput = (uint8_t *)b;
     uint32_t *ui32sInput = (uint32_t *)b;
 
     int n = (int)ui32sInput[0];
+    int logTimes = offsetBit == 12 ? (int)ui8sInput[8] : 0;
 
-    int offsetBit8 = 8; // 跳过块头部
     float x, y, z, sx, sy, sz, RX, RY, RZ, RW;
     uint32_t rgba;
     uint8_t x0, x1, x2, y0, y1, y2, z0, z1, z2, s0, s1, s2, R, G, B, A, rx, ry, rz, rw;
     int32_t i32x, i32y, i32z;
     for (int i = 0; i < n; i++) {
-        x0 = ui8sInput[offsetBit8 + i];
-        y0 = ui8sInput[offsetBit8 + n * 1 + i];
-        z0 = ui8sInput[offsetBit8 + n * 2 + i];
-        x1 = ui8sInput[offsetBit8 + n * 3 + i];
-        y1 = ui8sInput[offsetBit8 + n * 4 + i];
-        z1 = ui8sInput[offsetBit8 + n * 5 + i];
-        x2 = ui8sInput[offsetBit8 + n * 6 + i];
-        y2 = ui8sInput[offsetBit8 + n * 7 + i];
-        z2 = ui8sInput[offsetBit8 + n * 8 + i];
+        x0 = ui8sInput[offsetBit + i];
+        y0 = ui8sInput[offsetBit + n * 1 + i];
+        z0 = ui8sInput[offsetBit + n * 2 + i];
+        x1 = ui8sInput[offsetBit + n * 3 + i];
+        y1 = ui8sInput[offsetBit + n * 4 + i];
+        z1 = ui8sInput[offsetBit + n * 5 + i];
+        x2 = ui8sInput[offsetBit + n * 6 + i];
+        y2 = ui8sInput[offsetBit + n * 7 + i];
+        z2 = ui8sInput[offsetBit + n * 8 + i];
 
-        s0 = ui8sInput[offsetBit8 + n * 9 + i];
-        s1 = ui8sInput[offsetBit8 + n * 10 + i];
-        s2 = ui8sInput[offsetBit8 + n * 11 + i];
+        s0 = ui8sInput[offsetBit + n * 9 + i];
+        s1 = ui8sInput[offsetBit + n * 10 + i];
+        s2 = ui8sInput[offsetBit + n * 11 + i];
 
-        R = ui8sInput[offsetBit8 + n * 12 + i];
-        G = ui8sInput[offsetBit8 + n * 13 + i];
-        B = ui8sInput[offsetBit8 + n * 14 + i];
-        A = ui8sInput[offsetBit8 + n * 15 + i];
+        R = ui8sInput[offsetBit + n * 12 + i];
+        G = ui8sInput[offsetBit + n * 13 + i];
+        B = ui8sInput[offsetBit + n * 14 + i];
+        A = ui8sInput[offsetBit + n * 15 + i];
 
-        rx = ui8sInput[offsetBit8 + n * 16 + i];
-        ry = ui8sInput[offsetBit8 + n * 17 + i];
-        rz = ui8sInput[offsetBit8 + n * 18 + i];
+        rx = ui8sInput[offsetBit + n * 16 + i];
+        ry = ui8sInput[offsetBit + n * 17 + i];
+        rz = ui8sInput[offsetBit + n * 18 + i];
 
         i32x = (x0 | (x1 << 8) | (x2 << 16));
         if (i32x & 0x800000)
@@ -280,11 +282,9 @@ int spxSplat19(void *o, void *b, bool isLog3) {
         x = static_cast<float>(i32x) / 4096.0f;
         y = static_cast<float>(i32y) / 4096.0f;
         z = static_cast<float>(i32z) / 4096.0f;
-        if (isLog3) {
-            x = decodeLog(x, 3);
-            y = decodeLog(y, 3);
-            z = decodeLog(z, 3);
-        }
+        x = decodeLog(x, logTimes);
+        y = decodeLog(y, logTimes);
+        z = decodeLog(z, logTimes);
 
         sx = std::exp((float)s0 / 16.0f - 10.0f);
         sy = std::exp((float)s1 / 16.0f - 10.0f);
@@ -444,7 +444,8 @@ int spxSh3(void *o, void *b) {
  * 把spx格式的数据块解析为纹理
  * @param o: 输出用字节数组（纹理32*n或球谐系数16*n）
  * @param b: 输入的块字节数组
- *           【19,10019】splat19（点数4 + 格式4 + 数据19*n）
+ *           【19】splat19（点数4 + 格式4 + 数据19*n）
+ *           【10019】splat19（点数4 + 格式4 + log编码次数4 + 数据19*n）
  *           【20】splat20（点数4 + 格式4 + 数据20*n）
  *           【1】每点含9字节的1级球谐系数（点数4 + 格式4 + 数据9*n）
  *           【2】每点含24字节的1级加2级球谐系数（点数4 + 格式4 + 数据(9+15)*n）
@@ -455,9 +456,9 @@ EXTERN EMSCRIPTEN_KEEPALIVE int D(void *o, void *b) {
     uint32_t *ui32sInput = (uint32_t *)b;
 
     if (ui32sInput[1] == 10019)
-        return spxSplat19(o, b, true);
+        return spxSplat19(o, b, 12);
     else if (ui32sInput[1] == 19)
-        return spxSplat19(o, b, false);
+        return spxSplat19(o, b, 8);
     else if (ui32sInput[1] == 20)
         return spxSplat20(o, b);
     else if (ui32sInput[1] == 1)

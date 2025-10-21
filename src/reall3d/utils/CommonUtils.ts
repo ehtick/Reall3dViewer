@@ -445,10 +445,10 @@ export async function data190To19(data190: Uint8Array): Promise<Uint8Array> {
 }
 
 export async function data10190To10019(data10190: Uint8Array): Promise<Uint8Array> {
-    const ui32s = new Uint32Array(data10190.slice(0, 12).buffer);
+    const ui32s = new Uint32Array(data10190.slice(0, 16).buffer);
     const splatCount = ui32s[0];
-    const size1 = ui32s[2];
-    let offset = 8;
+    const size1 = ui32s[3];
+    let offset = 12;
     const data1: Uint8Array = data10190.slice(offset + 4, offset + 4 + size1);
     const { rgba: rgba1 } = await webpToRgba(data1);
     offset += 4 + size1;
@@ -466,14 +466,18 @@ export async function data10190To10019(data10190: Uint8Array): Promise<Uint8Arra
 
     const rs = new Uint8Array(8 + splatCount * 19);
     let n = 0;
+    rs[n] = data10190[n++]; // 数量保持不变
     rs[n] = data10190[n++];
     rs[n] = data10190[n++];
     rs[n] = data10190[n++];
-    rs[n] = data10190[n++];
-    rs[n++] = 35; // 10019[35, 39, 0, 0]
+    rs[n++] = 35; // 格式转10019[35, 39, 0, 0]
     rs[n++] = 39;
     rs[n++] = 0;
     rs[n++] = 0;
+    rs[n] = data10190[n++]; // log编码次数保持不变
+    rs[n] = data10190[n++];
+    rs[n] = data10190[n++];
+    rs[n] = data10190[n++];
 
     for (let i = 0; i < splatCount; i++) {
         rs[n++] = rgba1[i * 4 + 0]; // x0
