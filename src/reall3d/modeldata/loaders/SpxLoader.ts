@@ -367,7 +367,7 @@ function setBlockSplatData(model: SplatModel, data: Uint8Array) {
     }
 }
 
-// Flag1 的左1位标识大场景
+// spx v2
 function isLargeSpx(header: SpxHeader) {
-    return ((header?.Flag1 || 0) & 128) > 0;
+    return ((header?.Flag1 || 0) & 0b1) > 0;
 }
