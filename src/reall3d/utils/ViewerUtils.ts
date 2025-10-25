@@ -161,7 +161,14 @@ export function initRenderer(opts: Reall3dViewerOptions): WebGLRenderer {
 
     let renderer = null;
     if (!opts.renderer) {
-        renderer = new WebGLRenderer({ antialias: false, stencil: false, logarithmicDepthBuffer: true, precision: 'highp' });
+        renderer = new WebGLRenderer({
+            antialias: false,
+            stencil: false,
+            logarithmicDepthBuffer: true,
+            premultipliedAlpha: false,
+            precision: 'highp',
+            powerPreference: 'high-performance',
+        });
         renderer.setSize(root.clientWidth, root.clientHeight);
         renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
         opts.renderer = renderer;

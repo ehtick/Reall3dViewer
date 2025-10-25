@@ -163,7 +163,15 @@ export function setupMapUtils(events: Events) {
 
     on(MapCreateRenderer, () => {
         const root = fire(GetOptions).root as HTMLElement;
-        const renderer = new WebGLRenderer({ antialias: false, logarithmicDepthBuffer: true, stencil: true, alpha: true, precision: 'highp' });
+        const renderer = new WebGLRenderer({
+            antialias: false,
+            stencil: true,
+            alpha: true,
+            logarithmicDepthBuffer: true,
+            premultipliedAlpha: false,
+            precision: 'highp',
+            powerPreference: 'high-performance',
+        });
         renderer.setSize(root.clientWidth, root.clientHeight);
         renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
