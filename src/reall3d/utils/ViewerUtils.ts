@@ -109,6 +109,7 @@ export function initSplatMeshOptions(options: SplatMeshOptions): SplatMeshOption
     opts.debugMode ??= false;
     opts.maxRenderCountOfMobile ??= opts.bigSceneMode ? 256 * 10000 : (256 + 128) * 10240;
     opts.maxRenderCountOfPc ??= opts.bigSceneMode ? (256 + 64) * 10000 : (256 + 128) * 10000;
+    opts.mapMode && (opts.sortType = SortTypes.Default1);
 
     return opts;
 }
