@@ -91,7 +91,6 @@ scene.add(splatMesh);
 
 ## TODO
 - 持续优化增强渲染性能
-- 大场景
 
 
 ## 履历
