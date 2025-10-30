@@ -103,20 +103,21 @@ void main() {
         }
     }
 
-    vPosition = vec3(position.xy, -1.0);
+    bool isNormal = pointMode && currentRadius < currentLightRadius || !pointMode && currentRadius > currentLightRadius;
+    vPosition = vec4(position.xy, -1.0, 1.0);
     vec2 eigenVector1 = normalize(vec2(cov2Dv.y, eigenValue1 - cov2Dv.x));
     if (markPoint.w > 0.0 && length(vec3(markPoint.xyz) - v3Cen) < 0.000001) {
         vColor = vec4(1.0, 1.0, 0.0, 1.0);
         eigenValue1 = eigenValue2 = 11.0;
         eigenVector1 = normalize(vec2(11.0, 0.0));
-        vPosition.z = 1.0; // 选点，提示固定不透明
+        vPosition.z = 1.0; // 选点
     } else if (isLightColor) {
         vColor = vec4(1.0, 1.0, 1.0, 0.2);
     } else if (isWatermark) {
         vColor = waterMarkColor;
     } else {
         vColor = vec4(float(cov3d.w & 0xFFu) / 255.0, float((cov3d.w >> 8) & 0xFFu) / 255.0, float((cov3d.w >> 16) & 0xFFu) / 255.0, colorA);
-        if (shDegree > 0) {
+        if (shDegree > 0 && isNormal) {
             vColor.rgb += splatEvalSH(v3Cen);
         }
         vColor = FvEffect(cen, vColor, activeFlagValue, performanceNow);
@@ -124,9 +125,13 @@ void main() {
 
     float diameter1 = min(sqrt(2.0 * eigenValue1), maxPixelDiameter);
     float diameter2 = min(sqrt(2.0 * eigenValue2), maxPixelDiameter);
-    if (diameter1 < minPixelDiameter && diameter2 < minPixelDiameter && (pointMode && currentRadius < currentLightRadius || !pointMode && currentRadius > currentLightRadius)) {
-        vColor = vec4(0.0);
-        return;
+    if (isNormal) {
+        if (diameter1 < minPixelDiameter && diameter2 < minPixelDiameter) {
+            vColor = vec4(0.0);
+            return;
+        }
+    } else {
+        vPosition.w = -1.0;  // 点云模式渲染
     }
 
     vec2 eigenVector2 = vec2(eigenVector1.y, -eigenVector1.x);

@@ -7,7 +7,7 @@ uniform float lightFactor;
 uniform float minAlpha;
 uniform bool useSimilarExp;
 varying vec4 vColor;
-varying vec3 vPosition;
+varying vec4 vPosition;
 
 void main() {
     float alpha = vColor.a;
@@ -20,10 +20,12 @@ void main() {
         gl_FragColor = vec4(0.0);
         return;
     }
-
     if (vPosition.z >= 1.0) {
-        alpha = 1.0;
-    } else {
+        gl_FragColor = vec4(vColor.rgb, 0.9);
+        return;
+    }
+
+    if (vPosition.w > 0.0) {
         alpha *= useSimilarExp ? exp2(-r2) : exp(-r2);
         if (alpha <= minAlpha) {
             gl_FragColor = vec4(0.0);

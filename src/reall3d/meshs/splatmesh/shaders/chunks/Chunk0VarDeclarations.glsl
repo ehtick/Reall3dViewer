@@ -19,4 +19,4 @@ uniform uint flagValue, activeFlagValue;
 attribute uint splatIndex;
 
 varying vec4 vColor;
-varying vec3 vPosition;
+varying vec4 vPosition;
