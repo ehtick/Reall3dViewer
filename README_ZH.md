@@ -89,9 +89,6 @@ scene.add(splatMesh);
 ```
 
 
-## TODO
-- 持续优化增强渲染性能
-
 
 ## 履历
 https://github.com/reall3d-com/Reall3dViewer/releases
