@@ -39,6 +39,7 @@ import {
     Flying,
     ClearFlyPosition,
     FlySavePositions,
+    OnSetFlyDuration,
 } from '../events/EventConstants';
 import { initMapViewerOptions, initTileMap, setupMapUtils } from './utils/MapUtils';
 import { setupCommonUtils } from '../utils/CommonUtils';
@@ -180,6 +181,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
                 on(GetMeta, () => data);
                 fire(OnSetFlyPositions, data.flyPositions || []);
                 fire(OnSetFlyTargets, data.flyTargets || []);
+                fire(OnSetFlyDuration, data.flyDuration);
 
                 const set = new Set();
                 for (let url of data.scenes) {
@@ -295,4 +297,6 @@ export interface ScenesJsonData {
     flyPositions?: number[];
     /** Fly-through camera look-at points */
     flyTargets?: number[];
+    /** Fly duration */
+    flyDuration?: number;
 }

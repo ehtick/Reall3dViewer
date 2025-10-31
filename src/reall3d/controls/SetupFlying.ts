@@ -24,6 +24,7 @@ import {
     GetMeta,
     FlyingPause,
     FlyingPlay,
+    OnSetFlyDuration,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
 import { MetaData } from '../modeldata/ModelData';
@@ -37,6 +38,7 @@ export function setupFlying(events: Events) {
     const flyTargets: Vector3[] = [];
     let flyEnable: boolean = false;
     let flyOnceDone: boolean = false;
+    let flyDuration = 125 * 1000;
 
     on(FlyDisable, () => (flyEnable = false));
     on(FlyEnable, () => (flyEnable = true));
@@ -64,6 +66,9 @@ export function setupFlying(events: Events) {
         for (let i = 0, max = (v3s.length / 3) | 0; i < max; i++) {
             flyTargets[i] = new Vector3(v3s[i * 3 + 0], v3s[i * 3 + 1], v3s[i * 3 + 2]);
         }
+    });
+    on(OnSetFlyDuration, (duration: number = 125 * 1000) => {
+        flyDuration = duration;
     });
     on(AddFlyPosition, () => {
         const controls: CameraControls = fire(GetControls);
@@ -139,8 +144,7 @@ export function setupFlying(events: Events) {
     });
 
     let t = 0; // 插值因子
-    const duration = 125 * 1000;
-    let flyTotalTime = duration;
+    let flyTotalTime = flyDuration;
     let flyStartTime = 0;
     let flyPauseTime = 0;
     let flyElapsedTime = 0;
@@ -150,7 +154,7 @@ export function setupFlying(events: Events) {
     let curveTgt: CatmullRomCurve3 | null;
     on(Flying, (force: boolean) => {
         t = 0;
-        flyTotalTime = duration;
+        flyTotalTime = flyDuration;
         flyStartTime = Date.now();
         flyPauseTime = 0;
         flyElapsedTime = flyStartTime;
@@ -186,7 +190,7 @@ export function setupFlying(events: Events) {
     // 1,2,4,-2,-4
     on(FlyingPlay, (speed: number, elapsed: number) => {
         if (elapsed) {
-            flyElapsed = elapsed * duration;
+            flyElapsed = elapsed * flyDuration;
         }
 
         if (flyPauseTime) {

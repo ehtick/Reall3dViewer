@@ -233,6 +233,8 @@ export interface MetaData {
     flyPositions?: number[];
     /** Fly-through camera look-at points */
     flyTargets?: number[];
+    /** Fly duration */
+    flyDuration?: number;
 
     /** render quality level */
     qualityLevel?: number;

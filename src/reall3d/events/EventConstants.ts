@@ -437,6 +437,8 @@ export const MapFlyToTarget = i++;
 export const FlyingContinue = i++;
 /** 飞行播放 */
 export const FlyingPlay = i++;
+/** 设定飞行时长 */
+export const OnSetFlyDuration = i++;
 /** 取设定的渲染质量级别(1~9) */
 export const GetRenderQualityLevel = i++;
 /** 取设定的排序类型 */

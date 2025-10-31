@@ -63,6 +63,7 @@ import {
     UpdateSortType,
     CountFpsReal,
     IsDebugMode,
+    OnSetFlyDuration,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -432,6 +433,7 @@ export class Reall3dViewer {
         if (opts.bigSceneMode) {
             fire(OnSetFlyPositions, meta.flyPositions || []);
             fire(OnSetFlyTargets, meta.flyTargets || []);
+            fire(OnSetFlyDuration, meta.flyDuration);
         } else {
             fire(LoadSmallSceneMetaData, meta);
         }
