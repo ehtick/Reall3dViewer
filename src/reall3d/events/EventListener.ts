@@ -61,6 +61,7 @@ import { MarkSinglePoint } from '../meshs/mark/MarkSinglePoint';
 import { MarkMultiPlans } from '../meshs/mark/MarkMulitPlans';
 import { MarkCirclePlan } from '../meshs/mark/MarkCirclePlan';
 import { globalEv } from './GlobalEV';
+import { QualityLevels } from '../utils/consts/GlobalConstants';
 
 class MouseState {
     public down: number = 0;
@@ -562,7 +563,8 @@ export function setupEventListener(events: Events) {
         cSS3DRenderer.domElement.style.left = `${left}px`;
         cSS3DRenderer.domElement.style.top = `${top}px`;
         const renderer = fire(GetRenderer);
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        // renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(devicePixelRatio, fire(GetOptions).qualityLevel > QualityLevels.Default5 ? 2 : 1));
         renderer.setSize(width, height);
     }
 

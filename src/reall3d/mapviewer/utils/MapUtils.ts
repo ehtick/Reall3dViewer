@@ -173,7 +173,8 @@ export function setupMapUtils(events: Events) {
             powerPreference: 'high-performance',
         });
         renderer.setSize(root.clientWidth, root.clientHeight);
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        // renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        renderer.setPixelRatio(1); // 地图总是只按屏幕像素渲染
 
         on(GetRenderer, () => renderer);
         on(GetCanvas, () => renderer.domElement);

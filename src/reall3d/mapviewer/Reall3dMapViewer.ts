@@ -209,7 +209,8 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         const that = this;
         if (that.disposed) return;
         const { width, height, top, left } = that.container.getBoundingClientRect();
-        that.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        // that.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        that.renderer.setPixelRatio(1); // 地图总是只按屏幕像素渲染
         that.renderer.setSize(width, height);
         that.camera.aspect = width / height;
         that.camera.updateProjectionMatrix();

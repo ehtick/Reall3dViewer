@@ -236,6 +236,9 @@ export interface MetaData {
     /** Fly duration */
     flyDuration?: number;
 
+    /** Audio */
+    audio?: any;
+
     /** render quality level */
     qualityLevel?: number;
     /** sort type */

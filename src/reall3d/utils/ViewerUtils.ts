@@ -171,7 +171,7 @@ export function initRenderer(opts: Reall3dViewerOptions): WebGLRenderer {
             powerPreference: 'high-performance',
         });
         renderer.setSize(root.clientWidth, root.clientHeight);
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(devicePixelRatio, opts.qualityLevel > QualityLevels.Default5 ? 2 : 1));
         opts.renderer = renderer;
     } else {
         renderer = opts.renderer;
