@@ -39,6 +39,7 @@ import {
     GetSortType,
     OnQualityLevelChanged,
     IsSplatMeshCreated,
+    OnSmallSceneShowDone,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -52,6 +53,7 @@ import { MetaData } from '../../modeldata/ModelData';
 import { setupSorter } from '../../sorter/SetupSorter';
 import { BoundBox } from '../boundbox/BoundBox';
 import { QualityLevels, SortTypes } from '../../utils/consts/GlobalConstants';
+import { AudioText } from '../../media/AudioText';
 
 /**
  * Gaussian splatting mesh
@@ -62,6 +64,7 @@ export class SplatMesh extends Mesh {
     private disposed: boolean = false;
     private events: Events;
     private opts: SplatMeshOptions;
+    private audioText: AudioText;
     public boundBox: BoundBox;
 
     /**
@@ -97,6 +100,7 @@ export class SplatMesh extends Mesh {
         on(IsSplatMeshCreated, () => isSplatMeshCreated);
 
         on(NotifyViewerNeedUpdate, () => opts.viewerEvents?.fire(ViewerNeedUpdate));
+        on(OnSmallSceneShowDone, () => !fire(IsBigSceneMode) && setTimeout(() => that.audioText?.play(), 5000), true);
 
         setupCommonUtils(events);
         setupApi(events);
@@ -171,6 +175,7 @@ export class SplatMesh extends Mesh {
         const that = this;
         if (that.disposed) return;
         that.meta = meta;
+        that.audioText = new AudioText(meta.audio?.autoPlay, meta.audio?.mp3, meta.audio?.textDurations);
         that.events.fire(SplatTexdataManagerAddModel, opts, meta);
     }
 
@@ -193,6 +198,7 @@ export class SplatMesh extends Mesh {
         fire(TraverseDisposeAndClear, that.boundBox);
         fire(GetScene).remove(that);
         fire(GetScene).remove(that.boundBox);
+        that.audioText?.dispose();
 
         fire(CommonUtilsDispose);
         fire(SplatTexdataManagerDispose);
@@ -204,5 +210,6 @@ export class SplatMesh extends Mesh {
         that.opts = null;
         that.onAfterRender = null;
         that.boundBox = null;
+        that.audioText = null;
     }
 }

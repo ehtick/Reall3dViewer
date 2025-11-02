@@ -638,11 +638,16 @@ export function setupSplatMesh(events: Events) {
         }
     });
 
-    on(OnSmallSceneShowDone, (showMark: boolean = false) => {
-        fire(SplatUpdateParticleMode, 0); // 若有，停止粒子加载效果
-        showMark && fire(GetOptions).viewerEvents?.fire(MarkUpdateVisible);
-        fire(GetOptions).viewerEvents?.fire(FlyOnce);
-    });
+    on(
+        OnSmallSceneShowDone,
+        (showMark: boolean = false) => {
+            if (fire(IsBigSceneMode)) return;
+            fire(SplatUpdateParticleMode, 0); // 若有，停止粒子加载效果
+            showMark && fire(GetOptions).viewerEvents?.fire(MarkUpdateVisible);
+            fire(GetOptions).viewerEvents?.fire(FlyOnce);
+        },
+        true,
+    );
 
     on(CreateSplatUniforms, () => {
         return {

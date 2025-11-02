@@ -14,7 +14,7 @@ export const globalEv: Events = (() => {
     const ev = new Events();
     let disableBgAudio = false;
 
-    ev.on(PlaytBgAudio, async (urlAudio: string = '', isLoop: boolean = false, volume: number = 0.5): Promise<boolean> => {
+    ev.on(PlaytBgAudio, async (mp3: string = '', isLoop: boolean = false, volume: number = 0.5): Promise<boolean> => {
         const audioBg = getBackgroundAudio();
 
         let reslove: Function = null;
@@ -30,7 +30,7 @@ export const globalEv: Events = (() => {
             return;
         }
 
-        const mp3Bytes: any = await loadFile(urlAudio || 'https://reall3d.com/demo-models/demo/background1.mp3');
+        const mp3Bytes: any = await loadFile(mp3 || 'https://reall3d.com/demo-models/demo/background1.mp3');
         const mp3Url = URL.createObjectURL(new Blob([mp3Bytes], { type: 'application/octet-stream' }));
         new AudioLoader().load(
             mp3Url,
@@ -60,8 +60,8 @@ export const globalEv: Events = (() => {
         return disableBgAudio;
     });
 
-    ev.on(SetBgAudioVolumeDown, () => {
-        const audioBg = getBackgroundAudio();
+    ev.on(SetBgAudioVolumeDown, (autoCreate = false) => {
+        const audioBg = getBackgroundAudio(autoCreate);
         if (!audioBg?.isPlaying) return;
 
         let vol = audioBg.getVolume();
@@ -78,8 +78,8 @@ export const globalEv: Events = (() => {
             () => vol > 0.15,
         );
     });
-    ev.on(SetBgAudioVolumeUp, () => {
-        const audioBg = getBackgroundAudio();
+    ev.on(SetBgAudioVolumeUp, (autoCreate = false) => {
+        const audioBg = getBackgroundAudio(autoCreate);
         if (!audioBg?.isPlaying) return;
 
         let vol = audioBg.getVolume();

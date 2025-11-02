@@ -2,28 +2,48 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { Audio, AudioListener, AudioLoader } from 'three';
+import { globalEv } from '../events/GlobalEV';
+import { SetBgAudioVolumeDown, SetBgAudioVolumeUp } from '../events/EventConstants';
 
 export class AudioText {
     private audio: Audio;
+    private autoPlay: boolean;
+    private mp3: string;
+    private textDurations: any[];
 
-    public play(urlMp3: string, textDurations: any[] = []): void {
+    public constructor(autoPlay: boolean = false, mp3: string = '', textDurations: any[] = []) {
+        this.autoPlay = autoPlay;
+        this.mp3 = mp3;
+        const copyTextDurations = [];
+        for (const textDuration of textDurations) {
+            copyTextDurations.push([...textDuration]);
+        }
+        this.textDurations = copyTextDurations;
+    }
+
+    public play(force: boolean = false): void {
+        if (!force && !this.autoPlay) return;
         if (this.audio) return;
 
         const audio = new Audio(new AudioListener());
         this.audio = audio;
         const audioLoader = new AudioLoader();
-        audioLoader.load(urlMp3, async (buf: AudioBuffer) => {
-            audio.setBuffer(buf);
-            audio.setLoop(false);
-            audio.setVolume(1.0);
-            audio.play();
+        audioLoader.load(this.mp3, (buf: AudioBuffer) => {
+            globalEv.fire(SetBgAudioVolumeDown);
+            setTimeout(async () => {
+                audio.setBuffer(buf);
+                audio.setLoop(false);
+                audio.setVolume(1.0);
+                audio.play();
 
-            for (const textDuration of textDurations) {
-                const text: string = textDuration[0];
-                const duration: number = textDuration[1];
-                const rs = await this.showAudioText(text, duration);
-                if (!rs) break;
-            }
+                for (const textDuration of this.textDurations) {
+                    const text: string = textDuration[0];
+                    const duration: number = textDuration[1];
+                    const rs = await this.showAudioText(text, duration);
+                    if (!rs) break;
+                }
+                globalEv.fire(SetBgAudioVolumeUp);
+            }, 500);
         });
     }
 
@@ -58,5 +78,7 @@ export class AudioText {
     public dispose(): void {
         this.audio?.stop();
         this.audio = null;
+        this.mp3 = null;
+        this.textDurations = null;
     }
 }
