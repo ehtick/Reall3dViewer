@@ -392,6 +392,10 @@ export const TweenFlyEnable = i++;
 export const TweenFlyDisable = i++;
 /** 飞行暂停 */
 export const FlyingPause = i++;
+/** 是否看见 */
+export const IsCameraLookAtPoint = i++;
+/** 小场景是否已渲染就绪 */
+export const IsSmallSceneShowDone = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;

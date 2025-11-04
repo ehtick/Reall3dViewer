@@ -40,6 +40,8 @@ import {
     OnQualityLevelChanged,
     IsSplatMeshCreated,
     OnSmallSceneShowDone,
+    IsCameraLookAtPoint,
+    IsSmallSceneShowDone,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -48,12 +50,12 @@ import { setupSplatMesh } from './SetupSplatMesh';
 import { setupGaussianText } from '../../modeldata/text/SetupGaussianText';
 import { setupApi } from '../../api/SetupApi';
 import { initSplatMeshOptions } from '../../utils/ViewerUtils';
-import { setupCommonUtils } from '../../utils/CommonUtils';
+import { isInFrustum, setupCommonUtils } from '../../utils/CommonUtils';
 import { MetaData } from '../../modeldata/ModelData';
 import { setupSorter } from '../../sorter/SetupSorter';
 import { BoundBox } from '../boundbox/BoundBox';
 import { QualityLevels, SortTypes } from '../../utils/consts/GlobalConstants';
-import { AudioText } from '../../media/AudioText';
+import { AudioText, AudioTextOptions } from '../../media/AudioText';
 
 /**
  * Gaussian splatting mesh
@@ -98,9 +100,16 @@ export class SplatMesh extends Mesh {
         on(GetRenderQualityLevel, () => opts.qualityLevel || QualityLevels.Default5);
         on(GetSortType, () => opts.sortType || SortTypes.Default1);
         on(IsSplatMeshCreated, () => isSplatMeshCreated);
+        on(IsCameraLookAtPoint, (tgtPoint: Vector3, maxDistanceToCam = 1.0): boolean => {
+            return Math.abs(camera.position.distanceTo(tgtPoint)) < maxDistanceToCam && isInFrustum(camera, tgtPoint);
+        });
 
         on(NotifyViewerNeedUpdate, () => opts.viewerEvents?.fire(ViewerNeedUpdate));
-        on(OnSmallSceneShowDone, () => !fire(IsBigSceneMode) && setTimeout(() => that.audioText?.play(), 5000), true);
+
+        let isSmallSceneShowDone = false;
+        on(IsSmallSceneShowDone, () => isSmallSceneShowDone);
+        on(OnSmallSceneShowDone, () => (isSmallSceneShowDone = true), true);
+        on(OnSmallSceneShowDone, () => !fire(IsBigSceneMode) && setTimeout(() => !that.audioText.opts.position && that.audioText?.play(), 5000), true);
 
         setupCommonUtils(events);
         setupApi(events);
@@ -121,6 +130,14 @@ export class SplatMesh extends Mesh {
             that.onBeforeRender = () => {
                 fire(WorkerSort);
                 fire(SplatUpdatePerformanceNow, performance.now());
+
+                if (
+                    that.audioText.opts.position &&
+                    fire(IsSmallSceneShowDone) &&
+                    fire(IsCameraLookAtPoint, new Vector3().fromArray(that.audioText.opts.position), that.audioText.opts.distance)
+                ) {
+                    that.audioText.play();
+                }
             };
             that.onAfterRender = () => {
                 fire(SplatTexdataManagerDataChanged, 10000) && fire(NotifyViewerNeedUpdate); // 纹理数据更新后10秒内总是要刷新
@@ -175,7 +192,13 @@ export class SplatMesh extends Mesh {
         const that = this;
         if (that.disposed) return;
         that.meta = meta;
-        that.audioText = new AudioText(meta.audio?.autoPlay, meta.audio?.mp3, meta.audio?.textDurations);
+        const atOpts: AudioTextOptions = { autoPlay: meta.audio?.autoPlay, mp3: meta.audio?.mp3, textDurations: meta.audio?.textDurations };
+        if (meta.audio?.position) {
+            atOpts.event = that.events;
+            atOpts.position = meta.audio?.position;
+            atOpts.distance = meta.audio?.distance;
+        }
+        that.audioText = new AudioText(atOpts);
         that.events.fire(SplatTexdataManagerAddModel, opts, meta);
     }
 

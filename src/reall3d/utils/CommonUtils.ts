@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Audio, Object3D, PerspectiveCamera, ShaderChunk, Vector3 } from 'three';
+import { Audio, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, ShaderChunk, Vector3 } from 'three';
 import { Events } from '../events/Events';
 import {
     Vector3ToString,
@@ -24,11 +24,14 @@ import {
     IsCameraChangedNeedLoadData,
     GetCamera,
     CommonUtilsDispose,
+    IsCameraLookAtPoint,
+    GetControls,
 } from '../events/EventConstants';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
 import { unzip, unzipSync } from 'fflate';
+import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -673,4 +676,14 @@ export function loopByTime(fnRun: Function, fnIsContinue: Function = null, delay
         fnIsContinue?.() && setTimeout(run, delay);
     };
     run();
+}
+
+const frustum = new Frustum();
+const projScreenMatrix = new Matrix4();
+const viewMatrix = new Matrix4();
+export function isInFrustum(camera: Camera, point: Vector3) {
+    viewMatrix.copy(camera.matrixWorld).invert();
+    projScreenMatrix.multiplyMatrices(camera.projectionMatrix, viewMatrix);
+    frustum.setFromProjectionMatrix(projScreenMatrix);
+    return frustum.containsPoint(point);
 }
