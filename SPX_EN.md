@@ -66,8 +66,7 @@ Data blocks consist of a fixed header followed by customizable content.
 |-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
 | 0–3         | uint32    | `*`Count              | Number of Gaussians in this block                                           |
 | 4–7         | uint32    | `*`Format ID          | Identifies data layout (0–255 = open formats; >255 = exclusive)             |
-| 8–11        | uint32    | Extended field        | Optional                                                                    |
-| 8 or 12–n   | bytes     | `*`Data               | Structured per Format ID                                                    |
+| 8–n         | bytes     | `*`Data               | Structured per Format ID                                                    |
 
 ---
 
@@ -78,27 +77,7 @@ he data block format encompasses both open and exclusive formats. The reserved r
 <br>
 
 
-
-✅  Open Format `10019`, basic data `【default】`
-
-
-| Byte Offset | Type      | Field Name            | Description                                                                 |
-|-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
-| 0~3  | uint32 | `*`Gaussian Count     | Number of Gaussians |
-| 4~7  | uint32 | `*`Format ID          | `10019` |
-| 8~11 | uint32 | `*`log encoding times | `0~9` |
-| 12~n | bytes  | `*`Data               | x0...y0...z0...x1...y1...z1...x2...y2...z2...sx...sy...sz...r...g...b...a...rx...ry...rz... |
-
-- `x,y,z` Coordinates, log encoding, 24-bit precision (`x`, `y`, `z`).
-- `sx,sy,sz` Scale, 8-bit per axis (`sx`, `sy`, `sz`).
-- `r,g,b,a` Color, RGBA channels (8-bit each).
-- `rx,ry,rz` Rotation, Quaternion components (8-bit each).
-
----
-
-
-
-✅  Open Format `19`, basic data `【spx-v2 default】`
+✅  Open Format `19`, basic data
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
@@ -142,25 +121,6 @@ he data block format encompasses both open and exclusive formats. The reserved r
 | 8~n | bytes | `*`Data | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([rx,ry,rz,255...]) |
 
 - `x,y,z` Coordinates, 24-bit precision (`x`, `y`, `z`).
-- `sx,sy,sz` Scale, 8-bit per axis (`sx`, `sy`, `sz`).
-- `r,g,b,a` Color, RGBA channels (8-bit each).
-- `rx,ry,rz` Rotation, Quaternion components (8-bit each).
-
----
-
-
-
-✅  Open Format `10190`, basic data, webp encoding
-
-
-| Byte Offset | Type      | Field Name            | Description                                                                 |
-|-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
-| 0~3  | uint32 | `*`Gaussian Count     | Number of Gaussians |
-| 4~7  | uint32 | `*`Format ID          | `10190` splat per 19 bytes, webp encoding |
-| 8~11 | uint32 | `*`log encoding times | `0~9` |
-| 12~n | bytes  | `*`Data               | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([rx,ry,rz,255...]) |
-
-- `x,y,z` Coordinates, log encoding, 24-bit precision (`x`, `y`, `z`).
 - `sx,sy,sz` Scale, 8-bit per axis (`sx`, `sy`, `sz`).
 - `r,g,b,a` Color, RGBA channels (8-bit each).
 - `rx,ry,rz` Rotation, Quaternion components (8-bit each).
