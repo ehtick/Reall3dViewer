@@ -1,4 +1,4 @@
-## SPX Version 2 Format Specification
+## SPX Version 3 Format Specification (Being revised)
 The `.spx` format is a 3DGS model format designed to be fle**X**ible, e**X**tensible, and e**X**clusive.
 
 
@@ -94,22 +94,6 @@ he data block format encompasses both open and exclusive formats. The reserved r
 ---
 
 
-✅  Open Format `20`, basic data
-
-| Byte Offset | Type      | Field Name            | Description                                                                 |
-|-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
-| 0–3         | uint32    | `*`Gaussian Count     | Number of Gaussians                                                         |
-| 4–7         | uint32    | `*`Format ID          | `20`                                                                 |
-| 8–n         | bytes     | `*`Data               | x...y...z...sx...sy...sz...r...g...b...a...rw...rx...ry...rz... |
-
-- `x,y,z` Coordinates, 24-bit precision (`x`, `y`, `z`).
-- `sx,sy,sz` Scale, 8-bit per axis (`sx`, `sy`, `sz`).
-- `r,g,b,a` Color, RGBA channels (8-bit each).
-- `rw,rx,ry,rz` Rotation, Quaternion components (8-bit each).
-
----
-
-
 
 ✅  Open Format `190`, basic data, webp encoding
 
@@ -129,56 +113,13 @@ he data block format encompasses both open and exclusive formats. The reserved r
 
 
 
-✅  Open Format `1`, data of SH degree 1 (SH1 only)
+✅  Open Format `9`, palettes of SH degree 1~3, webp encoding
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
 |----------|------|------|------|
-| 0–3      | uint32 | `*`Gaussian Count     | Number of Gaussians                                                         |
-| 4–7      | uint32 | `*`Format ID          | `1` data of Spherical harmonics (SH) degree 1                       |
-| 8~n      | bytes  | `*`Data               | sh0...sh8,sh0...sh8,... |
-
-- `sh0...sh8` Spherical harmonics (8-bit each)
-
----
-
-
-
-✅  Open Format `2`, data of SH degree 2 (SH1 + SH2)
-
-
-| Byte Offset | Type      | Field Name            | Description                                                                 |
-|----------|------|------|------|
-| 0–3      | uint32 | `*`Gaussian Count     | Number of Gaussians                                                         |
-| 4–7      | uint32 | `*`Format ID          | `2` data of Spherical harmonics (SH) degree 1 and 2                       |
-| 8~n      | bytes  | `*`Data               | sh0...sh23,sh0...sh23,... |
-
-- `sh0...sh23` Spherical harmonics (8-bit each)
-
----
-
-
-✅  Open Format `3`, data of SH degree 3 (SH3 only)
-
-
-| Byte Offset | Type      | Field Name            | Description                                                                 |
-|----------|------|------|------|
-| 0–3      | uint32 | `*`Gaussian Count     | Number of Gaussians                                                         |
-| 4–7      | uint32 | `*`Format ID          | `3` data of Spherical harmonics (SH) degree 3                       |
-| 8~n      | bytes  | `*`Data               | sh24...sh44,sh24...sh44,... |
-
-- `sh24...sh44` Spherical harmonics (8-bit each)
-
----
-
-
-✅  Open Format `4`, data of SH degree 1~3, webp encoding
-
-
-| Byte Offset | Type      | Field Name            | Description                                                                 |
-|----------|------|------|------|
-| 0–3      | uint32 | `*`Gaussian Count     | Number of Gaussians                                                         |
-| 4–7      | uint32 | `*`Format ID          | `4` data of Spherical harmonics (SH) degree 1~3                       |
+| 0–3      | uint32 |      |  Reserved                                                        |
+| 4–7      | uint32 | `*`Format ID          | `9` palettes of Spherical harmonics (SH) degree 1~3                       |
 | 8~n      | bytes  | `*`Data               | webp([sh0,sh1,sh2...sh44,sh0,sh1,sh2...sh44,...])                |
 
 - `sh0,sh1,sh2...sh44` Spherical harmonics (8-bit each)
@@ -189,4 +130,5 @@ he data block format encompasses both open and exclusive formats. The reserved r
 
 ## Historical Version
 
+- `SPX SPEC V2` https://github.com/reall3d-com/Reall3dViewer/blob/main/spx-spec/v2/SPX_EN.md
 - `SPX SPEC V1` https://github.com/reall3d-com/Reall3dViewer/blob/main/spx-spec/v1/SPX_EN.md
