@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { data190To19, data10190To10019, sh123To1, sh123To2, sh123To3 } from '../../utils/CommonUtils';
+import { data190To19, data10190To10019, sh123To1, sh123To2, sh123To3, webpToRgba } from '../../utils/CommonUtils';
 import {
     SplatDataSize16,
     SplatDataSize32,
@@ -12,6 +12,8 @@ import {
     SpxBlockFormatSH3,
     SpxBlockFormatSH4,
     WasmBlockSize,
+    SpxBlockFormatSH8,
+    SpxBlockFormatSH9,
 } from '../../utils/consts/GlobalConstants';
 import { SpxHeader } from '../ModelData';
 
@@ -51,7 +53,7 @@ export async function parseSpxHeader(header: Uint8Array): Promise<SpxHeader> {
     head.Comment = comment.trim();
 
     head.HashCheck = true;
-    if (head.Fixed !== 'spx' && head.Version !== 1) {
+    if (head.Fixed !== 'spx') {
         return null;
     }
 
@@ -83,6 +85,7 @@ interface SpxBlockResult {
     isSh3?: boolean;
     isSh23?: boolean;
     dataSh3?: Uint8Array;
+    palettes?: Uint8Array;
     success: boolean;
 }
 
@@ -90,6 +93,19 @@ export async function parseSpxBlockData(data: Uint8Array, header: SpxHeader = nu
     let ui32s = new Uint32Array(data.slice(0, 8).buffer);
     const splatCount = ui32s[0];
     const blockFormat = ui32s[1];
+
+    if (blockFormat == SpxBlockFormatSH8) {
+        const splatCount = 0;
+        const palettes: Uint8Array = data.subarray(8);
+        const success = true;
+        return { splatCount, blockFormat, palettes, success };
+    } else if (blockFormat == SpxBlockFormatSH9) {
+        const { rgba } = await webpToRgba(data.subarray(8));
+        const splatCount = 0;
+        const palettes: Uint8Array = rgba;
+        const success = true;
+        return { splatCount, blockFormat, palettes, success };
+    }
 
     if (blockFormat == SpxBlockFormatSH4) {
         if (header.ShDegree == SpxBlockFormatSH1) {

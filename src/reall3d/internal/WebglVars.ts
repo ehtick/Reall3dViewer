@@ -22,6 +22,7 @@ export const VarLightFactor = 'lightFactor';
 export const VarDebugEffect = 'debugEffect';
 export const VarUsingIndex = 'usingIndex';
 export const VarSplatIndex = 'splatIndex';
+export const VarShPalettes = 'shPalettes';
 export const VarMaxRadius = 'maxRadius';
 export const VarFlagValue = 'flagValue';
 export const VarVPosition = 'vPosition';

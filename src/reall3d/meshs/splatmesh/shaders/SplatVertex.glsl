@@ -20,7 +20,7 @@ void main() {
         cov3d = texelFetch(splatTexture0, ivec2(((splatIndex & 0x3ffu) << 1) | 1u, splatIndex >> 10), 0);
     }
 
-    bool isWatermark = (cen.w & 65536u) > 0u;
+    bool isWatermark = IsWatermark(cen);
     float colorA = (float(cov3d.w >> 24) / 255.0);
     if (colorA < minAlpha && !isWatermark) {
         vColor = vec4(0.0);

@@ -172,6 +172,8 @@ export async function loadSpx(model: SplatModel) {
                 if (spxBlock.isSplat) {
                     model.downloadSplatCount += spxBlock.splatCount;
                     setBlockSplatData(model, spxBlock.datas);
+                } else if (spxBlock.palettes) {
+                    model.palettes = spxBlock.palettes; // 调色板
                 } else {
                     const maxSplatDataCnt = Math.min(model.fetchLimit, model.modelSplatCount);
                     if (spxBlock.isSh23) {

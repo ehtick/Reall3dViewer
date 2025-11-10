@@ -120,6 +120,9 @@ export class SplatModel {
     /** Active points data */
     public activePoints: any;
 
+    /** sh palettes */
+    public palettes?: Uint8Array;
+
     constructor(opts: ModelOptions, meta: MetaData = {}) {
         this.opts = { ...opts };
         const that = this;

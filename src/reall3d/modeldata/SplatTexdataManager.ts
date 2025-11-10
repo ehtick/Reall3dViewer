@@ -38,6 +38,7 @@ import {
     SplatUpdatePointMode,
     OnSmallSceneShowDone,
     SplatUpdateParticleMode,
+    SplatUpdateShPalettesTexture,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, MetaData, ModelStatus, SplatModel } from './ModelData';
@@ -75,6 +76,7 @@ export function setupSplatTextureManager(events: Events) {
     const isBigSceneMode: boolean = fire(IsBigSceneMode);
     let initBoundBox: boolean = false;
     let performanceStart = 0; // 小场景粒子加载效果使用
+    let palettesUpdated = false;
 
     on(GetAabbCenter, () => splatModel?.aabbCenter || new Vector3());
 
@@ -187,6 +189,12 @@ export function setupSplatTextureManager(events: Events) {
 
         // if (!splatModel.downloadSplatCount) return; // 尚无高斯数据
         if (!splatModel.dataSplatCount) return; // 尚无高斯数据
+
+        // 调色板
+        if (!palettesUpdated && splatModel.palettes) {
+            fire(SplatUpdateShPalettesTexture, splatModel.palettes);
+            palettesUpdated = true;
+        }
 
         if (mergeRunning) return;
         mergeRunning = true;

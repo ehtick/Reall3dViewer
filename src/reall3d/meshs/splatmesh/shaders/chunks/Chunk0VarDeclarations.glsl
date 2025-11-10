@@ -8,6 +8,7 @@ precision highp float;
 precision highp int;
 
 uniform highp usampler2D splatTexture0, splatTexture1, splatShTexture12, splatShTexture3;
+uniform usampler2D shPalettes;
 uniform vec2 focal, viewport;
 uniform int usingIndex, shDegree, particleMode, transitionEffect;
 uniform bool pointMode, bigSceneMode, showWaterMark, debugEffect;

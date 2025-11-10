@@ -24,6 +24,10 @@ export const SpxCreaterReall3d = 0;
 /** 【spx中定义的公开格式】spx open format */
 export const SpxOpenFormat0 = 0;
 
+/** 【spx中定义的公开数据块格式】Open Block Content Format 22, basic data */
+export const SpxBlockFormatData22 = 22;
+/** 【spx中定义的公开数据块格式】Open Block Content Format 22, basic data, webp encoding */
+export const SpxBlockFormatData220 = 220;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 20, basic data */
 export const SpxBlockFormatData20 = 20;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 19, basic data */
@@ -40,6 +44,10 @@ export const SpxBlockFormatSH2 = 2;
 export const SpxBlockFormatSH3 = 3;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 4, data of SH degree 1~3 （SH1 + SH2 + SH3） */
 export const SpxBlockFormatSH4 = 4;
+/** 【spx中定义的公开数据块格式】Open Block Content Format 8, sh palettes */
+export const SpxBlockFormatSH8 = 8;
+/** 【spx中定义的公开数据块格式】Open Block Content Format 9, sh palettes, webp encoding */
+export const SpxBlockFormatSH9 = 9;
 
 /** 【Reall3D扩展的专属格式】the exclusive format extended by reall3d */
 export const SpxExclusiveFormatReall3d = 3141592653;

@@ -396,6 +396,8 @@ export const FlyingPause = i++;
 export const IsCameraLookAtPoint = i++;
 /** 小场景是否已渲染就绪 */
 export const IsSmallSceneShowDone = i++;
+/** Splat更新调色板纹理 */
+export const SplatUpdateShPalettesTexture = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;

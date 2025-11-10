@@ -11,6 +11,7 @@ import {
     Mesh,
     NormalBlending,
     PerspectiveCamera,
+    RGBAFormat,
     RGBAIntegerFormat,
     ShaderMaterial,
     UnsignedIntType,
@@ -81,6 +82,7 @@ import {
     IsSplatMeshCreated,
     SplatUpdateUseSimilarExp,
     SplatUpdateActiveFlagValue,
+    SplatUpdateShPalettesTexture,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -103,6 +105,7 @@ import {
     VarPointMode,
     VarShDegree,
     VarShowWaterMark,
+    VarShPalettes,
     VarSplatIndex,
     VarSplatShTexture12,
     VarSplatShTexture3,
@@ -146,6 +149,7 @@ import { SplatMesh } from './SplatMesh';
 import { shaderChunk } from '../../utils/CommonUtils';
 import CmnFns from './shaders/chunks/CmnFns.glsl';
 import FvEffect from './shaders/chunks/FvEffect.glsl';
+import IsWatermark from './shaders/chunks/IsWatermark.glsl';
 import WatermarkEffect from './shaders/chunks/WatermarkEffect.glsl';
 
 export function setupSplatMesh(events: Events) {
@@ -158,6 +162,8 @@ export function setupSplatMesh(events: Events) {
     const arySwitchProcess: any[] = [];
     let bucketBits: number = 0;
     let sortType: number = 0;
+    const PalettesWidth = 960;
+    const PalettesHeight = 1024;
 
     let currentDisplayShDegree: number = 0;
     on(GetCurrentDisplayShDegree, () => currentDisplayShDegree);
@@ -262,6 +268,12 @@ export function setupSplatMesh(events: Events) {
         dataTextureSh3.needsUpdate = true;
         material.uniforms[VarSplatShTexture3].value = dataTextureSh3;
 
+        const dataShPalettes = new Uint8Array(PalettesWidth * PalettesHeight * 4);
+        dataShPalettes.fill(128);
+        const dataTextureShPalettes = new DataTexture(dataShPalettes, PalettesWidth, PalettesHeight, RGBAFormat);
+        dataTextureShPalettes.needsUpdate = true;
+        material.uniforms[VarShPalettes].value = dataTextureShPalettes;
+
         material.needsUpdate = true;
 
         let isLastEmpty: boolean = false;
@@ -284,9 +296,11 @@ export function setupSplatMesh(events: Events) {
             dataTexture.needsUpdate = true;
             if (texture.index) {
                 material.uniforms[VarSplatTexture1].value = dataTexture;
+                dataTexture1?.dispose();
                 dataTexture1 = dataTexture;
             } else {
                 material.uniforms[VarSplatTexture0].value = dataTexture;
+                dataTexture0?.dispose();
                 dataTexture0 = dataTexture;
             }
 
@@ -307,6 +321,8 @@ export function setupSplatMesh(events: Events) {
             dataTexture.needsUpdate = true;
             material.uniforms[VarSplatShTexture12].value = dataTexture;
             material.needsUpdate = true;
+            dataTextureSh12?.dispose();
+            dataTextureSh12 = dataTexture;
             fire(NotifyViewerNeedUpdate);
         });
 
@@ -323,6 +339,22 @@ export function setupSplatMesh(events: Events) {
             dataTexture.needsUpdate = true;
             material.uniforms[VarSplatShTexture3].value = dataTexture;
             material.needsUpdate = true;
+            dataTextureSh3?.dispose();
+            dataTextureSh3 = dataTexture;
+            fire(NotifyViewerNeedUpdate);
+        });
+
+        on(SplatUpdateShPalettesTexture, async (ui8s: Uint8Array) => {
+            if (!ui8s || !ui8s.length) return;
+
+            let data = ui8s;
+            if (data.length != PalettesWidth * PalettesHeight * 4) {
+                data = new Uint8Array(PalettesWidth * PalettesHeight * 4);
+                data.set(ui8s, 0);
+            }
+            dataTextureShPalettes.image.data = data;
+            dataTextureShPalettes.needsUpdate = true;
+
             fire(NotifyViewerNeedUpdate);
         });
 
@@ -485,6 +517,7 @@ export function setupSplatMesh(events: Events) {
                 dataTexture1 && dataTexture1.dispose();
                 dataTextureSh12 && dataTextureSh12.dispose();
                 dataTextureSh3 && dataTextureSh3.dispose();
+                dataTextureShPalettes?.dispose();
             },
             true,
         );
@@ -495,8 +528,9 @@ export function setupSplatMesh(events: Events) {
     function genShaderSource(src: string) {
         shaderChunk['cmn'] = CmnFns.trim();
         shaderChunk['FvEffect'] = (shaderChunk['custom-FvEffect'] || FvEffect).trim();
+        shaderChunk['IsWatermark'] = (shaderChunk['custom-IsWatermark'] || IsWatermark).trim();
         shaderChunk['WatermarkEffect'] = (shaderChunk['custom-WatermarkEffect'] || WatermarkEffect).trim();
-        return '#include <cmn>\n#include <FvEffect>\n#include <WatermarkEffect>\n' + src;
+        return '#include <cmn>\n#include <FvEffect>\n#include <IsWatermark>\n#include <WatermarkEffect>\n' + src;
     }
 
     on(CreateSplatMesh, async () => {
@@ -655,6 +689,7 @@ export function setupSplatMesh(events: Events) {
             [VarSplatTexture1]: { type: 't', value: null },
             [VarSplatShTexture12]: { type: 't', value: null },
             [VarSplatShTexture3]: { type: 't', value: null },
+            [VarShPalettes]: { type: 't', value: null },
             [VarFocal]: { type: 'v2', value: new Vector2() },
             [VarViewport]: { type: 'v2', value: new Vector2() },
             [VarUsingIndex]: { type: 'int', value: 0 },
