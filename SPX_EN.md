@@ -77,55 +77,71 @@ he data block format encompasses both open and exclusive formats. The reserved r
 <br>
 
 
-✅  Open Format `19`, basic data
+✅  Open Format `22`, basic data (Optimized for Encoding/Decoding Performance)
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
 |-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
 | 0~3 | uint32 | `*`Gaussian Count | Number of Gaussians |
-| 4~7 | uint32 | `*`Format ID | `19` |
-| 8~n | bytes | `*`Data | x0...y0...z0...x1...y1...z1...x2...y2...z2...sx...sy...sz...r...g...b...a...rx...ry...rz... |
+| 4~7 | uint32 | `*`Format ID | `22` |
+| 8~n | bytes | `*`Data | x0...y0...z0...x1...y1...z1...x2...y2...z2...sx...sy...sz...r...g...b...a...rw...rx...ry...rz...p0...p1... |
 
 - `x,y,z` Coordinates, 24-bit precision (`x`, `y`, `z`).
 - `sx,sy,sz` Scale, 8-bit per axis (`sx`, `sy`, `sz`).
 - `r,g,b,a` Color, RGBA channels (8-bit each).
-- `rx,ry,rz` Rotation, Quaternion components (8-bit each).
+- `rw,rx,ry,rz` Rotation, Quaternion components (8-bit each).
+- `p0,p1` Low and high bytes of palette index; omitted when no palette is used.
 
 ---
 
 
 
-✅  Open Format `190`, basic data, webp encoding
+✅  Open Format `220`, basic data (Optimized for compression ratio)
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
 |-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
 | 0~3 | uint32 | `*`Gaussian Count | Number of Gaussians |
-| 4~7 | uint32 | `*`Format ID | `190` splat per 19 bytes, webp encoding |
-| 8~n | bytes | `*`Data | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([rx,ry,rz,255...]) |
+| 4~7 | uint32 | `*`Format ID | `220`, webp encoding |
+| 8~n | bytes | `*`Data | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([rx,ry,rz,ri...], length,webp([p0,p1,0,255...]) |
 
 - `x,y,z` Coordinates, 24-bit precision (`x`, `y`, `z`).
 - `sx,sy,sz` Scale, 8-bit per axis (`sx`, `sy`, `sz`).
 - `r,g,b,a` Color, RGBA channels (8-bit each).
 - `rx,ry,rz` Rotation, Quaternion components (8-bit each).
+- `p0,p1` Low and high bytes of palette index; omitted when no palette is used.
 
 ---
 
 
 
-✅  Open Format `9`, palettes of SH degree 1~3, webp encoding
+✅  Open Format `8`, palettes of SH (Auto-selected by strategy, no manual specification required)
+
+
+| Byte Offset | Type      | Field Name            | Description                                                                 |
+|----------|------|------|------|
+| 0–3      | uint32 |      |  Reserved                                                        |
+| 4–7      | uint32 | `*`Format ID          | `8` palettes of Spherical harmonics (SH) degree 1~3                       |
+| 8~n      | bytes  | `*`Data               | [sh0,sh1,sh2...sh14,sh0,sh1,sh2...sh14,...]                |
+
+- `sh0,sh1,sh2...sh14` Spherical harmonic coefficients (r,g,b,255), in pixel units
+
+---
+
+
+
+✅  Open Format `9`, palettes of SH , webp encoding (Auto-selected by strategy, no manual specification required)
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
 |----------|------|------|------|
 | 0–3      | uint32 |      |  Reserved                                                        |
 | 4–7      | uint32 | `*`Format ID          | `9` palettes of Spherical harmonics (SH) degree 1~3                       |
-| 8~n      | bytes  | `*`Data               | webp([sh0,sh1,sh2...sh44,sh0,sh1,sh2...sh44,...])                |
+| 8~n      | bytes  | `*`Data               | webp([sh0,sh1,sh2...sh14,sh0,sh1,sh2...sh14,...])                |
 
-- `sh0,sh1,sh2...sh44` Spherical harmonics (8-bit each)
+- `sh0,sh1,sh2...sh14` Spherical harmonic coefficients (r,g,b,255), in pixel units
 
 ---
-
 
 
 ## Historical Version

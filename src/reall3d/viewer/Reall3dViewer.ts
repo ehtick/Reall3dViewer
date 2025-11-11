@@ -64,6 +64,7 @@ import {
     CountFpsReal,
     IsDebugMode,
     OnSetFlyDuration,
+    StopBgAudio,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -84,6 +85,7 @@ import { setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
 import { isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/ModelData';
+import { globalEv } from '../events/GlobalEV';
 
 /**
  * Built-in Gaussian Splatting model viewer
@@ -230,6 +232,7 @@ export class Reall3dViewer {
         document.addEventListener('drop', async function (e) {
             e.preventDefault();
             e.stopPropagation();
+            globalEv.fire(StopBgAudio);
             let file = e.dataTransfer.files[0];
             if (!file) return;
 
