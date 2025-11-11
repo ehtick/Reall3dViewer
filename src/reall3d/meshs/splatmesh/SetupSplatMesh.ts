@@ -163,7 +163,6 @@ export function setupSplatMesh(events: Events) {
     let bucketBits: number = 0;
     let sortType: number = 0;
     const PalettesWidth = 960;
-    const PalettesHeight = 1024;
 
     let currentDisplayShDegree: number = 0;
     on(GetCurrentDisplayShDegree, () => currentDisplayShDegree);
@@ -268,9 +267,9 @@ export function setupSplatMesh(events: Events) {
         dataTextureSh3.needsUpdate = true;
         material.uniforms[VarSplatShTexture3].value = dataTextureSh3;
 
-        const dataShPalettes = new Uint8Array(PalettesWidth * PalettesHeight * 4);
+        const dataShPalettes = new Uint8Array(PalettesWidth * 4);
         dataShPalettes.fill(128);
-        const dataTextureShPalettes = new DataTexture(dataShPalettes, PalettesWidth, PalettesHeight, RGBAFormat);
+        let dataTextureShPalettes = new DataTexture(dataShPalettes, PalettesWidth, 1, RGBAFormat);
         dataTextureShPalettes.needsUpdate = true;
         material.uniforms[VarShPalettes].value = dataTextureShPalettes;
 
@@ -347,14 +346,15 @@ export function setupSplatMesh(events: Events) {
         on(SplatUpdateShPalettesTexture, async (ui8s: Uint8Array) => {
             if (!ui8s || !ui8s.length) return;
 
-            let data = ui8s;
-            if (data.length != PalettesWidth * PalettesHeight * 4) {
-                data = new Uint8Array(PalettesWidth * PalettesHeight * 4);
-                data.set(ui8s, 0);
-            }
-            dataTextureShPalettes.image.data = data;
-            dataTextureShPalettes.needsUpdate = true;
-
+            const height = Math.ceil(ui8s.length / 4 / 960);
+            const dataShPalettes = new Uint8Array(PalettesWidth * height * 4);
+            dataShPalettes.set(ui8s);
+            const dataTexture = new DataTexture(dataShPalettes, PalettesWidth, height, RGBAFormat);
+            dataTexture.needsUpdate = true;
+            material.uniforms[VarShPalettes].value = dataTexture;
+            material.needsUpdate = true;
+            dataTextureShPalettes?.dispose();
+            dataTextureShPalettes = dataTexture;
             fire(NotifyViewerNeedUpdate);
         });
 

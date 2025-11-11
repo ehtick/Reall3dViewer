@@ -360,19 +360,19 @@ export async function data190To19(data190: Uint8Array): Promise<Uint8Array> {
     const splatCount = ui32s[0];
     const size1 = ui32s[2];
     let offset = 8;
-    const data1: Uint8Array = data190.slice(offset + 4, offset + 4 + size1);
+    const data1: Uint8Array = data190.subarray(offset + 4, offset + 4 + size1);
     const { rgba: rgba1 } = await webpToRgba(data1);
     offset += 4 + size1;
     const size2 = new Uint32Array(data190.slice(offset, offset + 4).buffer)[0];
-    const data2: Uint8Array = data190.slice(offset + 4, offset + 4 + size2);
+    const data2: Uint8Array = data190.subarray(offset + 4, offset + 4 + size2);
     const { rgba: rgba2 } = await webpToRgba(data2);
     offset += 4 + size2;
     const size3 = new Uint32Array(data190.slice(offset, offset + 4).buffer)[0];
-    const data3: Uint8Array = data190.slice(offset + 4, offset + 4 + size3);
+    const data3: Uint8Array = data190.subarray(offset + 4, offset + 4 + size3);
     const { rgba: rgba3 } = await webpToRgba(data3);
     offset += 4 + size3;
     const size4 = new Uint32Array(data190.slice(offset, offset + 4).buffer)[0];
-    const data4: Uint8Array = data190.slice(offset + 4, offset + 4 + size4);
+    const data4: Uint8Array = data190.subarray(offset + 4, offset + 4 + size4);
     const { rgba: rgba4 } = await webpToRgba(data4);
 
     const rs = new Uint8Array(8 + splatCount * 19);
@@ -452,19 +452,19 @@ export async function data10190To10019(data10190: Uint8Array): Promise<Uint8Arra
     const splatCount = ui32s[0];
     const size1 = ui32s[3];
     let offset = 12;
-    const data1: Uint8Array = data10190.slice(offset + 4, offset + 4 + size1);
+    const data1: Uint8Array = data10190.subarray(offset + 4, offset + 4 + size1);
     const { rgba: rgba1 } = await webpToRgba(data1);
     offset += 4 + size1;
     const size2 = new Uint32Array(data10190.slice(offset, offset + 4).buffer)[0];
-    const data2: Uint8Array = data10190.slice(offset + 4, offset + 4 + size2);
+    const data2: Uint8Array = data10190.subarray(offset + 4, offset + 4 + size2);
     const { rgba: rgba2 } = await webpToRgba(data2);
     offset += 4 + size2;
     const size3 = new Uint32Array(data10190.slice(offset, offset + 4).buffer)[0];
-    const data3: Uint8Array = data10190.slice(offset + 4, offset + 4 + size3);
+    const data3: Uint8Array = data10190.subarray(offset + 4, offset + 4 + size3);
     const { rgba: rgba3 } = await webpToRgba(data3);
     offset += 4 + size3;
     const size4 = new Uint32Array(data10190.slice(offset, offset + 4).buffer)[0];
-    const data4: Uint8Array = data10190.slice(offset + 4, offset + 4 + size4);
+    const data4: Uint8Array = data10190.subarray(offset + 4, offset + 4 + size4);
     const { rgba: rgba4 } = await webpToRgba(data4);
 
     const rs = new Uint8Array(8 + splatCount * 19);
@@ -548,7 +548,7 @@ export async function data220Decode(data220: Uint8Array, hasSh: boolean): Promis
     const splatCount = ui32s[0];
     const size1 = ui32s[2];
     let offset = 8;
-    const data1: Uint8Array = data220.slice(offset + 4, offset + 4 + size1);
+    const data1: Uint8Array = data220.subarray(offset + 4, offset + 4 + size1);
     const { rgba: rgbaPosition } = await webpToRgba(data1);
     offset += 4 + size1;
     const size2 = new Uint32Array(data220.slice(offset, offset + 4).buffer)[0];
@@ -596,7 +596,7 @@ export async function data220Decode(data220: Uint8Array, hasSh: boolean): Promis
 export async function sh123To1(data123: Uint8Array): Promise<Uint8Array> {
     const ui32s = new Uint32Array(data123.slice(0, 8).buffer);
     const splatCount = ui32s[0];
-    const data1: Uint8Array = data123.slice(8);
+    const data1: Uint8Array = data123.subarray(8);
     const { rgba } = await webpToRgba(data1);
 
     const rs = new Uint8Array(8 + splatCount * 9);
@@ -623,7 +623,7 @@ export async function sh123To1(data123: Uint8Array): Promise<Uint8Array> {
 export async function sh123To2(data123: Uint8Array): Promise<Uint8Array> {
     const ui32s = new Uint32Array(data123.slice(0, 8).buffer);
     const splatCount = ui32s[0];
-    const data1: Uint8Array = data123.slice(8);
+    const data1: Uint8Array = data123.subarray(8);
     const { rgba } = await webpToRgba(data1);
 
     const rs = new Uint8Array(8 + splatCount * 24);
@@ -650,7 +650,7 @@ export async function sh123To2(data123: Uint8Array): Promise<Uint8Array> {
 export async function sh123To3(data123: Uint8Array): Promise<Uint8Array> {
     const ui32s = new Uint32Array(data123.slice(0, 8).buffer);
     const splatCount = ui32s[0];
-    const data1: Uint8Array = data123.slice(8);
+    const data1: Uint8Array = data123.subarray(8);
     const { rgba } = await webpToRgba(data1);
 
     const rs = new Uint8Array(8 + splatCount * 21);
