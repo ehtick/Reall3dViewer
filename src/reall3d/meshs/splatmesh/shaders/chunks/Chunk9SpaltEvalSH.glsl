@@ -81,14 +81,38 @@ vec3[15] splatReadShDatas() {
     return sh;
 }
 
+vec3[15] splatReadShByPalettes(int row, int col) {
+    vec3[15] coeffs;
+
+    const float invW = 1.0 / 960.0;
+    const float invH = 1.0 / 1024.0; // 你的实际高度
+
+    float v = (float(row) + 0.5) * invH;
+    float u0 = (float(col * 15) + 0.5) * invW;
+
+    for (int i = 0; i < 15; i++) {
+        uvec4 texel = texture(shPalettes, vec2(u0 + float(i) * invW, v));
+        coeffs[i].r = (float(texel.r) - 128.0) / 128.0;
+        coeffs[i].g = (float(texel.g) - 128.0) / 128.0;
+        coeffs[i].b = (float(texel.b) - 128.0) / 128.0;
+    }
+
+    return coeffs;
+}
+
 // https://github.com/graphdeco-inria/gaussian-splatting/blob/main/utils/sh_utils.py
-vec3 splatEvalSH(in vec3 v3Cen) {
+vec3 splatEvalSH(in vec3 v3Cen, int row, int col) {
     vec3 dir = normalize(v3Cen - cameraPosition);
     float x = dir.x;
     float y = dir.y;
     float z = dir.z;
 
-    vec3[15] sh = splatReadShDatas();
+    vec3[15] sh;
+    if (shPalettesReady) {
+        sh = splatReadShByPalettes(row, col);
+    } else {
+        sh = splatReadShDatas();
+    }
     vec3 result = SH_C1 * (-sh[0] * y + sh[1] * z - sh[2] * x);
 
     if (shDegree > 1) {

@@ -11,7 +11,7 @@ uniform highp usampler2D splatTexture0, splatTexture1, splatShTexture12, splatSh
 uniform usampler2D shPalettes;
 uniform vec2 focal, viewport;
 uniform int usingIndex, shDegree, particleMode, transitionEffect;
-uniform bool pointMode, bigSceneMode, showWaterMark, debugEffect;
+uniform bool pointMode, bigSceneMode, showWaterMark, debugEffect, shPalettesReady;
 uniform float topY, maxRadius, currentVisibleRadius, currentLightRadius, performanceNow, performanceAct;
 uniform float minPixelDiameter, maxPixelDiameter, minAlpha;
 uniform vec4 markPoint, waterMarkColor;

@@ -542,6 +542,7 @@ int spxSplat220(void *o, void *b, int d) {
     int n = (int)ui32sInput[0];
     int offsetBit = 8;
 
+    const float SQRT2 = 1.4142135623730951f;
     float x, y, z, sx, sy, sz, RX, RY, RZ, RW, RI;
     uint32_t rgba;
     uint8_t x0, x1, x2, y0, y1, y2, z0, z1, z2, s0, s1, s2, R, G, B, A, rx, ry, rz, ri, p0, p1;
@@ -601,9 +602,9 @@ int spxSplat220(void *o, void *b, int d) {
 
         rgba = (A << 24) | (B << 16) | (G << 8) | R;
 
-        RX = ((float)rx - 128.0f) / 128.0f;
-        RY = ((float)ry - 128.0f) / 128.0f;
-        RZ = ((float)rz - 128.0f) / 128.0f;
+        RX = ((float)rx / 255.0f - 0.5f) * SQRT2;
+        RY = ((float)ry / 255.0f - 0.5f) * SQRT2;
+        RZ = ((float)rz / 255.0f - 0.5f) * SQRT2;
         ri -= 252;
         RI = 1.0f - (RX * RX + RY * RY + RZ * RZ);
         RI = RI < 0.0f ? 0.0f : std::sqrt(RI);

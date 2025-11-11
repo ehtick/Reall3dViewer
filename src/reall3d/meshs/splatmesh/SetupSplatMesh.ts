@@ -14,6 +14,7 @@ import {
     RGBAFormat,
     RGBAIntegerFormat,
     ShaderMaterial,
+    UnsignedByteType,
     UnsignedIntType,
     Vector2,
     Vector4,
@@ -83,6 +84,7 @@ import {
     SplatUpdateUseSimilarExp,
     SplatUpdateActiveFlagValue,
     SplatUpdateShPalettesTexture,
+    SplatUpdateShPalettesReady,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -106,6 +108,7 @@ import {
     VarShDegree,
     VarShowWaterMark,
     VarShPalettes,
+    VarShPalettesReady,
     VarSplatIndex,
     VarSplatShTexture12,
     VarSplatShTexture3,
@@ -269,7 +272,8 @@ export function setupSplatMesh(events: Events) {
 
         const dataShPalettes = new Uint8Array(PalettesWidth * 4);
         dataShPalettes.fill(128);
-        let dataTextureShPalettes = new DataTexture(dataShPalettes, PalettesWidth, 1, RGBAFormat);
+        let dataTextureShPalettes = new DataTexture(dataShPalettes, PalettesWidth, 1, RGBAIntegerFormat, UnsignedByteType);
+        dataTextureShPalettes.internalFormat = 'RGBA8UI';
         dataTextureShPalettes.needsUpdate = true;
         material.uniforms[VarShPalettes].value = dataTextureShPalettes;
 
@@ -346,10 +350,12 @@ export function setupSplatMesh(events: Events) {
         on(SplatUpdateShPalettesTexture, async (ui8s: Uint8Array) => {
             if (!ui8s || !ui8s.length) return;
 
-            const height = Math.ceil(ui8s.length / 4 / 960);
+            const height = 1024;
             const dataShPalettes = new Uint8Array(PalettesWidth * height * 4);
             dataShPalettes.set(ui8s);
-            const dataTexture = new DataTexture(dataShPalettes, PalettesWidth, height, RGBAFormat);
+            const dataTexture = new DataTexture(dataShPalettes, PalettesWidth, height, RGBAIntegerFormat, UnsignedByteType);
+            dataTextureShPalettes.internalFormat = 'RGBA8UI';
+            dataTexture.onUpdate = () => fire(SplatUpdateShPalettesReady);
             dataTexture.needsUpdate = true;
             material.uniforms[VarShPalettes].value = dataTexture;
             material.needsUpdate = true;
@@ -448,6 +454,11 @@ export function setupSplatMesh(events: Events) {
         });
         on(SplatUpdateShowWaterMark, (show: boolean = true) => {
             material.uniforms[VarShowWaterMark].value = show;
+            material.uniformsNeedUpdate = true;
+            fire(NotifyViewerNeedUpdate);
+        });
+        on(SplatUpdateShPalettesReady, (val: boolean = true) => {
+            material.uniforms[VarShPalettesReady].value = val;
             material.uniformsNeedUpdate = true;
             fire(NotifyViewerNeedUpdate);
         });
@@ -690,6 +701,7 @@ export function setupSplatMesh(events: Events) {
             [VarSplatShTexture12]: { type: 't', value: null },
             [VarSplatShTexture3]: { type: 't', value: null },
             [VarShPalettes]: { type: 't', value: null },
+            [VarShPalettesReady]: { type: 'bool', value: false },
             [VarFocal]: { type: 'v2', value: new Vector2() },
             [VarViewport]: { type: 'v2', value: new Vector2() },
             [VarUsingIndex]: { type: 'int', value: 0 },

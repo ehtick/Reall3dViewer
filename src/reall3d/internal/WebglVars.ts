@@ -9,6 +9,7 @@ export const VarMaxPixelDiameter = 'maxPixelDiameter';
 export const VarMinPixelDiameter = 'minPixelDiameter';
 export const VarActiveFlagValue = 'activeFlagValue';
 export const VarSplatShTexture3 = 'splatShTexture3';
+export const VarShPalettesReady = 'shPalettesReady';
 export const VarPerformanceNow = 'performanceNow';
 export const VarPerformanceAct = 'performanceAct';
 export const VarWaterMarkColor = 'waterMarkColor';
