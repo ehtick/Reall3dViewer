@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-export const ViewerVersion = 'v2.1.0-dev'; // Reall3dViewer 版本
+export const ViewerVersion = 'v2.2.0'; // Reall3dViewer 版本
 
 export const isMobile = !navigator.userAgent.includes('cloudphone') && navigator.userAgent.includes('Mobi');
 export const HalfChars = 'QWERTYUIOPLKJHGFDSAZXCVBNM1234567890qwertyuioplkjhgfdsazxcvbnm`~!@#$%^&*()-_=+\\|]}[{\'";::,<.>//? \t';
@@ -28,13 +28,18 @@ export const SpxOpenFormat0 = 0;
 export const SpxBlockFormatData22 = 22;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 22, basic data, webp encoding */
 export const SpxBlockFormatData220 = 220;
+/** 【spx中定义的公开数据块格式】Open Block Content Format 8, sh palettes */
+export const SpxBlockFormatSH8 = 8;
+/** 【spx中定义的公开数据块格式】Open Block Content Format 9, sh palettes, webp encoding */
+export const SpxBlockFormatSH9 = 9;
+
 /** 【spx中定义的公开数据块格式】Open Block Content Format 20, basic data */
 export const SpxBlockFormatData20 = 20;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 19, basic data */
 export const SpxBlockFormatData19 = 19;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 190, basic data */
 export const SpxBlockFormatData190 = 190;
-/** 【spx中定义的公开数据块格式】Open Block Content Format 10190, basic data */
+/** 【spx中定义的公开数据块格式】Open Block Content Format 10190, basic data [TEST] */
 export const SpxBlockFormatData10190 = 10190;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 1, data of SH degree 1 （SH1 only） */
 export const SpxBlockFormatSH1 = 1;
@@ -44,10 +49,6 @@ export const SpxBlockFormatSH2 = 2;
 export const SpxBlockFormatSH3 = 3;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 4, data of SH degree 1~3 （SH1 + SH2 + SH3） */
 export const SpxBlockFormatSH4 = 4;
-/** 【spx中定义的公开数据块格式】Open Block Content Format 8, sh palettes */
-export const SpxBlockFormatSH8 = 8;
-/** 【spx中定义的公开数据块格式】Open Block Content Format 9, sh palettes, webp encoding */
-export const SpxBlockFormatSH9 = 9;
 
 /** 【Reall3D扩展的专属格式】the exclusive format extended by reall3d */
 export const SpxExclusiveFormatReall3d = 3141592653;
