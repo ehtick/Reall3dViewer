@@ -40,7 +40,7 @@ Fixed-length header for format identification, containing bounding box data for 
 |             |     bit 5 | Flag 6: Reserved      | Reserved |
 |             |     bit 6 | Flag 7: Reserved      | Reserved |
 |             |     bit 7 | Flag 8: Large Scene   | Default small scene `0` |
-| 54~55       | uint16    | Max Data Category     | Writes the maximum value when data is categorized, default `0` |
+| 54~55       | uint16    | Reserved              | Reserved                                 |
 | 56–63       | -         | Reserved              | Reserved                                        |
 | 64–123      | ASCII     | Comment               | Maximum 60 ASCII characters                    |
 | 124–127     | uint32    | `*`Checksum           | Validates file integrity (creater-specific)                               |
@@ -65,7 +65,7 @@ Data blocks consist of a fixed header followed by customizable content.
 | Byte Offset | Type      | Field Name            | Description                                                                 |
 |-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
 | 0–3         | uint32    | `*`Count              | Number of Gaussians in this block                                           |
-| 4–7         | uint32    | `*`Format ID          | Identifies data layout (0–255 = open formats; >255 = exclusive)             |
+| 4–7         | uint32    | `*`Format ID          | Identifies block format                                                     |
 | 8–n         | bytes     | `*`Data               | Structured per Format ID                                                    |
 
 ---
@@ -103,12 +103,12 @@ he data block format encompasses both open and exclusive formats. The reserved r
 |-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
 | 0~3 | uint32 | `*`Gaussian Count | Number of Gaussians |
 | 4~7 | uint32 | `*`Format ID | `220`, webp encoding |
-| 8~n | bytes | `*`Data | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([rx,ry,rz,ri...], length,webp([p0,p1,0,255...]) |
+| 8~n | bytes | `*`Data | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([r0,r1,r2,ri...], length,webp([p0,p1,0,255...]) |
 
-- `x,y,z` Coordinates, 24-bit precision (`x`, `y`, `z`).
-- `sx,sy,sz` Scale, 8-bit per axis (`sx`, `sy`, `sz`).
+- `x,y,z` Coordinates, 24-bit precision.
+- `sx,sy,sz` Scale, 8-bit per axis.
 - `r,g,b,a` Color, RGBA channels (8-bit each).
-- `rx,ry,rz` Rotation, Quaternion components (8-bit each).
+- `r0,r1,r2,ri` Rotation, Quaternion components (8-bit each), ri is the index of the maximum value + 252.
 - `p0,p1` Low and high bytes of palette index; omitted when no palette is used.
 
 ---
