@@ -66,7 +66,7 @@ npm run build
 # http://hostname:port/index.html?url=your-model-link-address
 
 # .spx file can be obtained through conversion using the gsbox
-gsbox p2x -i /path/to/input.ply -o /path/to/output.spx -sh 0
+gsbox p2x -i /path/to/input.ply -o /path/to/output.spx
 ```
 
 use npm package [sample project here](https://github.com/reall3d-com/reall3dviewer-samples-use-npm-package)

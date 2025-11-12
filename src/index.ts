@@ -26,7 +26,7 @@ if (url) {
     debugMode && initDevMode(true);
 } else {
     viewer = new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
-    viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.spx`);
+    viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.v3.spx`);
 
     // viewer.addModel(`https://reall3d.com/demo-models/sogv1/v1.sog`);
     // viewer.addModel(`https://reall3d.com/demo-models/sogv1/meta.json`);
