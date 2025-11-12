@@ -25,12 +25,10 @@ void main() {
         return;
     }
 
-    if (vPosition.w > 0.0) {
-        alpha *= useSimilarExp ? exp2(-r2) : exp(-r2);
-        if (alpha <= minAlpha) {
-            gl_FragColor = vec4(0.0);
-            return;
-        }
+    alpha *= (useSimilarExp || vPosition.w > 0.0) ? exp2(-r2) : exp(-r2);
+    if (alpha <= minAlpha) {
+        gl_FragColor = vec4(0.0);
+        return;
     }
 
     gl_FragColor = vec4(lightFactor * vColor.rgb, alpha);
