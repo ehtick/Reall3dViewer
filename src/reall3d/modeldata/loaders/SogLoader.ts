@@ -135,7 +135,7 @@ export async function loadSog(model: SplatModel) {
 }
 
 async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, meta: any) {
-    const isV1 = !meta.version;
+    const isV1 = !meta.version || meta.version === 1;
     const cntSplat: number = isV1 ? meta.means.shape[0] : meta.count;
     const limitCnt = Math.min(cntSplat, model.fetchLimit);
     const shDegree = meta.shN ? 3 : 0;
@@ -152,6 +152,14 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
     const { rgba: centroids, width } = meta.shN ? await webpToRgba(mapFile.get(meta.shN.files[0])) : { rgba: null, width: 0 };
     const { rgba: labels } = meta.shN ? await webpToRgba(mapFile.get(meta.shN.files[1])) : { rgba: null };
 
+    if (shDegree > 0 && !isV1) {
+        const palettes = new Uint8Array(centroids.length);
+        for (let i = 0; i < centroids.length; i++) {
+            i % 4 < 3 && (palettes[i] = clipUint8(Math.round(meta.shN.codebook[centroids[i]] * 128.0) + 128.0));
+        }
+        model.palettes = palettes;
+    }
+
     while (limitCnt > model.dataSplatCount) {
         const data: Uint8Array = isV1 ? await parseSogV1(model.dataSplatCount) : await parseSogV2(model.dataSplatCount);
         model.splatData.set(data.slice(0), model.dataSplatCount * SplatDataSize32);
@@ -160,6 +168,118 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
         model.downloadSplatCount = model.dataSplatCount;
     }
 
+    async function parseSogV2(startCnt: number): Promise<Uint8Array> {
+        const maxCnt = Math.min(startCnt + maxProcessCnt, limitCnt);
+        const processCnt = maxCnt - startCnt;
+
+        const ui8sData = new Uint8Array(processCnt * DataSize32);
+        const f32sData = new Float32Array(ui8sData.buffer);
+
+        for (let i = startCnt, n = 0; i < maxCnt; i++) {
+            let fx = ((meansu[i * 4 + 0] << 8) | meansl[i * 4 + 0]) / 65535;
+            let fy = ((meansu[i * 4 + 1] << 8) | meansl[i * 4 + 1]) / 65535;
+            let fz = ((meansu[i * 4 + 2] << 8) | meansl[i * 4 + 2]) / 65535;
+            let x = meta.means.mins[0] + (meta.means.maxs[0] - meta.means.mins[0]) * fx;
+            let y = meta.means.mins[1] + (meta.means.maxs[1] - meta.means.mins[1]) * fy;
+            let z = meta.means.mins[2] + (meta.means.maxs[2] - meta.means.mins[2]) * fz;
+            x = Math.sign(x) * (Math.exp(Math.abs(x)) - 1);
+            y = Math.sign(y) * (Math.exp(Math.abs(y)) - 1);
+            z = Math.sign(z) * (Math.exp(Math.abs(z)) - 1);
+
+            let sx = Math.exp(meta.scales.codebook[scales[i * 4 + 0]]);
+            let sy = Math.exp(meta.scales.codebook[scales[i * 4 + 1]]);
+            let sz = Math.exp(meta.scales.codebook[scales[i * 4 + 2]]);
+
+            const { rw, rx, ry, rz } = decodeSogRotations(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
+
+            let r = meta.sh0.codebook[sh0[i * 4 + 0]];
+            let g = meta.sh0.codebook[sh0[i * 4 + 1]];
+            let b = meta.sh0.codebook[sh0[i * 4 + 2]];
+            let a = sh0[i * 4 + 3];
+
+            f32sData[n * 8 + 0] = x;
+            f32sData[n * 8 + 1] = y;
+            f32sData[n * 8 + 2] = z;
+            f32sData[n * 8 + 3] = sx;
+            f32sData[n * 8 + 4] = sy;
+            f32sData[n * 8 + 5] = sz;
+            ui8sData[n * 32 + 24] = clipUint8((0.5 + SH_C0 * r) * 255);
+            ui8sData[n * 32 + 25] = clipUint8((0.5 + SH_C0 * g) * 255);
+            ui8sData[n * 32 + 26] = clipUint8((0.5 + SH_C0 * b) * 255);
+            ui8sData[n * 32 + 27] = a;
+            ui8sData[n * 32 + 28] = clipUint8(rw * 128.0 + 128.0);
+            ui8sData[n * 32 + 29] = clipUint8(rx * 128.0 + 128.0);
+            ui8sData[n * 32 + 30] = clipUint8(ry * 128.0 + 128.0);
+            ui8sData[n * 32 + 31] = clipUint8(rz * 128.0 + 128.0);
+            n++;
+        }
+
+        const rs = await parseSplatToTexdata(ui8sData, processCnt);
+        if (shDegree > 0) {
+            for (let i = 0; i < processCnt; i++) {
+                rs[i * 32 + 12] = labels[(i + startCnt) * 4];
+                rs[i * 32 + 13] = labels[(i + startCnt) * 4 + 1];
+            }
+        }
+        return rs;
+    }
+
+    function updateModelMinMax(model: SplatModel, data: Uint8Array) {
+        // 计算当前半径，增量数据中继续计算即可
+        const dataCnt = data.byteLength / SplatDataSize32;
+        const f32s: Float32Array = new Float32Array(data.buffer);
+        for (let i = 0, x = 0, y = 0, z = 0; i < dataCnt; i++) {
+            x = f32s[i * 8];
+            y = f32s[i * 8 + 1];
+            z = f32s[i * 8 + 2];
+            model.minX = Math.min(model.minX, x);
+            model.maxX = Math.max(model.maxX, x);
+            model.minY = Math.min(model.minY, y);
+            model.maxY = Math.max(model.maxY, y);
+            model.minZ = Math.min(model.minZ, z);
+            model.maxZ = Math.max(model.maxZ, z);
+        }
+
+        const topY = 0;
+        model.currentRadius = Math.sqrt(model.maxX * model.maxX + topY * topY + model.maxZ * model.maxZ); // 当前模型数据范围离高点的最大半径
+        model.aabbCenter = new Vector3((model.minX + model.maxX) / 2, (model.minY + model.maxY) / 2, (model.minZ + model.maxZ) / 2);
+        model.maxRadius = 0.5 * Math.sqrt(Math.pow(model.maxX - model.minX, 2) + Math.pow(model.maxY - model.minY, 2) + Math.pow(model.maxZ - model.minZ, 2));
+        model.metaMatrix && model.aabbCenter.applyMatrix4(model.metaMatrix);
+    }
+
+    function decodeSogRotations(b0: number, b1: number, b2: number, bi: number) {
+        let r0 = (b0 / 255 - 0.5) * SQRT2;
+        let r1 = (b1 / 255 - 0.5) * SQRT2;
+        let r2 = (b2 / 255 - 0.5) * SQRT2;
+        let ri = Math.sqrt(Math.max(0, 1.0 - r0 * r0 - r1 * r1 - r2 * r2));
+        let idx = bi - 252;
+        let rw: number, rx: number, ry: number, rz: number;
+        if (idx == 0) {
+            rw = ri;
+            rx = r0;
+            ry = r1;
+            rz = r2;
+        } else if (idx == 1) {
+            rw = r0;
+            rx = ri;
+            ry = r1;
+            rz = r2;
+        } else if (idx == 2) {
+            rw = r0;
+            rx = r1;
+            ry = ri;
+            rz = r2;
+        } else {
+            rw = r0;
+            rx = r1;
+            ry = r2;
+            rz = ri;
+        }
+
+        return { rw, rx, ry, rz };
+    }
+
+    // 此版本已淘汰，不再维护
     async function parseSogV1(startCnt: number): Promise<Uint8Array> {
         const maxCnt = Math.min(startCnt + maxProcessCnt, limitCnt);
         const processCnt = maxCnt - startCnt;
@@ -249,8 +369,8 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
 
             for (let i = startCnt, n = 0; i < maxCnt; i++) {
                 const label = labels[i * 4 + 0] + (labels[i * 4 + 1] << 8);
-                const col = (label & 63) * 15; // 同 (n % 64) * 15
-                const row = label >> 6; // 同 Math.floor(n / 64)
+                const col = (label & 63) * 15;
+                const row = label >> 6;
                 const offset = row * width + col;
 
                 const sh1 = new Uint8Array(9);
@@ -284,151 +404,5 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
         }
 
         return await parseSplatToTexdata(ui8sData, processCnt);
-    }
-
-    async function parseSogV2(startCnt: number): Promise<Uint8Array> {
-        const maxCnt = Math.min(startCnt + maxProcessCnt, limitCnt);
-        const processCnt = maxCnt - startCnt;
-
-        const ui8sData = new Uint8Array(processCnt * DataSize32);
-        const f32sData = new Float32Array(ui8sData.buffer);
-
-        for (let i = startCnt, n = 0; i < maxCnt; i++) {
-            let fx = ((meansu[i * 4 + 0] << 8) | meansl[i * 4 + 0]) / 65535;
-            let fy = ((meansu[i * 4 + 1] << 8) | meansl[i * 4 + 1]) / 65535;
-            let fz = ((meansu[i * 4 + 2] << 8) | meansl[i * 4 + 2]) / 65535;
-            let x = meta.means.mins[0] + (meta.means.maxs[0] - meta.means.mins[0]) * fx;
-            let y = meta.means.mins[1] + (meta.means.maxs[1] - meta.means.mins[1]) * fy;
-            let z = meta.means.mins[2] + (meta.means.maxs[2] - meta.means.mins[2]) * fz;
-            x = Math.sign(x) * (Math.exp(Math.abs(x)) - 1);
-            y = Math.sign(y) * (Math.exp(Math.abs(y)) - 1);
-            z = Math.sign(z) * (Math.exp(Math.abs(z)) - 1);
-
-            let sx = Math.exp(meta.scales.codebook[scales[i * 4 + 0]]);
-            let sy = Math.exp(meta.scales.codebook[scales[i * 4 + 1]]);
-            let sz = Math.exp(meta.scales.codebook[scales[i * 4 + 2]]);
-
-            let r0 = (quats[i * 4 + 0] / 255 - 0.5) * SQRT2;
-            let r1 = (quats[i * 4 + 1] / 255 - 0.5) * SQRT2;
-            let r2 = (quats[i * 4 + 2] / 255 - 0.5) * SQRT2;
-            let ri = Math.sqrt(Math.max(0, 1.0 - r0 * r0 - r1 * r1 - r2 * r2));
-            let idx = quats[i * 4 + 3] - 252;
-            let rw: number, rx: number, ry: number, rz: number;
-            if (idx == 0) {
-                rw = ri;
-                rx = r0;
-                ry = r1;
-                rz = r2;
-            } else if (idx == 1) {
-                rw = r0;
-                rx = ri;
-                ry = r1;
-                rz = r2;
-            } else if (idx == 2) {
-                rw = r0;
-                rx = r1;
-                ry = ri;
-                rz = r2;
-            } else {
-                rw = r0;
-                rx = r1;
-                ry = r2;
-                rz = ri;
-            }
-            let r = meta.sh0.codebook[sh0[i * 4 + 0]];
-            let g = meta.sh0.codebook[sh0[i * 4 + 1]];
-            let b = meta.sh0.codebook[sh0[i * 4 + 2]];
-            let a = sh0[i * 4 + 3];
-
-            f32sData[n * 8 + 0] = x;
-            f32sData[n * 8 + 1] = y;
-            f32sData[n * 8 + 2] = z;
-            f32sData[n * 8 + 3] = sx;
-            f32sData[n * 8 + 4] = sy;
-            f32sData[n * 8 + 5] = sz;
-            ui8sData[n * 32 + 24] = clipUint8((0.5 + SH_C0 * r) * 255);
-            ui8sData[n * 32 + 25] = clipUint8((0.5 + SH_C0 * g) * 255);
-            ui8sData[n * 32 + 26] = clipUint8((0.5 + SH_C0 * b) * 255);
-            ui8sData[n * 32 + 27] = a;
-            ui8sData[n * 32 + 28] = clipUint8(rw * 128.0 + 128.0);
-            ui8sData[n * 32 + 29] = clipUint8(rx * 128.0 + 128.0);
-            ui8sData[n * 32 + 30] = clipUint8(ry * 128.0 + 128.0);
-            ui8sData[n * 32 + 31] = clipUint8(rz * 128.0 + 128.0);
-            n++;
-        }
-
-        if (shDegree > 0) {
-            const u2s = new Uint32Array(2);
-            u2s[0] = processCnt;
-            u2s[1] = SpxBlockFormatSH2;
-            const ui8sSH2 = new Uint8Array(8 + processCnt * 24);
-            ui8sSH2.set(new Uint8Array(u2s.buffer), 0);
-
-            const u3s = new Uint32Array(2);
-            u3s[0] = processCnt;
-            u3s[1] = SpxBlockFormatSH3;
-            const ui8sSH3 = new Uint8Array(8 + processCnt * 21);
-            ui8sSH3.set(new Uint8Array(u3s.buffer), 0);
-
-            for (let i = startCnt, n = 0; i < maxCnt; i++) {
-                const label = labels[i * 4 + 0] + (labels[i * 4 + 1] << 8);
-                const col = (label & 63) * 15; // 同 (n % 64) * 15
-                const row = label >> 6; // 同 Math.floor(n / 64)
-                const offset = row * width + col;
-
-                const sh1 = new Uint8Array(9);
-                const sh2 = new Uint8Array(15);
-                const sh3 = new Uint8Array(21);
-                let shValue: number;
-                for (let d = 0; d < 3; d++) {
-                    for (let k = 0; k < 3; k++) {
-                        shValue = meta.shN.codebook[centroids[(offset + k) * 4 + d]];
-                        sh1[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-                    }
-                    for (let k = 0; k < 5; k++) {
-                        shValue = meta.shN.codebook[centroids[(offset + 3 + k) * 4 + d]];
-                        sh2[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-                    }
-                    for (let k = 0; k < 7; k++) {
-                        shValue = meta.shN.codebook[centroids[(offset + 8 + k) * 4 + d]];
-                        sh3[k * 3 + d] = clipUint8(Math.round(shValue * 128.0) + 128.0);
-                    }
-                }
-                ui8sSH2.set(sh1, 8 + n * 24);
-                ui8sSH2.set(sh2, 8 + n * 24 + 9);
-                ui8sSH3.set(sh3, 8 + n * 21);
-                n++;
-            }
-
-            const sh2Block = await parseSpxBlockData(ui8sSH2);
-            model.sh12Data.push(sh2Block.datas);
-            const sh3Block = await parseSpxBlockData(ui8sSH3);
-            model.sh3Data.push(sh3Block.datas);
-        }
-
-        return await parseSplatToTexdata(ui8sData, processCnt);
-    }
-
-    function updateModelMinMax(model: SplatModel, data: Uint8Array) {
-        // 计算当前半径，增量数据中继续计算即可
-        const dataCnt = data.byteLength / SplatDataSize32;
-        const f32s: Float32Array = new Float32Array(data.buffer);
-        for (let i = 0, x = 0, y = 0, z = 0; i < dataCnt; i++) {
-            x = f32s[i * 8];
-            y = f32s[i * 8 + 1];
-            z = f32s[i * 8 + 2];
-            model.minX = Math.min(model.minX, x);
-            model.maxX = Math.max(model.maxX, x);
-            model.minY = Math.min(model.minY, y);
-            model.maxY = Math.max(model.maxY, y);
-            model.minZ = Math.min(model.minZ, z);
-            model.maxZ = Math.max(model.maxZ, z);
-        }
-
-        const topY = 0;
-        model.currentRadius = Math.sqrt(model.maxX * model.maxX + topY * topY + model.maxZ * model.maxZ); // 当前模型数据范围离高点的最大半径
-        model.aabbCenter = new Vector3((model.minX + model.maxX) / 2, (model.minY + model.maxY) / 2, (model.minZ + model.maxZ) / 2);
-        model.maxRadius = 0.5 * Math.sqrt(Math.pow(model.maxX - model.minX, 2) + Math.pow(model.maxY - model.minY, 2) + Math.pow(model.maxZ - model.minZ, 2));
-        model.metaMatrix && model.aabbCenter.applyMatrix4(model.metaMatrix);
     }
 }

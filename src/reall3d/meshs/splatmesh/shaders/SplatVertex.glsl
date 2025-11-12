@@ -118,7 +118,7 @@ void main() {
     } else {
         vColor = vec4(float(cov3d.w & 0xFFu) / 255.0, float((cov3d.w >> 8) & 0xFFu) / 255.0, float((cov3d.w >> 16) & 0xFFu) / 255.0, colorA);
         if (shDegree > 0 && isNormal) {
-            vColor.rgb += splatEvalSH(v3Cen, int(cen.w >> 6u), int(cen.w & 0x3Fu));
+            vColor.rgb += splatEvalSH(v3Cen, cen.w & 0xFFFFu);
         }
         vColor = FvEffect(cen, vColor, activeFlagValue, performanceNow);
     }
