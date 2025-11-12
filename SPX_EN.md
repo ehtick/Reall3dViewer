@@ -1,4 +1,4 @@
-## SPX Version 3 Format Specification (Being revised)
+## SPX Version 3 Format Specification
 The `.spx` format is a 3DGS model format designed to be fle**X**ible, e**X**tensible, and e**X**clusive.
 
 
