@@ -2,24 +2,13 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { Vector3 } from 'three';
-import { clipUint8, computeCompressionRatio, DecompressGzip, uint8ArrayToString, unzipToMap, webpToRgba } from '../../utils/CommonUtils';
-import {
-    DataSize32,
-    isMobile,
-    SH_C0,
-    SplatDataSize32,
-    SpxBlockFormatData20,
-    SpxBlockFormatSH1,
-    SpxBlockFormatSH2,
-    SpxBlockFormatSH3,
-} from '../../utils/consts/GlobalConstants';
+import { clipUint8, computeCompressionRatio, uint8ArrayToString, unzipToMap, webpToRgba } from '../../utils/CommonUtils';
+import { DataSize32, isMobile, SH_C0, SplatDataSize32, SpxBlockFormatSH2, SpxBlockFormatSH3 } from '../../utils/consts/GlobalConstants';
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata, parseSpxBlockData } from '../wasm/WasmParser';
 import { loadFile } from './FileLoader';
 
 const maxProcessCnt = isMobile ? 20480 : 51200;
-const SpxHeaderLength = 16;
-const CMask = (1 << 9) - 1;
 const SQRT2 = Math.sqrt(2.0);
 
 export async function loadSog(model: SplatModel) {
