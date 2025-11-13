@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-export const ViewerVersion = 'v2.2.0'; // Reall3dViewer 版本
+export const ViewerVersion = 'v2.3.0-dev'; // Reall3dViewer 版本
 
 export const isMobile = !navigator.userAgent.includes('cloudphone') && navigator.userAgent.includes('Mobi');
 export const HalfChars = 'QWERTYUIOPLKJHGFDSAZXCVBNM1234567890qwertyuioplkjhgfdsazxcvbnm`~!@#$%^&*()-_=+\\|]}[{\'";::,<.>//? \t';
