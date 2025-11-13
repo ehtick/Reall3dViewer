@@ -259,9 +259,9 @@ export function setupSplatTextureManager(events: Events) {
         const ui32s = new Uint32Array(texwidth * texheight * 4);
         const f32s = new Float32Array(ui32s.buffer);
         const mergeSplatData = new Uint8Array(ui32s.buffer);
-        mergeSplatData.set(splatModel.splatData.slice(0, dataSplatCount * 32), 0);
-        watermarkCount && mergeSplatData.set(splatModel.watermarkData.slice(0, watermarkCount * 32), dataSplatCount * 32);
-        textWatermarkCount && mergeSplatData.set(txtWatermarkData.slice(0, textWatermarkCount * 32), (dataSplatCount + watermarkCount) * 32);
+        mergeSplatData.set(splatModel.splatData.subarray(0, dataSplatCount * 32), 0);
+        watermarkCount && mergeSplatData.set(splatModel.watermarkData.subarray(0, watermarkCount * 32), dataSplatCount * 32);
+        textWatermarkCount && mergeSplatData.set(txtWatermarkData.subarray(0, textWatermarkCount * 32), (dataSplatCount + watermarkCount) * 32);
 
         const xyz = new Float32Array(splatModel.renderSplatCount * 3);
         for (let i = 0, n = 0; i < splatModel.renderSplatCount; i++) {
@@ -437,14 +437,14 @@ export function setupSplatTextureManager(events: Events) {
         const mergeSplatData = new Uint8Array(ui32s.buffer);
         let mergeDataCount = 0;
         for (let cut of cuts) {
-            mergeSplatData.set(cut.splatData.slice(0, cut.currentRenderCnt * 32), mergeDataCount * 32);
+            mergeSplatData.set(cut.splatData.subarray(0, cut.currentRenderCnt * 32), mergeDataCount * 32);
             mergeDataCount += cut.currentRenderCnt;
         }
         if (watermarkCount) {
-            mergeSplatData.set(splatModel.watermarkData.slice(0, watermarkCount * 32), mergeDataCount * 32);
+            mergeSplatData.set(splatModel.watermarkData.subarray(0, watermarkCount * 32), mergeDataCount * 32);
         }
         if (textWatermarkCount) {
-            mergeSplatData.set(txtWatermarkData.slice(0, textWatermarkCount * 32), (mergeDataCount + watermarkCount) * 32);
+            mergeSplatData.set(txtWatermarkData.subarray(0, textWatermarkCount * 32), (mergeDataCount + watermarkCount) * 32);
         }
 
         // 保险起见以最终数据数量为准

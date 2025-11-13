@@ -169,7 +169,7 @@ export async function parseSplatToTexdata(data: Uint8Array, splatCount: number):
     const dataParser: any = instance.exports.s;
 
     const wasmMemory = new Uint8Array(memory.buffer);
-    wasmMemory.set(data.slice(0, splatCount * SplatDataSize32), 0);
+    wasmMemory.set(data.subarray(0, splatCount * SplatDataSize32), 0);
     const code: number = dataParser(0, splatCount);
     if (code) {
         console.error('splat data parser failed:', code);

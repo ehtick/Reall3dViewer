@@ -151,7 +151,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
 
     while (limitCnt > model.dataSplatCount) {
         const data: Uint8Array = isV1 ? await parseSogV1(model.dataSplatCount) : await parseSogV2(model.dataSplatCount);
-        model.splatData.set(data.slice(0), model.dataSplatCount * SplatDataSize32);
+        model.splatData.set(data.subarray(0), model.dataSplatCount * SplatDataSize32);
         updateModelMinMax(model, data);
         model.dataSplatCount += data.byteLength / SplatDataSize32;
         model.downloadSplatCount = model.dataSplatCount;

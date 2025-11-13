@@ -197,7 +197,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH1;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(value.slice(offsetShs + (i * maxProcessCnt + j) * 9, offsetShs + (i * maxProcessCnt + j) * 9 + 9), offset);
+                    sh2.set(value.subarray(offsetShs + (i * maxProcessCnt + j) * 9, offsetShs + (i * maxProcessCnt + j) * 9 + 9), offset);
                     offset += 9;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -209,7 +209,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH2;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(value.slice(offsetShs + (i * maxProcessCnt + j) * 24, offsetShs + (i * maxProcessCnt + j) * 24 + 24), offset);
+                    sh2.set(value.subarray(offsetShs + (i * maxProcessCnt + j) * 24, offsetShs + (i * maxProcessCnt + j) * 24 + 24), offset);
                     offset += 24;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -221,7 +221,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH2;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(value.slice(offsetShs + (i * maxProcessCnt + j) * 45, offsetShs + (i * maxProcessCnt + j) * 45 + 24), offset);
+                    sh2.set(value.subarray(offsetShs + (i * maxProcessCnt + j) * 45, offsetShs + (i * maxProcessCnt + j) * 45 + 24), offset);
                     offset += 24;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -233,7 +233,7 @@ export async function loadSpz(model: SplatModel) {
                 u3s[1] = SpxBlockFormatSH3;
                 sh3.set(new Uint8Array(u3s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh3.set(value.slice(offsetShs + (i * maxProcessCnt + j) * 45 + 24, offsetShs + (i * maxProcessCnt + j) * 45 + 45), offset);
+                    sh3.set(value.subarray(offsetShs + (i * maxProcessCnt + j) * 45 + 24, offsetShs + (i * maxProcessCnt + j) * 45 + 45), offset);
                     offset += 21;
                 }
                 const sh3Block = await parseSpxBlockData(sh3);
@@ -251,7 +251,7 @@ export async function loadSpz(model: SplatModel) {
         const maxSplatDataCnt = Math.min(model.fetchLimit, header.numPoints);
         if (model.dataSplatCount + dataCnt > maxSplatDataCnt) {
             dataCnt = maxSplatDataCnt - model.dataSplatCount; // 丢弃超出限制的部分
-            model.splatData.set(data.slice(0, dataCnt * SplatDataSize32), model.dataSplatCount * SplatDataSize32);
+            model.splatData.set(data.subarray(0, dataCnt * SplatDataSize32), model.dataSplatCount * SplatDataSize32);
         } else {
             model.splatData.set(data, model.dataSplatCount * SplatDataSize32);
         }

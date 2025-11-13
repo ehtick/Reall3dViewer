@@ -55,7 +55,7 @@ export async function loadSplat(model: SplatModel) {
             } else {
                 // 解析并设定数据
                 perByteLen = await parseSplatAndSetSplatData(model, perByteLen, perValue, value);
-                perByteLen && perValue.set(value.slice(value.byteLength - perByteLen), 0);
+                perByteLen && perValue.set(value.subarray(value.byteLength - perByteLen), 0);
             }
 
             // 超过限制时终止下载
@@ -80,8 +80,8 @@ export async function loadSplat(model: SplatModel) {
             let value: Uint8Array;
             if (perByteLen) {
                 value = new Uint8Array(cntSplat * model.rowLength);
-                value.set(perValue.slice(0, perByteLen), 0);
-                value.set(newValue.slice(0, newValue.byteLength - leave), perByteLen);
+                value.set(perValue.subarray(0, perByteLen), 0);
+                value.set(newValue.subarray(0, newValue.byteLength - leave), perByteLen);
             } else {
                 value = newValue.slice(0, cntSplat * model.rowLength);
             }
@@ -124,7 +124,7 @@ function setSplatData(model: SplatModel, data: Uint8Array) {
     const maxSplatDataCnt = Math.min(model.fetchLimit, model.modelSplatCount);
     if (model.dataSplatCount + dataCnt > maxSplatDataCnt) {
         dataCnt = maxSplatDataCnt - model.dataSplatCount; // 丢弃超出限制的部分
-        model.splatData.set(data.slice(0, dataCnt * SplatDataSize32), model.dataSplatCount * SplatDataSize32);
+        model.splatData.set(data.subarray(0, dataCnt * SplatDataSize32), model.dataSplatCount * SplatDataSize32);
     } else {
         model.splatData.set(data, model.dataSplatCount * SplatDataSize32);
     }

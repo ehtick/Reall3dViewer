@@ -66,7 +66,7 @@ export async function loadSpx(model: SplatModel) {
                         headChunk.set(headChunks[i], cnt);
                         cnt += headChunks[i].byteLength;
                     } else {
-                        headChunk.set(headChunks[i].slice(0, SpxHeaderSize - cnt), cnt);
+                        headChunk.set(headChunks[i].subarray(0, SpxHeaderSize - cnt), cnt);
                         value = new Uint8Array(headChunks[i].slice(SpxHeaderSize - cnt));
                     }
                 }
@@ -115,7 +115,7 @@ export async function loadSpx(model: SplatModel) {
                 }
 
                 const ui8s = new Uint8Array(perByteLen + value.byteLength);
-                ui8s.set(perValue.slice(0, perByteLen), 0);
+                ui8s.set(perValue.subarray(0, perByteLen), 0);
                 ui8s.set(value, perByteLen);
                 value = ui8s.slice(4);
 
@@ -147,7 +147,7 @@ export async function loadSpx(model: SplatModel) {
                         ui8sBlock.set(blockValues[i], offset);
                         offset += blockValues[i].byteLength;
                     } else {
-                        ui8sBlock.set(blockValues[i].slice(0, blockSize - offset), offset);
+                        ui8sBlock.set(blockValues[i].subarray(0, blockSize - offset), offset);
                         value = new Uint8Array(blockValues[i].slice(blockSize - offset)); // 剩余部分，可能足够长包含多块
                     }
                 }
@@ -292,9 +292,9 @@ function setBlockSplatData(model: SplatModel, data: Uint8Array) {
                     watermarkData.set(model.watermarkData, 0);
                     model.watermarkData = watermarkData;
                 }
-                model.watermarkData.set(data.slice(i * 32, i * 32 + 32), model.watermarkCount++ * SplatDataSize32);
+                model.watermarkData.set(data.subarray(i * 32, i * 32 + 32), model.watermarkCount++ * SplatDataSize32);
             } else {
-                model.splatData.set(data.slice(i * 32, i * 32 + 32), model.dataSplatCount++ * SplatDataSize32);
+                model.splatData.set(data.subarray(i * 32, i * 32 + 32), model.dataSplatCount++ * SplatDataSize32);
             }
         }
 
