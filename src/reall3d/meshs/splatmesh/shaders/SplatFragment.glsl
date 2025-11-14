@@ -25,7 +25,7 @@ void main() {
         return;
     }
 
-    alpha *= (useSimilarExp || vPosition.w > 0.0) ? exp2(-r2) : exp(-r2);
+    alpha *= (useSimilarExp || vPosition.w < 0.0) ? exp2(-r2) : fnExp(-r2);
     if (alpha <= minAlpha) {
         gl_FragColor = vec4(0.0);
         return;
