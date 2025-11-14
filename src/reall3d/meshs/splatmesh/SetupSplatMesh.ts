@@ -591,7 +591,7 @@ export function setupSplatMesh(events: Events) {
             const maxPix = meta.maxPixelDiameter || maxPixs[level - 1];
             fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
             fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
-            fire(SplatUpdateUseSimilarExp, false);
+            fire(SplatUpdateUseSimilarExp, level < QualityLevels.L2);
         }
         fire(WorkerUpdateParams);
     });
