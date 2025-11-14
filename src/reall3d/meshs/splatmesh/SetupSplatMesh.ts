@@ -576,16 +576,18 @@ export function setupSplatMesh(events: Events) {
         fire(SplatUpdateShDegree, maxShDegrees[level - 1]);
         if (isMobile) {
             const minPixs = [4, 3, 3, 2, 2, 2, 1, 1, 1];
+            const maxPixs = [128, 128, 128, 256, 256, 256, 512, 512, 512];
             const minAlphas = [7, 6, 5, 4, 4, 3, 2, 2, 2];
             const minPix = meta.minPixelDiameter || minPixs[level - 1];
-            const maxPix = meta.maxPixelDiameter || (level < QualityLevels.L4 ? 128 : level > QualityLevels.L6 ? 512 : 256);
+            const maxPix = meta.maxPixelDiameter || maxPixs[level - 1];
             fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
             fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
             fire(SplatUpdateUseSimilarExp, level < QualityLevels.L4);
         } else {
+            const minPixs = [2, 2, 2, 1, 1, 1, 1, 1, 1];
             const maxPixs = [128, 256, 256, 512, 512, 1024, 1024, 1024, 1024];
             const minAlphas = [5, 4, 3, 2, 2, 1, 1, 1, 1];
-            const minPix = meta.minPixelDiameter || (level < QualityLevels.L4 ? 2 : 1);
+            const minPix = meta.minPixelDiameter || minPixs[level - 1];
             const maxPix = meta.maxPixelDiameter || maxPixs[level - 1];
             fire(SplatUpdateMinMaxPixelDiameter, minPix, maxPix);
             fire(SplatUpdateMinAlpha, meta.minAlpha || minAlphas[level - 1]);
