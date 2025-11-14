@@ -126,7 +126,7 @@ export function setupSplatTextureManager(events: Events) {
         try {
             await promiseModelSplatCount;
             const isNgativeY = !!splatModel.header?.Flag2; // Flag2为非0时视为倒立（superedit打开呈现倒立）
-            textWatermarkData = await fire(GetGaussianText, text, isY, isNgativeY);
+            textWatermarkData = await fire(GetGaussianText, text, isY, isNgativeY, splatModel.opts.format);
             splatModel && (splatModel.textWatermarkVersion = Date.now());
         } catch (e) {
             console.info('failed to generate watermark');

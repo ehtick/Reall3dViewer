@@ -17,11 +17,13 @@ export function setupApi(events: Events) {
         console.info(metaJson);
     });
 
-    on(HttpQueryGaussianText, (text: string = '') => {
+    on(HttpQueryGaussianText, (text: string = '', fmt = '') => {
         const url = 'https://reall3d.com/gsfont/api/getGaussianText';
         const formData = new FormData();
         formData.append('text', text.substring(0, 100)); // 限制查取最大100字
+        formData.append('fmt', fmt);
         formData.append('ver', ViewerVersion);
+        formData.append('tk', sessionStorage.getItem('tk-gstext') || '');
 
         return new Promise(resolve => {
             fetch(url, { method: 'POST', body: formData })

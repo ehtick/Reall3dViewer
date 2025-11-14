@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { GetGaussianText, HttpQueryGaussianText } from '../../events/EventConstants';
+import { GetGaussianText, GetOptions, GetSplatMesh, HttpQueryGaussianText } from '../../events/EventConstants';
 import { Events } from '../../events/Events';
 import { HalfChars, SplatDataSize32 } from '../../utils/consts/GlobalConstants';
 import { parseWordToTexdata } from '../wasm/WasmParser';
@@ -11,9 +11,9 @@ export function setupGaussianText(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const halfSet = new Set(HalfChars.split(''));
 
-    on(GetGaussianText, async (text: string = '', isY: boolean = true, isNgativeY: boolean = true): Promise<Uint8Array> => {
+    on(GetGaussianText, async (text: string = '', isY: boolean = true, isNgativeY: boolean = true, fmt = ''): Promise<Uint8Array> => {
         const words = text.trim().substring(0, 100);
-        let dataJson: number[][] = await fire(HttpQueryGaussianText, words); // 限制最多100字
+        let dataJson: number[][] = await fire(HttpQueryGaussianText, words, fmt); // 限制最多100字
 
         let wordsJson: number[][][] = [];
         for (let i = 0; i < dataJson.length; i++) {
