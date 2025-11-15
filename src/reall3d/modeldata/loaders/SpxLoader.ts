@@ -286,7 +286,7 @@ function setBlockSplatData(model: SplatModel, data: Uint8Array) {
             model.minZ = Math.min(model.minZ, z);
             model.maxZ = Math.max(model.maxZ, z);
 
-            if (ui32s[i * 8 + 3] >> 16) {
+            if (ui32s[i * 8 + 3] & 65536) {
                 if (model.watermarkCount * SplatDataSize32 === model.watermarkData.byteLength) {
                     const watermarkData = new Uint8Array((model.watermarkCount + stepCnt) * SplatDataSize32);
                     watermarkData.set(model.watermarkData, 0);
@@ -309,7 +309,7 @@ function setBlockSplatData(model: SplatModel, data: Uint8Array) {
     const f32s: Float32Array = new Float32Array(data.buffer);
     const ui32s: Uint32Array = new Uint32Array(data.buffer);
     for (let i = 0, count = Math.floor(data.byteLength / SplatDataSize32), x = 0, y = 0, z = 0, key = ''; i < count; i++) {
-        if (ui32s[i * 8 + 3] >> 16) {
+        if (ui32s[i * 8 + 3] & 65536) {
             if (model.watermarkCount * SplatDataSize32 === model.watermarkData.byteLength) {
                 const watermarkData = new Uint8Array((model.watermarkCount + stepCnt) * SplatDataSize32);
                 watermarkData.set(model.watermarkData, 0);
