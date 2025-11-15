@@ -585,44 +585,25 @@ export async function data220Decode(data220: Uint8Array, hasSh: boolean): Promis
     return rs;
 }
 
-export async function data300220Decode(data220: Uint8Array, hasSh: boolean): Promise<Uint8Array> {
-    const ui32s = new Uint32Array(data220.slice(0, 12).buffer);
+export async function decodeWebpBlockDatas(webpBlockDatas: Uint8Array): Promise<Uint8Array> {
+    const ui32s = new Uint32Array(webpBlockDatas.slice(0, 4).buffer);
     const splatCount = ui32s[0];
-    const size1 = ui32s[2];
     let offset = 8;
-    const data1: Uint8Array = data220.subarray(offset + 4, offset + 4 + size1);
-    const { rgba: rgbaPosition } = await webpToRgba(data1);
-    offset += 4 + size1;
-    const size2 = new Uint32Array(data220.slice(offset, offset + 4).buffer)[0];
-    const data2: Uint8Array = data220.subarray(offset + 4, offset + 4 + size2);
-    const { rgba: rgbaScale } = await webpToRgba(data2);
-    offset += 4 + size2;
-    const size3 = new Uint32Array(data220.slice(offset, offset + 4).buffer)[0];
-    const data3: Uint8Array = data220.subarray(offset + 4, offset + 4 + size3);
-    const { rgba: rgbaColor } = await webpToRgba(data3);
-    offset += 4 + size3;
-    const size4 = new Uint32Array(data220.slice(offset, offset + 4).buffer)[0];
-    const data4: Uint8Array = data220.subarray(offset + 4, offset + 4 + size4);
-    const { rgba: rgbaRotation } = await webpToRgba(data4);
 
-    const rs = new Uint8Array(8 + splatCount * (hasSh ? 28 : 24));
-    rs.set(data220.subarray(0, 8)); // 数量格式保持不变
-    let start = 8;
-    rs.set(rgbaPosition.subarray(0, splatCount * 12), start);
-    start += splatCount * 12;
-    rs.set(rgbaScale.subarray(0, splatCount * 4), start);
-    start += splatCount * 4;
-    rs.set(rgbaColor.subarray(0, splatCount * 4), start);
-    start += splatCount * 4;
-    rs.set(rgbaRotation.subarray(0, splatCount * 4), start);
-    if (hasSh) {
-        offset += 4 + size4;
-        const size5 = new Uint32Array(data220.slice(offset, offset + 4).buffer)[0];
-        const data5: Uint8Array = data220.subarray(offset + 4, offset + 4 + size5);
-        const { rgba } = await webpToRgba(data5);
+    const rgbas: Uint8Array[] = [];
+    while (offset < webpBlockDatas.length) {
+        const size = new Uint32Array(webpBlockDatas.slice(offset, offset + 4).buffer)[0];
+        const webpBytes: Uint8Array = webpBlockDatas.subarray(offset + 4, offset + 4 + size);
+        const { rgba } = await webpToRgba(webpBytes);
+        rgbas.push(rgba);
+        offset += 4 + size;
+    }
 
+    const rs = new Uint8Array(8 + splatCount * 4 * rgbas.length);
+    rs.set(webpBlockDatas.subarray(0, 8)); // 数量格式保持不变
+    for (let i = 0, start = 8; i < rgbas.length; i++) {
+        rs.set(rgbas[i].subarray(0, splatCount * 4), start);
         start += splatCount * 4;
-        rs.set(rgba.subarray(0, splatCount * 4), start);
     }
     return rs;
 }
