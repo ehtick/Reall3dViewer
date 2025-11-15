@@ -116,7 +116,7 @@ void main() {
     } else if (isWatermark) {
         vColor = waterMarkColor;
     } else {
-        vColor = vec4(float(cov3d.w & 0xFFu) / 255.0, float((cov3d.w >> 8) & 0xFFu) / 255.0, float((cov3d.w >> 16) & 0xFFu) / 255.0, colorA);
+        vColor = vec4(float(cov3d.w & 0xFFu) / 255.0, float((cov3d.w >> 8u) & 0xFFu) / 255.0, float((cov3d.w >> 16u) & 0xFFu) / 255.0, colorA);
         if (shDegree > 0 && isNormal) {
             vColor.rgb += splatEvalSH(v3Cen, cen.w & 0xFFFFu);
         }
