@@ -95,7 +95,8 @@ export async function parseSpxBlockData(data: Uint8Array, header: SpxHeader = nu
     let ui32s = new Uint32Array(data.slice(0, 8).buffer);
     const splatCount = ui32s[0];
     const blockFormat = ui32s[1];
-    const isV3Webp = header?.Version == 3 && (blockFormat == 222 || blockFormat == 300222); // TODO 优雅些
+    const WebpBfs = [SpxBlockFormatData220, 300222];
+    const isV3Webp = header?.Version >= 3 && WebpBfs.includes(blockFormat);
 
     if (blockFormat == SpxBlockFormatSH8) {
         const splatCount = 0;
@@ -134,8 +135,6 @@ export async function parseSpxBlockData(data: Uint8Array, header: SpxHeader = nu
         data = await decodeWebpBlockDatas(data);
     } else if (blockFormat == SpxBlockFormatData190) {
         data = await data190To19(data);
-    } else if (blockFormat == SpxBlockFormatData220) {
-        data = await data220Decode(data, shDegree > 0); // TEST
     } else if (blockFormat == SpxBlockFormatData10190) {
         data = await data10190To10019(data);
     }
