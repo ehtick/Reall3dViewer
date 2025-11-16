@@ -103,7 +103,7 @@ he data block format encompasses both open and exclusive formats. The reserved r
 |-------------|-----------|-----------------------|-----------------------------------------------------------------------------|
 | 0~3 | uint32 | `*`Gaussian Count | Number of Gaussians |
 | 4~7 | uint32 | `*`Format ID | `220`, webp encoding |
-| 8~n | bytes | `*`Data | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([r0,r1,r2,ri...], length,webp([p0,p1,0,255...]) |
+| 8~n | bytes | `*`Data | length,webp([x0,y0,z0,255...]), length,webp([x1,y1,z1,255...]), length,webp([x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([r0,r1,r2,ri...], length,webp([p0,p1,0,255...]) |
 
 - `x,y,z` Coordinates, 24-bit precision.
 - `sx,sy,sz` Scale, 8-bit per axis.

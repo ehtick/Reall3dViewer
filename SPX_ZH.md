@@ -108,7 +108,7 @@
 |----------|------|------|------|
 | 0~3 | uint32 | `*`数量 | 高斯数量 |
 | 4~7 | uint32 | `*`格式识别号 | `220`基本数据, `22`格式基础上加webp编码 |
-| 8~n | bytes  | `*`数据 | length,webp([x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([r0,r1,r2,ri...], length,webp([p0,p1,0,255...]) |
+| 8~n | bytes  | `*`数据 | length,webp([x0,y0,z0,255...]), length,webp([x1,y1,z1,255...]), length,webp([x2,y2,z2,255...]), length,webp([sx,sy,sz,255...]), length,webp([r,g,b,a...]), length,webp([r0,r1,r2,ri...], length,webp([p0,p1,0,255...]) |
 
 - `x,y,z` 坐标，24位编码
 - `sx,sy,sz` 缩放，单字节编码
