@@ -458,9 +458,10 @@ int spxSplat22(void *o, void *b, int d) {
     int offsetBit = 8;
 
     float x, y, z, sx, sy, sz, RX, RY, RZ, RW;
-    uint32_t rgba, pi;
+    uint32_t rgba;
     uint8_t x0, x1, x2, y0, y1, y2, z0, z1, z2, s0, s1, s2, R, G, B, A, rx, ry, rz, rw, p0, p1;
     int32_t i32x, i32y, i32z;
+    uint32_t pi = 0;
     for (int i = 0; i < n; i++) {
         x0 = ui8sInput[offsetBit + i];
         y0 = ui8sInput[offsetBit + n * 1 + i];
@@ -486,8 +487,11 @@ int spxSplat22(void *o, void *b, int d) {
         ry = ui8sInput[offsetBit + n * 18 + i];
         rz = ui8sInput[offsetBit + n * 19 + i];
 
-        p0 = ui8sInput[offsetBit + n * 20 + i];
-        p1 = ui8sInput[offsetBit + n * 21 + i];
+        if (d > 0) {
+            p0 = ui8sInput[offsetBit + n * 20 + i];
+            p1 = ui8sInput[offsetBit + n * 21 + i];
+            pi = p0 | (p1 << 8);
+        }
 
         i32x = (x0 | (x1 << 8) | (x2 << 16));
         if (i32x & 0x800000)
@@ -516,8 +520,6 @@ int spxSplat22(void *o, void *b, int d) {
         RX = ((float)rx - 128.0f) / 128.0f;
         RY = ((float)ry - 128.0f) / 128.0f;
         RZ = ((float)rz - 128.0f) / 128.0f;
-
-        pi = d > 0 ? (p0 | (p1 << 8)) : 0;
 
         computeWriteTexdata(o, i * 8, x, y, z, sx, sy, sz, RW, RX, RY, RZ, rgba, pi);
     }
