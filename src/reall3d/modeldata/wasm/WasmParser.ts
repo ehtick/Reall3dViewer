@@ -152,7 +152,7 @@ async function parseBlockData(splatCount: number, blockFormat: number, data: Uin
 
     const resultByteLength = splatCount * (isSh ? SplatDataSize16 : SplatDataSize32);
     const wasmModule = WebAssembly.compile(Uint8Array.from(atob(wasms[idx]), c => c.charCodeAt(0)).buffer);
-    const blockCnt: number = Math.floor((resultByteLength + data.byteLength) / WasmBlockSize) + 2;
+    const blockCnt: number = Math.ceil((resultByteLength + data.byteLength) / WasmBlockSize) + 2;
     const memory = new WebAssembly.Memory({ initial: blockCnt, maximum: blockCnt });
     const instance = await WebAssembly.instantiate(await wasmModule, { env: { memory, expf } });
     const dataParser: any = instance.exports.D;
@@ -166,7 +166,7 @@ async function parseBlockData(splatCount: number, blockFormat: number, data: Uin
 
 export async function parseSplatToTexdata(data: Uint8Array, splatCount: number): Promise<Uint8Array> {
     const wasmModule = WebAssembly.compile(Uint8Array.from(atob(WasmOpen), c => c.charCodeAt(0)).buffer);
-    const blockCnt = Math.floor((splatCount * SplatDataSize32) / WasmBlockSize) + 2;
+    const blockCnt = Math.ceil((splatCount * SplatDataSize32) / WasmBlockSize) + 2;
     const memory = new WebAssembly.Memory({ initial: blockCnt, maximum: blockCnt });
     const instance = await WebAssembly.instantiate(await wasmModule, { env: { memory, expf } });
     const dataParser: any = instance.exports.s;
@@ -184,7 +184,7 @@ export async function parseSplatToTexdata(data: Uint8Array, splatCount: number):
 
 export async function parseWordToTexdata(x: number, y0z: number, isY: boolean = true, isNgativeY: boolean = true): Promise<Uint8Array> {
     const wasmModule = WebAssembly.compile(Uint8Array.from(atob(WasmDataV2), c => c.charCodeAt(0)).buffer);
-    const memory = new WebAssembly.Memory({ initial: 1, maximum: 1 });
+    const memory = new WebAssembly.Memory({ initial: 2, maximum: 2 });
     const instance = await WebAssembly.instantiate(await wasmModule, { env: { memory, expf } });
     const dataSplat: any = instance.exports.w;
 
