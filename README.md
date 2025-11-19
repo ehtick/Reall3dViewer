@@ -65,8 +65,9 @@ npm run build
 # open a web browser to render your 3dgs model
 # http://hostname:port/index.html?url=your-model-link-address
 
-# .spx file can be obtained through conversion using the gsbox
-gsbox p2x -i /path/to/input.ply -o /path/to/output.spx
+# .spx or .sog file can be obtained through conversion using the gsbox
+gsbox ply2sog -i /path/to/input.ply -o /path/to/output.sog
+gsbox sog2spx -i /path/to/input.ply -o /path/to/output.spx
 ```
 
 use npm package [sample project here](https://github.com/reall3d-com/reall3dviewer-samples-use-npm-package)
