@@ -16,6 +16,7 @@ import {
     RunLoopByFrame,
     ControlPlaneUpdate,
     FocusMarkerAutoDisappear,
+    ControlsSetFlyCameraMode,
 } from '../events/EventConstants';
 import { PerspectiveCamera, Vector3 } from 'three';
 import { Events } from '../events/Events';
@@ -73,9 +74,24 @@ export function setupCameraControls(events: Events) {
     on(GetCameraLookAt, (copy: boolean = false) => (copy ? controls.target.clone() : controls.target));
     on(GetCameraLookUp, (copy: boolean = false) => (copy ? fire(GetCamera).up.clone() : fire(GetCamera).up));
 
+    let flyCameraMode = false;
+    on(ControlsSetFlyCameraMode, () => {
+        if (flyCameraMode) return;
+        flyCameraMode = true;
+
+        // TODO
+        const direction = new Vector3().subVectors(controls.target, controls.object.position).normalize().multiplyScalar(0.01);
+        controls.target.copy(controls.object.position.clone().add(direction));
+        controls.panSpeed = controls.target.distanceTo(controls.object.position) > controls.minDistance ? 1 : 50;
+        controls.update();
+    });
+
     let oEnables: any;
     const aryProcessAnimate: any[] = [];
     on(CameraSetLookAt, (target: Vector3, animate: boolean = false, rotateAnimate: boolean) => {
+        flyCameraMode = false;
+        controls.panSpeed = controls.target.distanceTo(controls.object.position) > controls.minDistance ? 1 : 50;
+
         fire(FocusMarkerUpdate, target);
         if (!animate) {
             controls.target.copy(target);

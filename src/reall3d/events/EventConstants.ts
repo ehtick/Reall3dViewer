@@ -400,6 +400,8 @@ export const IsSmallSceneShowDone = i++;
 export const SplatUpdateShPalettesTexture = i++;
 /** Splat更新调色板纹理就绪状态 */
 export const SplatUpdateShPalettesReady = i++;
+/** 更新相机视点改成飞翔模式 */
+export const ControlsSetFlyCameraMode = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;
