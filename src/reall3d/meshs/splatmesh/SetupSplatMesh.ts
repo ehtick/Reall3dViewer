@@ -11,7 +11,6 @@ import {
     Mesh,
     NormalBlending,
     PerspectiveCamera,
-    RGBAFormat,
     RGBAIntegerFormat,
     ShaderMaterial,
     UnsignedByteType,
@@ -85,6 +84,7 @@ import {
     SplatUpdateActiveFlagValue,
     SplatUpdateShPalettesTexture,
     SplatUpdateShPalettesReady,
+    ComputeTextureWidthHeight,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -109,6 +109,8 @@ import {
     VarShowWaterMark,
     VarShPalettes,
     VarShPalettesReady,
+    VarSplatFetchBits,
+    VarSplatFetchMask,
     VarSplatIndex,
     VarSplatShTexture12,
     VarSplatShTexture3,
@@ -226,14 +228,11 @@ export function setupSplatMesh(events: Events) {
     });
 
     on(CreateSplatMaterial, async () => {
-        const MaxSplatCount = await fire(GetMaxRenderCount);
         if (disposed) return;
-        const texwidth = 1024 * 2;
-        const texheight = Math.ceil((2 * MaxSplatCount) / texwidth);
         const opts: SplatMeshOptions = fire(GetOptions);
-
+        const { texwidth, texheight } = fire(ComputeTextureWidthHeight, await fire(GetMaxRenderCount));
         const material: ShaderMaterial = new ShaderMaterial({
-            uniforms: fire(CreateSplatUniforms),
+            uniforms: fire(CreateSplatUniforms, texwidth),
             vertexShader: genShaderSource(vertexShader),
             fragmentShader: genShaderSource(fragmentShader),
             transparent: true,
@@ -694,8 +693,12 @@ export function setupSplatMesh(events: Events) {
         true,
     );
 
-    on(CreateSplatUniforms, () => {
+    on(CreateSplatUniforms, (texwidth: number) => {
+        const fetchBits = Math.log2(texwidth) - 1; // 纹理采样位移
+        const fetchMask = (1 << fetchBits) - 1; // 纹理采样掩码
         return {
+            [VarSplatFetchMask]: { type: 'int', value: fetchMask },
+            [VarSplatFetchBits]: { type: 'int', value: fetchBits },
             [VarSplatTexture0]: { type: 't', value: null },
             [VarSplatTexture1]: { type: 't', value: null },
             [VarSplatShTexture12]: { type: 't', value: null },

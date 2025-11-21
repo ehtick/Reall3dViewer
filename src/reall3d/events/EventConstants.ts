@@ -402,6 +402,8 @@ export const SplatUpdateShPalettesTexture = i++;
 export const SplatUpdateShPalettesReady = i++;
 /** 更新相机视点改成飞翔模式 */
 export const ControlsSetFlyCameraMode = i++;
+/** 计算纹理宽高 */
+export const ComputeTextureWidthHeight = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;

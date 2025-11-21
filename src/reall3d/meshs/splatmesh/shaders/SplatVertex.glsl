@@ -7,17 +7,19 @@
 
 void main() {
     uvec4 cen, cov3d;
+    int fetchX = int(splatIndex & splatFetchMask) << 1;
+    int fetchY = int(splatIndex >> splatFetchBits);
     if (bigSceneMode) {
         if (usingIndex == 0) {
-            cen = texelFetch(splatTexture0, ivec2((splatIndex & 0x3ffu) << 1, splatIndex >> 10), 0);
-            cov3d = texelFetch(splatTexture0, ivec2(((splatIndex & 0x3ffu) << 1) | 1u, splatIndex >> 10), 0);
+            cen = texelFetch(splatTexture0, ivec2(fetchX, fetchY), 0);
+            cov3d = texelFetch(splatTexture0, ivec2(fetchX | 1, fetchY), 0);
         } else {
-            cen = texelFetch(splatTexture1, ivec2((splatIndex & 0x3ffu) << 1, splatIndex >> 10), 0);
-            cov3d = texelFetch(splatTexture1, ivec2(((splatIndex & 0x3ffu) << 1) | 1u, splatIndex >> 10), 0);
+            cen = texelFetch(splatTexture1, ivec2(fetchX, fetchY), 0);
+            cov3d = texelFetch(splatTexture1, ivec2(fetchX | 1, fetchY), 0);
         }
     } else {
-        cen = texelFetch(splatTexture0, ivec2((splatIndex & 0x3ffu) << 1, splatIndex >> 10), 0);
-        cov3d = texelFetch(splatTexture0, ivec2(((splatIndex & 0x3ffu) << 1) | 1u, splatIndex >> 10), 0);
+        cen = texelFetch(splatTexture0, ivec2(fetchX, fetchY), 0);
+        cov3d = texelFetch(splatTexture0, ivec2(fetchX | 1, fetchY), 0);
     }
 
     bool isWatermark = fnWatermark(cen);

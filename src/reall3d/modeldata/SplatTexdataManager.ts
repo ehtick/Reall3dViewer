@@ -39,6 +39,7 @@ import {
     OnSmallSceneShowDone,
     SplatUpdateParticleMode,
     SplatUpdateShPalettesTexture,
+    ComputeTextureWidthHeight,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, MetaData, ModelStatus, SplatModel } from './ModelData';
@@ -253,9 +254,7 @@ export function setupSplatTextureManager(events: Events) {
         texture.textureReady = false;
 
         // 合并（模型数据 + 动态文字水印）
-        const texwidth = 1024 * 2;
-        const texheight = Math.ceil((2 * maxRenderCount) / texwidth);
-
+        const { texwidth, texheight } = fire(ComputeTextureWidthHeight, maxRenderCount);
         const ui32s = new Uint32Array(texwidth * texheight * 4);
         const f32s = new Float32Array(ui32s.buffer);
         const mergeSplatData = new Uint8Array(ui32s.buffer);
@@ -321,8 +320,7 @@ export function setupSplatTextureManager(events: Events) {
         if (disposed) return;
 
         const maxRenderCount = await fire(GetMaxRenderCount);
-        const texwidth = 1024 * 2;
-        const texheight = Math.ceil((2 * maxRenderCount) / texwidth);
+        const { texwidth, texheight } = fire(ComputeTextureWidthHeight, maxRenderCount);
         const txtWatermarkData = textWatermarkData;
         const watermarkCount = 0; // model.watermarkCount; // 待合并的水印数（模型数据部分）
         const textWatermarkCount = (txtWatermarkData?.byteLength || 0) / 32; // 待合并的水印数（可动态变化的文字水印部分）

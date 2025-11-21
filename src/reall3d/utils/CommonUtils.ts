@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Audio, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, ShaderChunk, Vector3 } from 'three';
+import { Audio, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Renderer, ShaderChunk, Vector3, WebGLRenderer } from 'three';
 import { Events } from '../events/Events';
 import {
     Vector3ToString,
@@ -24,14 +24,13 @@ import {
     IsCameraChangedNeedLoadData,
     GetCamera,
     CommonUtilsDispose,
-    IsCameraLookAtPoint,
-    GetControls,
+    ComputeTextureWidthHeight,
+    GetRenderer,
 } from '../events/EventConstants';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
-import { unzip, unzipSync } from 'fflate';
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { unzipSync } from 'fflate';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -41,6 +40,18 @@ export function setupCommonUtils(events: Events) {
     on(IsDebugMode, () => fire(GetOptions).debugMode);
 
     on(CommonUtilsDispose, () => (disposed = true));
+
+    on(ComputeTextureWidthHeight, (splatCount: number) => {
+        const maxTextureSize: number = (fire(GetRenderer) as WebGLRenderer).capabilities.maxTextureSize;
+        const totalPixels = 2 * splatCount;
+        let texwidth = 1024;
+        while (texwidth * maxTextureSize < totalPixels) {
+            texwidth *= 2;
+        }
+        texwidth = Math.min(texwidth, maxTextureSize / 2);
+        const texheight = Math.min(Math.ceil(totalPixels / texwidth), maxTextureSize);
+        return { texwidth, texheight };
+    });
 
     // 按帧率执行
     let iFrameCount: number = 0;
