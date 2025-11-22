@@ -322,10 +322,12 @@ function setBlockSplatData(model: SplatModel, data: Uint8Array) {
         x = f32s[i * 8];
         y = f32s[i * 8 + 1];
         z = f32s[i * 8 + 2];
+        const autoCutY = Math.ceil(autoCut / 3);
         let kx = Math.min(autoCut - 1, Math.floor((Math.max(0, x - model.header.MinX) / (model.header.MaxX - model.header.MinX)) * autoCut));
+        let ky = Math.min(autoCutY - 1, Math.floor((Math.max(0, y - model.header.MinY) / (model.header.MaxY - model.header.MinY)) * autoCutY));
         let kz = Math.min(autoCut - 1, Math.floor((Math.max(0, z - model.header.MinZ) / (model.header.MaxZ - model.header.MinZ)) * autoCut));
 
-        key = `${kx}-${kz}`;
+        key = `${kx}-${ky}-${kz}`;
         let cut = model.map.get(key);
         if (!cut) {
             cut = {};
