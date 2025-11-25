@@ -607,5 +607,6 @@ export function setupSplatTextureManager(events: Events) {
         RunLoopByFrame,
         async () => await mergeAndUploadData(isBigSceneMode),
         () => !disposed,
+        6,
     );
 }
