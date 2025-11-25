@@ -237,9 +237,9 @@ export async function loadSpx(model: SplatModel) {
 
             // 超过限制时终止下载
             const limitCnt = model.fetchLimit;
-            if (model.header.ShDegree === 3) {
+            if (model.header.Version < 3 && model.header.ShDegree === 3) {
                 model.downloadSplatCount >= limitCnt && model.sh12Count >= limitCnt && model.sh3Count >= limitCnt && model.abortController.abort();
-            } else if (model.header.ShDegree) {
+            } else if (model.header.Version < 3 && model.header.ShDegree) {
                 model.downloadSplatCount >= limitCnt && model.sh12Count >= limitCnt && model.abortController.abort();
             } else {
                 model.downloadSplatCount >= limitCnt && model.abortController.abort();
