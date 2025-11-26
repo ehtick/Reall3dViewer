@@ -422,11 +422,9 @@ export class Reall3dViewer {
 
         // 重置
         const opts: Reall3dViewerOptions = { ...meta, ...(meta.cameraInfo || {}) };
-        meta.autoCut = Math.min(Math.max(meta.autoCut || 0, 0), 50); // 限制0~50
-        opts.bigSceneMode = meta.autoCut > 1; // 切割多块的为大场景
+        opts.bigSceneMode = !!meta.isLargeScene;
         that.reset({ ...opts });
 
-        !opts.bigSceneMode && delete meta.autoCut; // 小场景或没有配置成切割多块，都不支持切割
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;
 
         // 按元数据调整更新相机、标注等信息
@@ -492,7 +490,7 @@ export class Reall3dViewer {
         // 检查整理
         meta.showWatermark = meta.showWatermark !== false; // 是否显示水印文字
         meta.url = meta.url || modelOpts.url;
-        delete meta.autoCut; // 小场景没有切割
+        delete meta.isLargeScene; // addModel为固定小场景模式
         if (!modelOpts.format) {
             modelOpts.url = modelOpts.url || meta.url;
             if (modelOpts.url.endsWith('.spx')) {

@@ -563,11 +563,10 @@ export function setupSplatTextureManager(events: Events) {
         splatModel = new SplatModel(opts, meta);
 
         // 计算设定下载限制
-        if (isBigSceneMode && meta.autoCut) {
+        if (isBigSceneMode) {
             const pcDownloadLimitCount = meta.pcDownloadLimitSplatCount || PcDownloadLimitSplatCount;
             const mobileDownloadLimitCount = meta.mobileDownloadLimitSplatCount || MobileDownloadLimitSplatCount;
-            const bigSceneDownloadLimit = isMobile ? mobileDownloadLimitCount : pcDownloadLimitCount;
-            splatModel.fetchLimit = Math.min(meta.autoCut * meta.autoCut * maxRenderCount + maxRenderCount, bigSceneDownloadLimit);
+            splatModel.fetchLimit = isMobile ? mobileDownloadLimitCount : pcDownloadLimitCount;
         } else {
             splatModel.fetchLimit = maxRenderCount;
         }

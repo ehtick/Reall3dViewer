@@ -128,7 +128,7 @@ export class SplatModel {
         const that = this;
 
         that.meta = meta;
-        meta.autoCut && (that.map = new Map());
+        meta.isLargeScene && (that.map = new Map());
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;
 
         if (!opts.format) {
@@ -260,8 +260,10 @@ export interface MetaData {
     /** Enable particle loading effect (small scenes) */
     particleMode?: boolean;
 
-    /** Auto-cut count */
-    autoCut?: number;
+    /** is large scene */
+    isLargeScene?: boolean;
+    /** cut size */
+    cutSize?: number;
     /** Transformation matrix */
     transform?: number[];
     /** Geolocation (EPSG:4326 WGS 84) */

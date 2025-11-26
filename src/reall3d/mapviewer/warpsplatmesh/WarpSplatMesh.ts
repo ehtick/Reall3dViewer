@@ -49,8 +49,7 @@ export class WarpSplatMesh extends Mesh {
                     meta.transform = matrix.toArray();
                 }
                 that.metaMatrix = matrix;
-                meta.autoCut && (meta.autoCut = Math.min(Math.max(meta.autoCut, 1), 50));
-                const bigSceneMode = meta.autoCut && meta.autoCut > 1;
+                const bigSceneMode = !!meta.isLargeScene;
                 const pointcloudMode = false;
                 const depthTest = false;
                 const showWatermark = meta.showWatermark !== false;
@@ -150,7 +149,7 @@ export class WarpSplatMesh extends Mesh {
                 } else {
                     const meta = that.meta;
                     const opts: SplatMeshOptions = { ...that.opts };
-                    meta.autoCut && (opts.bigSceneMode = true);
+                    opts.bigSceneMode = !!meta.isLargeScene;
                     const splatMesh = new SplatMesh(opts);
                     that.splatMesh = splatMesh;
                     that.opts.scene.add(splatMesh);

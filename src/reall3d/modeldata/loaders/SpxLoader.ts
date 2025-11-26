@@ -79,7 +79,7 @@ export async function loadSpx(model: SplatModel) {
                     console.error(`invalid spx format`);
                     continue;
                 }
-                if (model.meta.autoCut > 1 && !isLargeSpx(h)) {
+                if (model.meta.isLargeScene && !isLargeSpx(h)) {
                     model.abortController.abort();
                     model.status === ModelStatus.Fetching && (model.status = ModelStatus.Invalid);
                     console.error(`invalid LOD format`);
@@ -260,10 +260,9 @@ export async function loadSpx(model: SplatModel) {
 }
 
 function setBlockSplatData(model: SplatModel, data: Uint8Array) {
-    let isCut: boolean = !!model.meta.autoCut;
     let dataCnt = data.byteLength / 32;
     const stepCnt = 4096;
-    if (!isCut) {
+    if (!model.meta.isLargeScene) {
         const maxSplatDataCnt = Math.min(model.fetchLimit, model.modelSplatCount);
         !model.splatData && (model.splatData = new Uint8Array(maxSplatDataCnt * SplatDataSize32));
         !model.watermarkData && (model.watermarkData = new Uint8Array(0));
@@ -304,10 +303,10 @@ function setBlockSplatData(model: SplatModel, data: Uint8Array) {
     }
 
     // 以下大场景需切割
-    let autoCut: number = Math.min(Math.max(model.meta.autoCut, 2), 50); // 按推荐参数切，检查纠正在2~50区间（4~2500块）
     !model.watermarkData && (model.watermarkData = new Uint8Array(0));
     const f32s: Float32Array = new Float32Array(data.buffer);
     const ui32s: Uint32Array = new Uint32Array(data.buffer);
+    const cutSize = model.meta.cutSize || 5 * (model.meta.meterScale || 1);
     for (let i = 0, count = Math.floor(data.byteLength / SplatDataSize32), x = 0, y = 0, z = 0, key = ''; i < count; i++) {
         if (ui32s[i * 8 + 3] & 65536) {
             if (model.watermarkCount * SplatDataSize32 === model.watermarkData.byteLength) {
@@ -322,10 +321,9 @@ function setBlockSplatData(model: SplatModel, data: Uint8Array) {
         x = f32s[i * 8];
         y = f32s[i * 8 + 1];
         z = f32s[i * 8 + 2];
-        const autoCutY = Math.ceil(autoCut / 3);
-        let kx = Math.min(autoCut - 1, Math.floor((Math.max(0, x - model.header.MinX) / (model.header.MaxX - model.header.MinX)) * autoCut));
-        let ky = Math.min(autoCutY - 1, Math.floor((Math.max(0, y - model.header.MinY) / (model.header.MaxY - model.header.MinY)) * autoCutY));
-        let kz = Math.min(autoCut - 1, Math.floor((Math.max(0, z - model.header.MinZ) / (model.header.MaxZ - model.header.MinZ)) * autoCut));
+        const kx = ((x - model.header.MinX) / cutSize) | 0;
+        const ky = ((y - model.header.MinY) / cutSize) | 0;
+        const kz = ((z - model.header.MinZ) / cutSize) | 0;
 
         key = `${kx}-${ky}-${kz}`;
         let cut = model.map.get(key);
