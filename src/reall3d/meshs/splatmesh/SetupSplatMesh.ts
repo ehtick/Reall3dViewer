@@ -85,6 +85,8 @@ import {
     SplatUpdateShPalettesTexture,
     SplatUpdateShPalettesReady,
     ComputeTextureWidthHeight,
+    GetSplatShaderDefines,
+    SplatUpdateUseLod,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -118,6 +120,7 @@ import {
     VarSplatTexture1,
     VarTopY,
     VarTransitionEffect,
+    VarUseLod,
     VarUseSimilarExp,
     VarUsingIndex,
     VarViewport,
@@ -227,6 +230,15 @@ export function setupSplatMesh(events: Events) {
         return geometry;
     });
 
+    on(GetSplatShaderDefines, () => {
+        const defines: any = {};
+        const opts: SplatMeshOptions = fire(GetOptions);
+        if (opts.bigSceneMode) {
+            defines.BigSceneMode = '';
+        }
+        return defines;
+    });
+
     on(CreateSplatMaterial, async () => {
         if (disposed) return;
         const opts: SplatMeshOptions = fire(GetOptions);
@@ -241,6 +253,7 @@ export function setupSplatMesh(events: Events) {
             depthTest: opts.depthTest !== false, // 是否启用深度测试。深度测试用于确保只有离相机更近的物体才会被渲染
             depthWrite: false, // 是否将深度值写入深度缓冲区
             side: DoubleSide,
+            defines: fire(GetSplatShaderDefines),
         });
 
         const dataArray0 = new Uint32Array(texwidth * texheight * 4);
@@ -412,6 +425,11 @@ export function setupSplatMesh(events: Events) {
             material.uniformsNeedUpdate = true;
             const opts: SplatMeshOptions = fire(GetOptions);
             opts.bigSceneMode = isBigSceneMode;
+            fire(NotifyViewerNeedUpdate);
+        });
+        on(SplatUpdateUseLod, (useLod: boolean) => {
+            material.uniforms[VarUseLod].value = useLod;
+            material.uniformsNeedUpdate = true;
             fire(NotifyViewerNeedUpdate);
         });
         on(SplatUpdateLightFactor, (value: number) => {
@@ -712,6 +730,7 @@ export function setupSplatMesh(events: Events) {
             [VarPointMode]: { type: 'bool', value: false },
             [VarDebugEffect]: { type: 'bool', value: true },
             [VarBigSceneMode]: { type: 'bool', value: false },
+            [VarUseLod]: { type: 'bool', value: false },
             [VarShDegree]: { type: 'int', value: 0 },
             [VarLightFactor]: { type: 'float', value: 1 },
             [VarTopY]: { type: 'float', value: 0 },

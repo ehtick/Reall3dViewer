@@ -5,7 +5,7 @@ import { Vector3 } from 'three';
 import { SplatDataSize20, SplatDataSize32, SpxHeaderSize, SpxOpenFormat0, SpxExclusiveFormatReall3d } from '../../utils/consts/GlobalConstants';
 import { parseSpxBlockData, parseSpxHeader } from '../wasm/WasmParser';
 import { ModelStatus, SplatModel, SpxHeader } from '../ModelData';
-import { computeCompressionRatio, DecompressGzip, DecompressXZ } from '../../utils/CommonUtils';
+import { computeCompressionRatio, DecompressGzip, DecompressXZ, isLargeSpx } from '../../utils/CommonUtils';
 
 /** Specify the Recognizable Formats Here */
 const ExclusiveFormats: number[] = [SpxOpenFormat0, SpxExclusiveFormatReall3d];
@@ -367,9 +367,4 @@ function setBlockSplatData(model: SplatModel, data: Uint8Array) {
         }
         model.dataSplatCount++;
     }
-}
-
-// spx v2
-function isLargeSpx(header: SpxHeader) {
-    return ((header?.Flag1 || 0) & 0b1) > 0;
 }

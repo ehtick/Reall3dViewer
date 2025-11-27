@@ -34,6 +34,7 @@ export const VarMarkPoint = 'markPoint';
 export const VarShDegree = 'shDegree';
 export const VarViewport = 'viewport';
 export const VarMinAlpha = 'minAlpha';
+export const VarUseLod = 'useLod';
 export const VarVColor = 'vColor';
 export const VarFocal = 'focal';
 export const VarTopY = 'topY';

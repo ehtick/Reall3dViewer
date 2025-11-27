@@ -40,6 +40,8 @@ import {
     SplatUpdateParticleMode,
     SplatUpdateShPalettesTexture,
     ComputeTextureWidthHeight,
+    Flying,
+    SplatUpdateUseLod,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, MetaData, ModelStatus, SplatModel } from './ModelData';
@@ -48,7 +50,7 @@ import { loadPly } from './loaders/PlyLoader';
 import { loadSplat } from './loaders/SplatLoader';
 import { loadSpx } from './loaders/SpxLoader';
 import { loadSpz } from './loaders/SpzLoader';
-import { isNeedReload } from '../utils/CommonUtils';
+import { isInverted, isNeedReload } from '../utils/CommonUtils';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import {
     BlankingTimeOfLargeScene,
@@ -78,6 +80,7 @@ export function setupSplatTextureManager(events: Events) {
     let initBoundBox: boolean = false;
     let performanceStart = 0; // 小场景粒子加载效果使用
     let palettesUpdated = false;
+    let largeSceneStartFly = false;
 
     on(GetAabbCenter, () => splatModel?.aabbCenter || new Vector3());
 
@@ -126,7 +129,7 @@ export function setupSplatTextureManager(events: Events) {
     on(SetGaussianText, async (text: string, isY: boolean = true) => {
         try {
             await promiseModelSplatCount;
-            const isNgativeY = !!splatModel.header?.Flag2; // Flag2为非0时视为倒立（superedit打开呈现倒立）
+            const isNgativeY = isInverted(splatModel.header); // 是否倒立（superedit打开呈现倒立）
             textWatermarkData = await fire(GetGaussianText, text, isY, isNgativeY, splatModel.opts.format);
             splatModel && (splatModel.textWatermarkVersion = Date.now());
         } catch (e) {
@@ -230,7 +233,7 @@ export function setupSplatTextureManager(events: Events) {
         if (splatModel.smallSceneUploadDone && splatModel.lastTextWatermarkVersion == splatModel.textWatermarkVersion) return; // 已传完(模型数据 + 动态文字水印)
 
         if (!texture.version) {
-            fire(SplatUpdateTopY, (splatModel.header?.Flag2 ? splatModel.header.MaxTopY : splatModel.header?.MinTopY) || 0); // 初次传入高点
+            fire(SplatUpdateTopY, (isInverted(splatModel.header) ? splatModel.header.MaxTopY : splatModel.header?.MinTopY) || 0); // 初次传入高点
 
             let ver: string = splatModel.opts.format;
             let ratio = '　';
@@ -318,6 +321,12 @@ export function setupSplatTextureManager(events: Events) {
 
     async function mergeAndUploadLargeSceneData(downloadDone: boolean) {
         if (disposed) return;
+
+        if (downloadDone && !largeSceneStartFly) {
+            largeSceneStartFly = true;
+            (fire(GetOptions) as SplatMeshOptions).viewerEvents?.fire(Flying, true);
+            fire(SplatUpdateUseLod, splatModel.header.Lod > 0);
+        }
 
         const maxRenderCount = await fire(GetMaxRenderCount);
         const { texwidth, texheight } = fire(ComputeTextureWidthHeight, maxRenderCount);
@@ -606,6 +615,6 @@ export function setupSplatTextureManager(events: Events) {
         RunLoopByFrame,
         async () => await mergeAndUploadData(isBigSceneMode),
         () => !disposed,
-        6,
+        isMobile ? 10 : 6,
     );
 }

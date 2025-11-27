@@ -31,6 +31,7 @@ import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
 import { unzipSync } from 'fflate';
+import { SpxHeader } from '../modeldata/ModelData';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -762,4 +763,13 @@ export function isInFrustum(camera: Camera, point: Vector3) {
     projScreenMatrix.multiplyMatrices(camera.projectionMatrix, viewMatrix);
     frustum.setFromProjectionMatrix(projScreenMatrix);
     return frustum.containsPoint(point);
+}
+
+// spx v3
+export function isLargeSpx(header: SpxHeader) {
+    return ((header?.Flags || 0) & 0b1) > 0;
+}
+
+export function isInverted(header: SpxHeader) {
+    return ((header?.Flags || 0) & 0b10000000) > 0;
 }

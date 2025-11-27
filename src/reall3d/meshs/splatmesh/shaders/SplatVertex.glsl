@@ -30,6 +30,7 @@ void main() {
     }
 
     vec3 v3Cen = uintBitsToFloat(cen.xyz);
+    #include ./chunks/Chunk5SpaltLod
     v3Cen = animateParticle(v3Cen);
     v3Cen = WatermarkEffect(v3Cen, isWatermark, debugEffect, performanceNow);
 
@@ -71,7 +72,8 @@ void main() {
             eigenValue1 = eigenValue2 = 0.5;
         }
 
-        if (!bigSceneMode && currentLightRadius > 0.0) {
+#ifndef BigSceneMode
+        if (currentLightRadius > 0.0) {
             // 仅小场景支持光圈过渡效果
             if (transitionEffect == 1) {
                 if (currentRadius < currentLightRadius && currentRadius > currentLightRadius * 0.9) {
@@ -101,8 +103,8 @@ void main() {
                 }
 
             }
-
         }
+#endif
     }
 
     bool isNormal = pointMode && currentRadius < currentLightRadius || !pointMode && currentRadius > currentLightRadius;

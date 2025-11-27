@@ -404,6 +404,10 @@ export const SplatUpdateShPalettesReady = i++;
 export const ControlsSetFlyCameraMode = i++;
 /** 计算纹理宽高 */
 export const ComputeTextureWidthHeight = i++;
+/** 着色器宏定义 */
+export const GetSplatShaderDefines = i++;
+/** 大场景是否使用LOD */
+export const SplatUpdateUseLod = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;
