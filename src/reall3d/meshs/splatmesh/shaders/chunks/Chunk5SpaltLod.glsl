@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 #ifdef BigSceneMode
-if (bigSceneMode && useLod) {
+if (useLod && ! isWatermark) {
 int lod = int(cen.w >> 30u);
 float distance = length(v3Cen - cameraPosition);
 if (distance < 50.0) {
