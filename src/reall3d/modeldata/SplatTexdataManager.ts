@@ -96,7 +96,7 @@ export function setupSplatTextureManager(events: Events) {
         return rs;
     });
 
-    on(GetShTexheight, async (shDegree: number): Promise<number> => {
+    on(GetShTexheight, async (shDegree: number, texwidth: number): Promise<number> => {
         const opts: SplatMeshOptions = fire(GetOptions);
         if (opts.bigSceneMode) return 1; // 大场景不支持
 
@@ -113,7 +113,6 @@ export function setupSplatTextureManager(events: Events) {
             return 1;
         }
 
-        const texwidth = 1024 * 2;
         const texheight = Math.ceil(cnt / texwidth);
         return texheight;
     });

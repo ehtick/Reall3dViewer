@@ -15,7 +15,7 @@ uniform bool pointMode, bigSceneMode, useLod, showWaterMark, debugEffect, shPale
 uniform float topY, maxRadius, currentVisibleRadius, currentLightRadius, performanceNow, performanceAct;
 uniform float minPixelDiameter, maxPixelDiameter, minAlpha;
 uniform vec4 markPoint, waterMarkColor;
-uniform uint splatFetchMask, splatFetchBits, flagValue, activeFlagValue;
+uniform uint splatTextureWidth, flagValue, activeFlagValue;
 
 attribute uint splatIndex;
 

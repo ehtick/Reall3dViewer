@@ -3,6 +3,7 @@
 // ==============================================
 export const VarCurrentVisibleRadius = 'currentVisibleRadius';
 export const VarCurrentLightRadius = 'currentLightRadius';
+export const VarSplatTextureWidth = 'splatTextureWidth';
 export const VarTransitionEffect = 'transitionEffect';
 export const VarSplatShTexture12 = 'splatShTexture12';
 export const VarMaxPixelDiameter = 'maxPixelDiameter';
@@ -10,8 +11,6 @@ export const VarMinPixelDiameter = 'minPixelDiameter';
 export const VarActiveFlagValue = 'activeFlagValue';
 export const VarSplatShTexture3 = 'splatShTexture3';
 export const VarShPalettesReady = 'shPalettesReady';
-export const VarSplatFetchMask = 'splatFetchMask';
-export const VarSplatFetchBits = 'splatFetchBits';
 export const VarPerformanceNow = 'performanceNow';
 export const VarPerformanceAct = 'performanceAct';
 export const VarWaterMarkColor = 'waterMarkColor';

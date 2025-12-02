@@ -7,8 +7,8 @@
 
 void main() {
     uvec4 cen, cov3d;
-    int fetchX = int(splatIndex & splatFetchMask) << 1;
-    int fetchY = int(splatIndex >> splatFetchBits);
+    int fetchX = int(splatIndex & ((splatTextureWidth >> 1u) - 1u)) << 1;
+    int fetchY = int(splatIndex / (splatTextureWidth >> 1u));
     if (bigSceneMode) {
         if (usingIndex == 0) {
             cen = texelFetch(splatTexture0, ivec2(fetchX, fetchY), 0);

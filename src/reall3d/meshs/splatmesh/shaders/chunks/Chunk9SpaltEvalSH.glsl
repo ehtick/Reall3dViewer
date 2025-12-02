@@ -13,7 +13,9 @@ const float[7] SH_C3 = float[](-0.5900435899266435, 2.890611442640554, -0.457045
 vec3[15] splatReadShDatas() {
     int shCnt = 0;
     float[45] fSHs;
-    uvec4 rgb12 = texelFetch(splatShTexture12, ivec2((splatIndex & 0x7ffu), (splatIndex >> 11)), 0);
+    int fetchX = int(splatIndex & ((splatTextureWidth) - 1u));
+    int fetchY = int(splatIndex / splatTextureWidth);
+    uvec4 rgb12 = texelFetch(splatShTexture12, ivec2(fetchX, fetchY), 0);
     if (rgb12.a > 0u) {
         shCnt = 3;
         fSHs[0] = float((rgb12.r >> 27) & MaskSH) * FactorSH - 1.0;
@@ -45,7 +47,7 @@ vec3[15] splatReadShDatas() {
             fSHs[23] = float((rgb12.a >> 8) & MaskSH) * FactorSH - 1.0;
 
             if (shDegree > 2) {
-                uvec4 rgb3 = texelFetch(splatShTexture3, ivec2(splatIndex & 0x7ffu, splatIndex >> 11), 0);
+                uvec4 rgb3 = texelFetch(splatShTexture3, ivec2(fetchX, fetchY), 0);
                 if (rgb3.a > 0u) {
                     shCnt = 15;
                     fSHs[24] = float((rgb3.r >> 27) & MaskSH) * FactorSH - 1.0;

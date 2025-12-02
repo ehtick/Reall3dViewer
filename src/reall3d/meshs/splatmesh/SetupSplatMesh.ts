@@ -111,13 +111,12 @@ import {
     VarShowWaterMark,
     VarShPalettes,
     VarShPalettesReady,
-    VarSplatFetchBits,
-    VarSplatFetchMask,
     VarSplatIndex,
     VarSplatShTexture12,
     VarSplatShTexture3,
     VarSplatTexture0,
     VarSplatTexture1,
+    VarSplatTextureWidth,
     VarTopY,
     VarTransitionEffect,
     VarUseLod,
@@ -268,13 +267,13 @@ export function setupSplatMesh(events: Events) {
         dataTexture1.needsUpdate = true;
         material.uniforms[VarSplatTexture1].value = dataTexture1;
 
-        const shTexheight12 = await fire(GetShTexheight, 1);
+        const shTexheight12 = await fire(GetShTexheight, 1, texwidth);
         const dataArraySh12 = new Uint32Array(texwidth * shTexheight12 * 4);
         let dataTextureSh12 = new DataTexture(dataArraySh12, texwidth, shTexheight12, RGBAIntegerFormat, UnsignedIntType);
         dataTextureSh12.internalFormat = 'RGBA32UI';
         dataTextureSh12.needsUpdate = true;
         material.uniforms[VarSplatShTexture12].value = dataTextureSh12;
-        const shTexheight3 = await fire(GetShTexheight, 3);
+        const shTexheight3 = await fire(GetShTexheight, 3, texwidth);
         const dataArraySh3 = new Uint32Array(texwidth * shTexheight3 * 4);
         let dataTextureSh3 = new DataTexture(dataArraySh3, texwidth, shTexheight3, RGBAIntegerFormat, UnsignedIntType);
         dataTextureSh3.internalFormat = 'RGBA32UI';
@@ -324,7 +323,7 @@ export function setupSplatMesh(events: Events) {
 
         on(SplatUpdateSh12Texture, async (datas: Uint8Array[]) => {
             if (fire(IsBigSceneMode) || !datas || !datas.length) return;
-            const dataArray = new Uint32Array(texwidth * (await fire(GetShTexheight, 1)) * 4);
+            const dataArray = new Uint32Array(texwidth * (await fire(GetShTexheight, 1, texwidth)) * 4);
             const ui8s = new Uint8Array(dataArray.buffer);
             for (let i = 0, offset = 0; i < datas.length; i++) {
                 ui8s.set(datas[i], offset);
@@ -342,7 +341,7 @@ export function setupSplatMesh(events: Events) {
 
         on(SplatUpdateSh3Texture, async (datas: Uint8Array[]) => {
             if (fire(IsBigSceneMode) || !datas || !datas.length) return;
-            const dataArray = new Uint32Array(texwidth * (await fire(GetShTexheight, 3)) * 4);
+            const dataArray = new Uint32Array(texwidth * (await fire(GetShTexheight, 3, texwidth)) * 4);
             const ui8s = new Uint8Array(dataArray.buffer);
             for (let i = 0, offset = 0; i < datas.length; i++) {
                 ui8s.set(datas[i], offset);
@@ -712,11 +711,8 @@ export function setupSplatMesh(events: Events) {
     );
 
     on(CreateSplatUniforms, (texwidth: number) => {
-        const fetchBits = Math.log2(texwidth) - 1; // 纹理采样位移
-        const fetchMask = (1 << fetchBits) - 1; // 纹理采样掩码
         return {
-            [VarSplatFetchMask]: { type: 'int', value: fetchMask },
-            [VarSplatFetchBits]: { type: 'int', value: fetchBits },
+            [VarSplatTextureWidth]: { type: 'int', value: texwidth },
             [VarSplatTexture0]: { type: 't', value: null },
             [VarSplatTexture1]: { type: 't', value: null },
             [VarSplatShTexture12]: { type: 't', value: null },
