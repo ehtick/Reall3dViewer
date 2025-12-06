@@ -408,6 +408,14 @@ export const ComputeTextureWidthHeight = i++;
 export const GetSplatShaderDefines = i++;
 /** 大场景是否使用LOD */
 export const SplatUpdateUseLod = i++;
+/** 大场景下载LOD数据 */
+export const SplatTexdataManagerAddSplatLod = i++;
+/** 大场景添加LOD元数据 */
+export const LodDownloadManagerAddLodMeta = i++;
+/** 更新加载状态（无进度条） */
+export const UpdateFetchStatus = i++;
+/** 是否下载中 */
+export const IsLodFetching = i++;
 
 /** 创建地图渲染器 */
 export const MapCreateRenderer = i++;

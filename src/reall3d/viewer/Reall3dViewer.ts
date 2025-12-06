@@ -418,11 +418,11 @@ export class Reall3dViewer {
         }
 
         if (!meta.url) return console.error('missing model file url');
-        if (!meta.url.endsWith('.spx')) return console.error('The format is unsupported in the large scene mode', meta.url);
+        if (!meta.url.endsWith('.spx') && !meta.url.endsWith('.json')) return console.error('The format is unsupported in the large scene mode', meta.url);
 
         // 重置
         const opts: Reall3dViewerOptions = { ...meta, ...(meta.cameraInfo || {}) };
-        opts.bigSceneMode = !!meta.isLargeScene;
+        opts.bigSceneMode = meta.url.endsWith('.json') || !!meta.isLargeScene;
         that.reset({ ...opts });
 
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;

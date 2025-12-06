@@ -42,6 +42,7 @@ import {
     OnSmallSceneShowDone,
     IsCameraLookAtPoint,
     IsSmallSceneShowDone,
+    LodDownloadManagerAddLodMeta,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -199,7 +200,11 @@ export class SplatMesh extends Mesh {
             atOpts.distance = meta.audio?.distance;
         }
         that.audioText = new AudioText(atOpts);
-        that.events.fire(SplatTexdataManagerAddModel, opts, meta);
+        if (meta.url.endsWith('.lod.json')) {
+            that.events.fire(LodDownloadManagerAddLodMeta, opts, meta);
+        } else {
+            that.events.fire(SplatTexdataManagerAddModel, opts, meta);
+        }
     }
 
     public fire(key: number, ...args: any): any {

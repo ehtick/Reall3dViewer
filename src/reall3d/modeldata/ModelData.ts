@@ -4,6 +4,7 @@
 import { Matrix4, Vector3 } from 'three';
 import { CameraInfo } from '../controls/SetupCameraControls';
 import { ModelOptions } from './ModelOptions';
+import { SplatCube, SplatCube3D } from './SplatCube3D';
 
 /**
  * SPX file header information
@@ -123,6 +124,12 @@ export class SplatModel {
     /** sh palettes */
     public palettes?: Uint8Array;
 
+    // ---------- LOD ----------
+    public splatCube3D: SplatCube3D;
+    public mapCube: Map<string, SplatCube>;
+    public fetchSet: Set<string>; // 下载统计
+    // -------------------------
+
     constructor(opts: ModelOptions, meta: MetaData = {}) {
         this.opts = { ...opts };
         const that = this;
@@ -146,7 +153,7 @@ export class SplatModel {
                 console.error('unknown format!');
             }
         }
-        that.abortController = new AbortController();
+        that.abortController = new AbortController(); // TODO
     }
 }
 

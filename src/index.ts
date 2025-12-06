@@ -26,7 +26,12 @@ if (url) {
     debugMode && initDevMode(true);
 } else {
     viewer = new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
-    viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.v3.spx`);
+    // viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.v3.spx`);
+
+    // viewer.addScene(`./hgd.scene.json`);
+    // viewer.addScene(`./hgd.lod012.scene.json`);
+    // viewer.addScene(`https://reall3d.com/demo-models/lod/hgd.lod012.scene.json`);
+    viewer.addScene(`https://reall3d.com/demo-models/lod-cube/test-lod.scene.json`);
 
     initDevMode();
 }
