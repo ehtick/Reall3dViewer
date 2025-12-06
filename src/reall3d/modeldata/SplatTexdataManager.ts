@@ -585,8 +585,9 @@ export function setupSplatTextureManager(events: Events) {
             }
         }
         if (!cubes.length) return; // 没有可渲染数据
+        const visibleCubes = cubes.filter(item => item.currentVisible);
 
-        fire(Information, { cuts: `${cubes.length} / ${splatModel.mapCube.size}`, lodTotalCount: splatModel.splatCube3D.totalCount });
+        fire(Information, { cuts: `${visibleCubes.length} / ${splatModel.mapCube.size}`, lodTotalCount: splatModel.splatCube3D.totalCount });
 
         const sysTime = Date.now();
         texture.version = sysTime;
@@ -711,7 +712,7 @@ export function setupSplatTextureManager(events: Events) {
         // 下载完0层级后起飞
         if (!flyOnceDone && !splatModel.fetchSet.size) {
             let done = true;
-            for (let cube of cubes) {
+            for (let cube of splatModel.splatCube3D.cubes) {
                 if (cube.lods[0] && !cube.lods[0].downloadCount) {
                     done = false;
                     break;
