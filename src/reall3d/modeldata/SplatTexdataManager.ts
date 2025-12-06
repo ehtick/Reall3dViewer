@@ -67,6 +67,7 @@ import { loadSpxLod } from './loaders/SpxLodLoader';
 import { DataStatus, SplatCube, SplatCube3D, SplatLod } from './SplatCube3D';
 
 let runCounter = 0;
+let flyOnceDone = false;
 
 /**
  * 纹理数据管理
@@ -706,6 +707,22 @@ export function setupSplatTextureManager(events: Events) {
         lastPostDataTime = sysTime;
 
         fire(Information, { visibleSplatCount: texture.visibleSplatCount, modelSplatCount: texture.modelSplatCount });
+
+        // 下载完0层级后起飞
+        if (!flyOnceDone && !splatModel.fetchSet.size) {
+            let done = true;
+            for (let cube of cubes) {
+                if (cube.lods[0] && !cube.lods[0].downloadCount) {
+                    done = false;
+                    break;
+                }
+            }
+            if (done) {
+                flyOnceDone = true;
+                const opts: SplatMeshOptions = fire(GetOptions);
+                opts.viewerEvents?.fire(Flying, true);
+            }
+        }
 
         // 缓存整理
         const maxCacheCount = isMobile ? splatModel.splatCube3D.mobileCacheCount || 800_0000 : 3000_0000;
