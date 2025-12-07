@@ -589,7 +589,7 @@ export function setupSplatMesh(events: Events) {
         const maxShDegrees = [0, 1, 2, 3, 3, 3, 3, 3, 3];
         fire(SplatUpdateShDegree, maxShDegrees[level - 1]);
         if (isMobile) {
-            const minPixs = [4, 3, 3, 2, 2, 2, 1, 1, 1];
+            const minPixs = [4, 3, 3, 2, 1, 1, 1, 1, 1];
             const maxPixs = [128, 128, 128, 256, 256, 256, 512, 512, 512];
             const minAlphas = [7, 6, 5, 4, 4, 3, 2, 2, 2];
             const minPix = meta.minPixelDiameter || minPixs[level - 1];
