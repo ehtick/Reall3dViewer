@@ -194,6 +194,7 @@ export function setupSplatTextureManager(events: Events) {
             mergeRunning = true;
             setTimeout(async () => {
                 await mergeAndUploadLodLargeSceneData();
+                checkLodCache();
                 mergeRunning = false;
             });
             return;
@@ -724,10 +725,12 @@ export function setupSplatTextureManager(events: Events) {
                 opts.viewerEvents?.fire(Flying, true);
             }
         }
+    }
 
+    function checkLodCache() {
         // 缓存整理
-        const maxCacheCount = isMobile ? splatModel.splatCube3D.mobileCacheCount || 800_0000 : 3000_0000;
-        if (runCounter++ % 100 == 0 && splatModel.downloadSplatCount > maxCacheCount) {
+        const maxCacheCount = isMobile ? splatModel.splatCube3D.mobileCacheCount || 600_0000 : 3000_0000;
+        if (runCounter++ % 6 == 0 && splatModel.downloadSplatCount > maxCacheCount) {
             const lodLasts: SplatLod[] = [];
             for (const cube of splatModel.mapCube.values()) {
                 cube.lods[cube.lods.length - 1]?.downloadCount && lodLasts.push(cube.lods[cube.lods.length - 1]);
