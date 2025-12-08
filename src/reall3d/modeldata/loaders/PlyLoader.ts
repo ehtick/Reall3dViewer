@@ -7,7 +7,7 @@ import { DataSize32, isMobile, SH_C0, SplatDataSize32, SpxBlockFormatSH1, SpxBlo
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata, parseSpxBlockData } from '../wasm/WasmParser';
 
-const maxProcessCnt = isMobile ? 20480 : 51200;
+const maxProcessCnt = isMobile ? 20480 : 512000;
 
 /**
  * PLY加载器（注：仅支持3DGS标准格式的PLY）

@@ -8,7 +8,7 @@ import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata, parseSpxBlockData } from '../wasm/WasmParser';
 import { loadFile } from './FileLoader';
 
-const maxProcessCnt = isMobile ? 20480 : 51200;
+const maxProcessCnt = isMobile ? 20480 : 512000;
 const SQRT2 = Math.sqrt(2.0);
 
 export async function loadSog(model: SplatModel) {

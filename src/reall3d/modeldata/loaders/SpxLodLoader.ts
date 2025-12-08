@@ -1,12 +1,11 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Vector3 } from 'three';
 import { SplatDataSize20, SplatDataSize32, SpxHeaderSize, SpxOpenFormat0, SpxExclusiveFormatReall3d } from '../../utils/consts/GlobalConstants';
 import { parseSpxBlockData, parseSpxHeader } from '../wasm/WasmParser';
-import { ModelStatus, SplatModel, SpxHeader } from '../ModelData';
-import { computeCompressionRatio, DecompressGzip, DecompressXZ, isLargeSpx } from '../../utils/CommonUtils';
-import { DataStatus, SplatCube, SplatLod } from '../SplatCube3D';
+import { SplatModel, SpxHeader } from '../ModelData';
+import { DecompressGzip, DecompressXZ } from '../../utils/CommonUtils';
+import { DataStatus, SplatLod } from '../SplatCube3D';
 
 /** Specify the Recognizable Formats Here */
 const ExclusiveFormats: number[] = [SpxOpenFormat0, SpxExclusiveFormatReall3d];

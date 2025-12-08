@@ -15,7 +15,7 @@ import {
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSpxBlockData } from '../wasm/WasmParser';
 
-const maxProcessCnt = isMobile ? 20480 : 51200;
+const maxProcessCnt = isMobile ? 20480 : 512000;
 const SpxHeaderLength = 16;
 const CMask = (1 << 9) - 1;
 
