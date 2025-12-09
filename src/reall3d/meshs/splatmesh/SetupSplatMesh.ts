@@ -362,6 +362,7 @@ export function setupSplatMesh(events: Events) {
 
             const height = 1024;
             const dataShPalettes = new Uint8Array(PalettesWidth * height * 4);
+            dataShPalettes.fill(128);
             dataShPalettes.set(ui8s);
             const dataTexture = new DataTexture(dataShPalettes, PalettesWidth, height, RGBAIntegerFormat, UnsignedByteType);
             dataTextureShPalettes.internalFormat = 'RGBA8UI';

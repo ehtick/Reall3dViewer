@@ -127,7 +127,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
     const isV1 = !meta.version || meta.version === 1;
     const cntSplat: number = isV1 ? meta.means.shape[0] : meta.count;
     const limitCnt = Math.min(cntSplat, model.fetchLimit);
-    const shDegree = meta.shN ? 3 : 0;
+    const shDegree = meta.shN ? meta.shN.bands || 3 : 0;
     const splatData = new Uint8Array(limitCnt * DataSize32);
     model.modelSplatCount = cntSplat;
     model.dataShDegree = shDegree;
@@ -142,11 +142,30 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
     const { rgba: labels } = meta.shN ? await webpToRgba(mapFile.get(meta.shN.files[1])) : { rgba: null };
 
     if (shDegree > 0 && !isV1) {
-        const palettes = new Uint8Array(centroids.length);
-        for (let i = 0; i < centroids.length; i++) {
-            i % 4 < 3 && (palettes[i] = clipUint8(Math.round(meta.shN.codebook[centroids[i]] * 128.0) + 128.0));
+        if (width == 960) {
+            const palettes = new Uint8Array(centroids.length);
+            for (let i = 0; i < centroids.length; i++) {
+                i % 4 < 3 && (palettes[i] = clipUint8(Math.round(meta.shN.codebook[centroids[i]] * 128.0) + 128.0));
+            }
+            model.palettes = palettes;
+        } else {
+            const dim = width == 96 ? 3 : 8;
+            const cnt = meta.shN.count || centroids.length / 4 / dim;
+            console.info('cnt', cnt, 'dim', dim);
+            const palettes = new Uint8Array(cnt * 15 * 4);
+            palettes.fill(128);
+            for (let i = 0, n = 0; i < cnt; i++) {
+                const offset = i * dim;
+                for (let j = 0; j < dim; j++) {
+                    palettes[n * 4 + 0] = clipUint8(Math.round(meta.shN.codebook[centroids[(offset + j) * 4 + 0]] * 128.0) + 128.0);
+                    palettes[n * 4 + 1] = clipUint8(Math.round(meta.shN.codebook[centroids[(offset + j) * 4 + 1]] * 128.0) + 128.0);
+                    palettes[n * 4 + 2] = clipUint8(Math.round(meta.shN.codebook[centroids[(offset + j) * 4 + 2]] * 128.0) + 128.0);
+                    n++;
+                }
+                n += 15 - dim;
+            }
+            model.palettes = palettes;
         }
-        model.palettes = palettes;
     }
 
     while (limitCnt > model.dataSplatCount) {
