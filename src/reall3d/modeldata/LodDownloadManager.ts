@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Matrix4, Plane, Vector3, Vector4 } from 'three';
+import { Matrix4, Plane, Vector3 } from 'three';
 import {
     RunLoopByFrame,
     GetViewProjectionMatrix,
@@ -11,8 +11,8 @@ import {
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { distanceToCube, extractFrustumPlanes, isSplatCubeVisible } from '../utils/CommonUtils';
-import { MetaData, SpxHeader } from './ModelData';
-import { DataStatus, SplatCube, SplatCube3D, SplatLod } from './SplatCube3D';
+import { MetaData } from './ModelData';
+import { DataStatus, SplatCube, SplatCube3D } from './SplatCube3D';
 
 const MaxDownloadCount = 16;
 
@@ -24,7 +24,6 @@ export function setupLodDownloadManager(events: Events) {
     const mapCube: Map<string, SplatCube> = new Map();
     const tmpPlanes = new Array(6).fill(null).map(() => new Plane());
     let splatCube3D: SplatCube3D;
-    let checkCounter = 0;
 
     fire(
         RunLoopByFrame,
@@ -77,11 +76,9 @@ export function setupLodDownloadManager(events: Events) {
             cube.currentDistance = distanceToCube(cameraPosition, cube); // 计算距离
             const visible = isSplatCubeVisible(cameraPosition, tmpPlanes, cube);
             if (!visible) {
-                const dist0 = Math.max(0, cube.currentDistance - cube.radius * 10); // 周边10格
-                if (cube.currentDistance - cube.radius * 10 < 0 && cube.lods[0]?.downloadCount) {
-                    // 不可见的周边10格，如果有0层级数据，强制拉进来用
-                } else {
-                    continue; // 不可见时跳过
+                // 不可见的周边10格准备预加载0层级数据，否则跳过
+                if (!(cube.currentDistance - cube.radius * 10 < 0 && cube.lods[0]?.downloadCount)) {
+                    continue; // 跳过
                 }
             }
 
