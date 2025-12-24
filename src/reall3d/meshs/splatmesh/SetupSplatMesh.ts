@@ -742,7 +742,7 @@ export function setupSplatMesh(events: Events) {
             [VarMaxPixelDiameter]: { type: 'float', value: 1024.0 },
             [VarMinAlpha]: { type: 'float', value: 2 / 255 },
             [VarWaterMarkColor]: { type: 'v4', value: new Vector4(1, 1, 0, 0.5) },
-            [VarShowWaterMark]: { type: 'bool', value: true },
+            [VarShowWaterMark]: { type: 'bool', value: false },
             [VarUseSimilarExp]: { type: 'bool', value: true },
             [VarFlagValue]: { type: 'uint', value: 1 },
             [VarActiveFlagValue]: { type: 'uint', value: 0 },

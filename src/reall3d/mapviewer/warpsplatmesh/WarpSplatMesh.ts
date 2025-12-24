@@ -52,7 +52,7 @@ export class WarpSplatMesh extends Mesh {
                 const bigSceneMode = !!meta.isLargeScene;
                 const pointcloudMode = false;
                 const depthTest = false;
-                const showWatermark = meta.showWatermark !== false;
+                const showWatermark = !!meta.showWatermark;
                 const opts: SplatMeshOptions = { renderer, scene, controls, pointcloudMode, bigSceneMode, showWatermark, depthTest, mapMode: true };
                 opts.maxRenderCountOfMobile ??= opts.bigSceneMode ? 128 * 10240 : 400 * 10000;
                 opts.maxRenderCountOfPc ??= opts.bigSceneMode ? 320 * 10000 : 400 * 10000;
@@ -155,7 +155,7 @@ export class WarpSplatMesh extends Mesh {
                     that.opts.scene.add(splatMesh);
                     splatMesh.meta = meta;
                     const watermark = meta.watermark || meta.name || ''; // 水印文字
-                    meta.showWatermark = meta.showWatermark !== false; // 是否显示水印文字
+                    meta.showWatermark = !!meta.showWatermark; // 是否显示水印文字
                     splatMesh.fire(SetGaussianText, watermark, true, false);
                     splatMesh.addModel({ url: meta.url }, meta);
                 }

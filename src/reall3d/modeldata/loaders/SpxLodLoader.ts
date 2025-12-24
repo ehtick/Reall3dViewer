@@ -5,22 +5,22 @@ import { SplatDataSize20, SplatDataSize32, SpxHeaderSize, SpxOpenFormat0, SpxExc
 import { parseSpxBlockData, parseSpxHeader } from '../wasm/WasmParser';
 import { SplatModel, SpxHeader } from '../ModelData';
 import { DecompressGzip, DecompressXZ } from '../../utils/CommonUtils';
-import { DataStatus, SplatLod } from '../SplatCube3D';
+import { DataStatus, SplatFile, SplatTiles } from '../SplatTiles';
 
 /** Specify the Recognizable Formats Here */
 const ExclusiveFormats: number[] = [SpxOpenFormat0, SpxExclusiveFormatReall3d];
 
-export async function loadSpxLod(model: SplatModel, splatLod: SplatLod) {
+export async function loadSpxLod(model: SplatModel, splatTiles: SplatTiles, splatFile: SplatFile) {
     try {
-        splatLod.status |= DataStatus.Fetching;
-        splatLod.abortController = new AbortController();
-        model.fetchSet.add(splatLod.url);
-        const signal: AbortSignal = splatLod.abortController.signal;
+        splatFile.status |= DataStatus.Fetching;
+        splatFile.abortController = new AbortController();
+        splatTiles.fetchSet.add(splatFile.url);
+        const signal: AbortSignal = splatFile.abortController.signal;
         const cache = 'default'; // model.opts.fetchReload ? 'reload' : 'default';
-        const req = await fetch(splatLod.url, { mode: 'cors', credentials: 'omit', cache, signal });
+        const req = await fetch(splatFile.url, { mode: 'cors', credentials: 'omit', cache, signal });
         if (req.status != 200) {
             console.warn(`fetch error: ${req.status}`);
-            splatLod.status |= DataStatus.FetchFailed;
+            splatFile.status |= DataStatus.FetchFailed;
             return;
         }
         const reader = req.body.getReader();
@@ -28,7 +28,7 @@ export async function loadSpxLod(model: SplatModel, splatLod: SplatLod) {
         const dataSize = contentLength - SpxHeaderSize;
         if (dataSize < SplatDataSize20) {
             console.warn('data empty', model.opts.url);
-            splatLod.status |= DataStatus.Invalid;
+            splatFile.status |= DataStatus.Invalid;
             return;
         }
 
@@ -73,19 +73,19 @@ export async function loadSpxLod(model: SplatModel, splatLod: SplatLod) {
                 // 解析头数据
                 const h: SpxHeader = await parseSpxHeader(headChunk);
                 if (!h) {
-                    splatLod.status |= DataStatus.Invalid;
+                    splatFile.status |= DataStatus.Invalid;
                     console.error(`invalid spx format`);
-                    splatLod.abortController.abort();
-                    continue;
+                    splatFile.abortController.abort();
+                    break;
                 }
                 if (h.Version < 3) {
-                    splatLod.status |= DataStatus.Invalid;
+                    splatFile.status |= DataStatus.Invalid;
                     console.error(`unsupport spx version of lod scene`, h.Version);
-                    splatLod.abortController.abort();
-                    continue;
+                    splatFile.abortController.abort();
+                    break;
                 }
 
-                splatLod.spxHeader = h;
+                splatFile.spxHeader = h;
                 model.modelSplatCount += h.SplatCount;
                 model.dataShDegree = h.ShDegree;
                 headChunks = null;
@@ -94,10 +94,10 @@ export async function loadSpxLod(model: SplatModel, splatLod: SplatLod) {
                 // 文件头检查校验
                 if (!ExclusiveFormats.includes(h.ExclusiveId)) {
                     // 属于无法识别的格式时停止处理，或者进一步结合CreaterId判断是否能识别，避免后续出现数据解析错误
-                    splatLod.status |= DataStatus.Invalid;
+                    splatFile.status |= DataStatus.Invalid;
                     console.error(`Unrecognized format, creater id =`, h.CreaterId, ', exclusive id =', h.ExclusiveId, h.Comment);
-                    splatLod.abortController.abort();
-                    continue;
+                    splatFile.abortController.abort();
+                    break;
                 }
             }
 
@@ -156,18 +156,18 @@ export async function loadSpxLod(model: SplatModel, splatLod: SplatLod) {
                         console.error('unsuported compress type:', compressType);
                     }
                 }
-                const spxBlock = await parseSpxBlockData(ui8sBlock, splatLod.spxHeader);
+                const spxBlock = await parseSpxBlockData(ui8sBlock, splatFile.spxHeader);
                 if (!spxBlock.success) {
                     console.error('spx block data parser failed. block format:', spxBlock.blockFormat);
-                    splatLod.status |= DataStatus.Invalid;
-                    splatLod.abortController.abort();
+                    splatFile.status |= DataStatus.Invalid;
+                    splatFile.abortController.abort();
                     break;
                 }
 
                 if (spxBlock.isSplat) {
-                    !splatLod.downloadData && (splatLod.downloadData = new Uint8Array(splatLod.count * SplatDataSize32));
-                    splatLod.downloadData.set(spxBlock.datas, splatLod.downloadCount * SplatDataSize32);
-                    splatLod.downloadCount += spxBlock.splatCount;
+                    !splatFile.downloadData && (splatFile.downloadData = new Uint8Array(splatFile.spxHeader.SplatCount * SplatDataSize32));
+                    splatFile.downloadData.set(spxBlock.datas, splatFile.downloadCount * SplatDataSize32);
+                    splatFile.downloadCount += spxBlock.splatCount;
                     model.downloadSplatCount += spxBlock.splatCount;
                 } else if (spxBlock.palettes) {
                     model.palettes = spxBlock.palettes; // 调色板
@@ -199,14 +199,16 @@ export async function loadSpxLod(model: SplatModel, splatLod: SplatLod) {
     } catch (e) {
         if (e.name === 'AbortError') {
             console.warn('Fetch Abort', model.opts.url);
-            splatLod.status |= DataStatus.FetchAborted;
+            splatFile.status |= DataStatus.FetchAborted;
         } else {
             console.error(e);
-            splatLod.status |= DataStatus.FetchFailed;
-            model.abortController.abort();
+            splatFile.status |= DataStatus.FetchFailed;
+            splatFile.abortController.abort();
         }
+        console.info(splatFile.url);
     } finally {
-        splatLod.status |= DataStatus.FetchDone;
-        model.fetchSet.delete(splatLod.url);
+        splatFile.status |= DataStatus.FetchDone;
+        splatTiles.fetchSet.delete(splatFile.url);
+        splatFile.abortController = null;
     }
 }

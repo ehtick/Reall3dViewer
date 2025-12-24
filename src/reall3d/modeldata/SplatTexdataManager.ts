@@ -52,7 +52,7 @@ import { loadPly } from './loaders/PlyLoader';
 import { loadSplat } from './loaders/SplatLoader';
 import { loadSpx } from './loaders/SpxLoader';
 import { loadSpz } from './loaders/SpzLoader';
-import { distanceToCube, extractFrustumPlanes, isInverted, isNeedReload, isSplatCubeVisible } from '../utils/CommonUtils';
+import { computeSplatNodeDistance, extractFrustumPlanes, isInverted, isNeedReload } from '../utils/CommonUtils';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import {
     BlankingTimeOfLargeScene,
@@ -62,12 +62,9 @@ import {
     PcDownloadLimitSplatCount,
 } from '../utils/consts/GlobalConstants';
 import { loadSog } from './loaders/SogLoader';
-import { setupLodDownloadManager } from './LodDownloadManager';
+import { setupLodDownloadManager, todoDownload } from './LodDownloadManager';
 import { loadSpxLod } from './loaders/SpxLodLoader';
-import { DataStatus, SplatCube, SplatCube3D, SplatLod } from './SplatCube3D';
-
-let runCounter = 0;
-let flyOnceDone = false;
+import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
 
 /**
  * 纹理数据管理
@@ -79,6 +76,9 @@ export function setupSplatTextureManager(events: Events) {
     let disposed: boolean;
     let lastPostDataTime: number = Date.now() + 60 * 60 * 1000;
 
+    let runCounter = 0;
+    let flyOnceDone = false;
+
     let textWatermarkData: Uint8Array = null; // 水印数据
     let splatModel: SplatModel;
     let texture0: SplatTexdata = { index: 0, version: 0 };
@@ -89,7 +89,7 @@ export function setupSplatTextureManager(events: Events) {
     let performanceStart = 0; // 小场景粒子加载效果使用
     let palettesUpdated = false;
     let largeSceneStartFly = false;
-    const tmpPlanes = new Array(6).fill(null).map(() => new Plane());
+    const frustumPlanes = new Array(6).fill(null).map(() => new Plane());
 
     on(GetAabbCenter, () => splatModel?.aabbCenter || new Vector3());
 
@@ -183,7 +183,7 @@ export function setupSplatTextureManager(events: Events) {
     async function mergeAndUploadData(isBigSceneMode: boolean) {
         if (disposed) return;
 
-        if (splatModel?.mapCube) {
+        if (splatModel?.splatTiles) {
             // 调色板
             if (!palettesUpdated && splatModel.palettes) {
                 fire(SplatUpdateShPalettesTexture, splatModel.palettes);
@@ -513,158 +513,202 @@ export function setupSplatTextureManager(events: Events) {
         const maxRenderCount = await fire(GetMaxRenderCount);
         const { texwidth, texheight } = fire(ComputeTextureWidthHeight, maxRenderCount);
         const txtWatermarkData = textWatermarkData;
-        const watermarkCount = 0; // model.watermarkCount; // 待合并的水印数（模型数据部分）
+        const watermarkCount = splatModel.watermarkCount; // 待合并的水印数（模型数据部分）
         const textWatermarkCount = (txtWatermarkData?.byteLength || 0) / 32; // 待合并的水印数（可动态变化的文字水印部分）
         const maxDataMergeCount = maxRenderCount - watermarkCount - textWatermarkCount; // 最大数据合并点数
 
-        fire(UpdateFetchStatus, splatModel.fetchSet.size);
+        fire(UpdateFetchStatus, splatModel.splatTiles.fetchSet.size);
         fire(Information, { modelSplatCount: splatModel.downloadSplatCount + textWatermarkCount });
 
         let texture: SplatTexdata = texture0.version <= texture1.version ? texture0 : texture1;
         if (texture0.version && ((!texture.index && !texture1.active) || (texture.index && !texture0.active))) return; // 待渲染
         if (Date.now() - texture.activeTime < BlankingTimeOfLargeScene) return;
 
+        const v3Tmp = new Vector3();
+        const splatTiles = splatModel.splatTiles;
+        if (!splatTiles.topLodReady) return;
+
         // 视锥剔除
-        const cubes: SplatCube[] = [];
-        const lods: SplatLod[] = [];
-        let currentTotalVisibleCnt = 0; // 当前可渲染的总点数
         const viewProjMatrix: Matrix4 = fire(GetViewProjectionMatrix);
-        const cameraPosition: Vector3 = fire(GetCameraPosition);
-        extractFrustumPlanes(viewProjMatrix, tmpPlanes); // 更新视锥体平面
+        extractFrustumPlanes(viewProjMatrix, frustumPlanes); // 更新视锥体平面
 
-        for (const cube of splatModel.mapCube.values()) {
-            cube.currentRenderCnt = 0; // 置零，待重新计算
-            cube.currentDistance = distanceToCube(cameraPosition, cube); // 计算距离
-            cube.currentVisible = isSplatCubeVisible(cameraPosition, tmpPlanes, cube);
-            if (!cube.currentVisible) {
-                const lod = cube.lods[0];
-                if (lod?.downloadCount) {
-                    lod.currentRenderCnt = lod.downloadCount;
-                    lods.push(lod);
-                    cube.currentRenderCnt = lod.currentRenderCnt;
-                    cube.currentRenderLodIndex = 0;
-                    cubes.push(cube);
-                    currentTotalVisibleCnt += lod.currentRenderCnt;
-                }
-                continue;
-            }
+        const fnAddTargetLod = (splatTile: SplatTileNode, requireLevel: number, isFallback = false): number => {
+            !isFallback && todoDownload(splatTiles.files[splatTile.lods[requireLevel]?.fileKey]);
 
-            // 距离阈值相应的层级已处理时跳过
-            for (let i = 0, maxLen = splatModel.splatCube3D.lodDistances.length; i < maxLen; i++) {
-                if (cube.currentDistance < splatModel.splatCube3D.lodDistances[i]) {
-                    if (i < maxLen - 1) continue; // 继续找更高精度层级，当最高层级仍不符合要求时不跳过，接下去反向查找低层级替代
-                }
-
-                if (cube.lods[i]?.downloadCount) {
-                    // 目标层级有数据，直接用
-                    const lod = cube.lods[i];
-                    lod.currentRenderCnt = lod.downloadCount;
-                    lod.lastTime = Date.now();
-                    lods.push(lod);
-                    cube.currentRenderCnt = lod.currentRenderCnt;
-                    cube.currentRenderLodIndex = i;
-                    cubes.push(cube);
-                    currentTotalVisibleCnt += lod.currentRenderCnt;
+            const tileMapping = splatTile.lods[requireLevel];
+            if (!tileMapping) {
+                if (requireLevel >= 0) {
+                    fnAddTargetLod(splatTile, requireLevel - 1, true);
                 } else {
-                    // 目标层级没数据，查找低精度层级替代
-                    let n = i;
-                    while (--n >= 0) {
-                        if (cube.lods[n]?.downloadCount) {
-                            const lod = cube.lods[n];
-                            cubes.push(cube);
-                            lod.currentRenderCnt = lod.downloadCount;
-                            lod.lastTime = Date.now();
-                            lods.push(lod);
-                            cube.currentRenderCnt = lod.currentRenderCnt;
-                            cube.currentRenderLodIndex = n;
-                            currentTotalVisibleCnt += lod.currentRenderCnt;
-                            break;
-                        }
-                    }
+                    splatTile.currentRenderLod = -1; // 找不到
                 }
-                break;
-            }
-        }
-        if (!cubes.length) return; // 没有可渲染数据
-        const visibleCubes = cubes.filter(item => item.currentVisible);
-
-        fire(Information, { cuts: `${visibleCubes.length} / ${splatModel.mapCube.size}`, lodTotalCount: splatModel.splatCube3D.totalCount });
-
-        const sysTime = Date.now();
-        texture.version = sysTime;
-        texture.active = false;
-
-        const perLimit = Math.min(maxDataMergeCount / currentTotalVisibleCnt, 1); // 最大不超100%
-        if (perLimit > 0.95) {
-            // 最大合并数占比大于95%时按比例简化概算
-            for (const cube of cubes) cube.currentRenderCnt = (cube.currentRenderCnt * perLimit) | 0;
-        } else {
-            // 占比较小时按距离计算
-            cubes.sort((a, b) => a.currentDistance - b.currentDistance);
-            // // 微调
-            // for (const cube of cubes) {
-            //     if (cube.currentDistance < 5) {
-            //         cube.currentDistance *= 0.5;
-            //     } else if (cube.currentDistance < 4) {
-            //         cube.currentDistance *= 0.4;
-            //     } else if (cube.currentDistance < 3) {
-            //         cube.currentDistance *= 0.3;
-            //     } else if (cube.currentDistance < 2) {
-            //         cube.currentDistance *= 0.1;
-            //     }
-            // }
-            // 分配
-            allocatePointsLod(cubes, maxDataMergeCount);
-
-            // 检查、调整
-            let totalCurrentRenderCnt = 0;
-            for (let cube of cubes) totalCurrentRenderCnt += cube.currentRenderCnt;
-
-            if (totalCurrentRenderCnt > maxDataMergeCount) {
-                // 检查
-                let delCnt = totalCurrentRenderCnt - maxDataMergeCount;
-                for (let i = cubes.length - 1; i >= 0; i--) {
-                    if (delCnt <= 0) break;
-                    const cube = cubes[i];
-                    if (cube.currentRenderCnt >= delCnt) {
-                        cube.currentRenderCnt -= delCnt;
-                        delCnt = 0;
+            } else {
+                const file = splatTiles.files[tileMapping.fileKey];
+                if (file?.downloadCount) {
+                    splatTile.currentRenderLod = requireLevel;
+                } else {
+                    if (requireLevel >= 0) {
+                        fnAddTargetLod(splatTile, requireLevel - 1, true);
                     } else {
-                        delCnt -= cube.currentRenderCnt;
-                        cube.currentRenderCnt = 0;
+                        splatTile.currentRenderLod = -1; // 找不到
                     }
                 }
-            } else if (totalCurrentRenderCnt < maxDataMergeCount) {
-                // 调整
-                let addCnt = maxDataMergeCount - totalCurrentRenderCnt;
-                for (let i = 0; i < cubes.length; i++) {
-                    if (addCnt <= 0) break;
-                    let cube = cubes[i];
-                    let lod = lods[i];
-                    if (lod.currentRenderCnt > cube.currentRenderCnt) {
-                        if (lod.currentRenderCnt - cube.currentRenderCnt >= addCnt) {
-                            cube.currentRenderCnt += addCnt;
-                            addCnt = 0;
-                        } else {
-                            const add = lod.currentRenderCnt - cube.currentRenderCnt;
-                            cube.currentRenderCnt += add;
-                            addCnt -= add;
-                        }
+            }
+
+            return splatTile.currentRenderLod;
+        };
+
+        const checkSplatNodeVisible = (node: SplatTileNode): number => {
+            // 视锥剔除，第1个为近截面，第6个为远截面忽略计算
+            const v3Center = v3Tmp.fromArray(node.center);
+            const distances: number[] = [];
+            for (let i = 0; i < 5; i++) {
+                const distance = frustumPlanes[i].distanceToPoint(v3Center); // 计算球心到平面的有符号距离
+                if (distance < -node.radius) {
+                    node.currentVisible = false; // 若球体完全在平面外侧（负方向），则不可见
+                    return 0; // 不可见
+                }
+                distances[i] = distance;
+            }
+            node.currentVisible = true;
+            node.currentDistance = distances[0] >= 0 ? Math.max(0, distances[0] - node.radius) : Math.min(0, distances[0] + node.radius);
+            if (node.lods) return 1; // 叶节点按完全可见处理
+
+            for (let distance of distances) {
+                if (distance < 0 || distance < node.radius) return -1; // 部分可见
+            }
+            if (!node.fileKey) return 1; // 非文件节点不需继续判断
+
+            // 完全可见的文件节点，判断提示下载
+            const file = splatTiles.files[node.fileKey];
+            if (file.status) return 1; // 已下载不必继续
+
+            const nearDistance = Math.max(0, distances[0] - node.radius);
+            const farDistance = distances[0] + node.radius;
+
+            let nearLod = 0;
+            for (let i = 0; i < splatTiles.lodLevels; i++) {
+                if (nearDistance >= splatTiles.lodDistances[i]) {
+                    nearLod = i;
+                    break;
+                }
+            }
+            let farLod = 0;
+            for (let i = 0; i < splatTiles.lodLevels; i++) {
+                if (farDistance >= splatTiles.lodDistances[i]) {
+                    farLod = i;
+                    break;
+                }
+            }
+
+            if (nearLod <= file.lod && file.lod <= farLod) {
+                file.currentDistance = nearDistance;
+                todoDownload(file); // 提示下载
+            }
+            return 1; // 完全可见
+        };
+
+        const calcRequireLodLevel = (leafNode: SplatTileNode) => {
+            let requireLevel = -1;
+            const distance = computeSplatNodeDistance(frustumPlanes, leafNode);
+            for (let i = 0; i < splatTiles.lodDistances.length; i++) {
+                if (!leafNode.lods[i]) continue; // 该块无此lod数据
+
+                if (distance >= splatTiles.lodDistances[i]) {
+                    requireLevel = i;
+                    break;
+                }
+            }
+            return requireLevel;
+        };
+
+        traveSplatTree(splatTiles.tree, node => {
+            const state = checkSplatNodeVisible(node); // 内含提示下载
+            if (state == 0) {
+                // 完全不可见，旗下全部叶节点直接设定
+                traveSplatTree(node, nd => {
+                    if (nd.lods) {
+                        nd.currentVisible = false;
+                        nd.currentRenderLod = 0;
+                    }
+                });
+                return false;
+            } else if (state > 0) {
+                // 完全可见（部分可见的叶节点都是完全可见），旗下全部叶节点直接计算设定
+                traveSplatTree(node, nd => {
+                    if (!nd.lods) return;
+
+                    nd.currentVisible = true;
+                    fnAddTargetLod(nd, calcRequireLodLevel(nd));
+                });
+            }
+        });
+
+        // 数量检查
+        let sumCurrentSplatCount = 0;
+        let leafs: SplatTileNode[] = []; // 所有叶节点
+        let reduceLeafs: SplatTileNode[] = []; // 降级处理时的目标范围
+        let visibleCuts = 0;
+        traveSplatTree(splatTiles.tree, leaf => {
+            if (!leaf.lods) return;
+
+            leaf.currentVisible && visibleCuts++;
+            leafs.push(leaf);
+            leaf.currentRenderLod > 0 && reduceLeafs.push(leaf);
+            sumCurrentSplatCount += leaf.lods[leaf.currentRenderLod]?.count || 0; // 块中不一定各lod都有数据
+        });
+        let currentTotalVisibleCnt = visibleCuts > 0 ? sumCurrentSplatCount : 0;
+
+        if (sumCurrentSplatCount > maxDataMergeCount) {
+            const reduceLod = (tgtLod: number) => {
+                for (let i = 0; i < reduceLeafs.length; i++) {
+                    const reduceNode = reduceLeafs[i];
+                    if (reduceNode.currentRenderLod != tgtLod) continue;
+
+                    const newLod = fnAddTargetLod(reduceNode, tgtLod - 1);
+                    if (newLod >= 0) {
+                        sumCurrentSplatCount += reduceNode.lods[newLod].count - reduceNode.lods[tgtLod].count;
+                        if (sumCurrentSplatCount <= maxDataMergeCount) break;
+                    } else {
+                        sumCurrentSplatCount -= reduceNode.lods[tgtLod].count;
                     }
                 }
+            };
+
+            // 排序
+            reduceLeafs.sort((a, b) => b.currentDistance - a.currentDistance); // 按距离降序
+
+            while (sumCurrentSplatCount > maxDataMergeCount) {
+                let maxLod = 0;
+                for (const reduceNode of reduceLeafs) {
+                    maxLod = Math.max(maxLod, reduceNode.currentRenderLod);
+                }
+                reduceLod(maxLod);
             }
         }
 
         // 合并
+        const sysTime = Date.now();
+        texture.version = sysTime;
+        texture.active = false;
+
         const ui32s = new Uint32Array(texwidth * texheight * 4);
         const f32s = new Float32Array(ui32s.buffer);
         const mergeSplatData = new Uint8Array(ui32s.buffer);
         let mergeDataCount = 0;
-        for (let cube of cubes) {
-            const lod = cube.lods[cube.currentRenderLodIndex];
-            mergeSplatData.set(lod.downloadData.subarray(0, cube.currentRenderCnt * 32), mergeDataCount * 32);
-            mergeDataCount += cube.currentRenderCnt;
+
+        if (visibleCuts > 0) {
+            for (let node of leafs) {
+                const tileMapping = node.lods[node.currentRenderLod];
+                if (!tileMapping) continue;
+
+                const file = splatTiles.files[tileMapping.fileKey];
+                file.lastTime = Date.now();
+                mergeSplatData.set(file.downloadData.subarray(tileMapping.offset * 32, (tileMapping.offset + tileMapping.count) * 32), mergeDataCount * 32);
+                mergeDataCount += tileMapping.count;
+            }
         }
+
         if (watermarkCount) {
             mergeSplatData.set(splatModel.watermarkData.subarray(0, watermarkCount * 32), mergeDataCount * 32);
         }
@@ -675,21 +719,22 @@ export function setupSplatTextureManager(events: Events) {
         // 保险起见以最终数据数量为准
         const totalRenderSplatCount = mergeDataCount + watermarkCount + textWatermarkCount;
         const xyz = new Float32Array(totalRenderSplatCount * 3);
-        for (let i = 0, n = 0; i < totalRenderSplatCount; i++) {
-            xyz[i * 3] = f32s[i * 8];
-            xyz[i * 3 + 1] = f32s[i * 8 + 1];
-            xyz[i * 3 + 2] = f32s[i * 8 + 2];
-        }
+        const mins: number[] = [f32s[0], f32s[1], f32s[2]];
+        const maxs: number[] = [f32s[0], f32s[1], f32s[2]];
+        for (let i = 0, x = 0, y = 0, z = 0; i < totalRenderSplatCount; i++) {
+            x = f32s[i * 8];
+            y = f32s[i * 8 + 1];
+            z = f32s[i * 8 + 2];
+            xyz[i * 3] = x;
+            xyz[i * 3 + 1] = y;
+            xyz[i * 3 + 2] = z;
 
-        let mins = [...cubes[0].mins];
-        let maxs = [...cubes[0].maxs];
-        for (let cube of cubes) {
-            mins[0] = Math.min(mins[0], cube.mins[0]);
-            mins[1] = Math.min(mins[1], cube.mins[1]);
-            mins[2] = Math.min(mins[2], cube.mins[2]);
-            maxs[0] = Math.max(maxs[0], cube.maxs[0]);
-            maxs[1] = Math.max(maxs[1], cube.maxs[1]);
-            maxs[2] = Math.max(maxs[2], cube.maxs[2]);
+            mins[0] = Math.min(mins[0], x);
+            mins[1] = Math.min(mins[1], y);
+            mins[2] = Math.min(mins[2], z);
+            maxs[0] = Math.max(maxs[0], x);
+            maxs[1] = Math.max(maxs[1], y);
+            maxs[2] = Math.max(maxs[2], z);
         }
 
         texture.txdata = ui32s;
@@ -708,47 +753,44 @@ export function setupSplatTextureManager(events: Events) {
         fire(UploadSplatTexture, texture);
         lastPostDataTime = sysTime;
 
-        fire(Information, { visibleSplatCount: texture.visibleSplatCount, modelSplatCount: texture.modelSplatCount });
+        const cuts = `${visibleCuts}/${leafs.length}`;
+        const lodTotalCount = splatTiles.totalCount;
+        fire(Information, { lodTotalCount, cuts, visibleSplatCount: texture.visibleSplatCount, modelSplatCount: texture.modelSplatCount });
 
-        // 下载完0层级后起飞
-        if (!flyOnceDone && !splatModel.fetchSet.size) {
-            let done = true;
-            for (let cube of splatModel.splatCube3D.cubes) {
-                if (cube.lods[0] && !cube.lods[0].downloadCount) {
-                    done = false;
-                    break;
-                }
-            }
-            if (done) {
-                flyOnceDone = true;
-                const opts: SplatMeshOptions = fire(GetOptions);
-                opts.viewerEvents?.fire(Flying, true);
-            }
+        // 所有顶层级下载完后起飞
+        if (!flyOnceDone) {
+            flyOnceDone = true;
+            const opts: SplatMeshOptions = fire(GetOptions);
+            opts.viewerEvents?.fire(Flying, true);
         }
     }
 
     function checkLodCache() {
         // 缓存整理
-        const maxCacheCount = isMobile ? splatModel.splatCube3D.mobileCacheCount || 600_0000 : 3000_0000;
+        if (!splatModel?.splatTiles) return;
+
+        const maxCacheCount = isMobile ? splatModel.splatTiles.mobileCacheCount || 600_0000 : splatModel.splatTiles.pcCacheCount || 3000_0000;
+        if (splatModel.downloadSplatCount < maxCacheCount) return;
+
         if (runCounter++ % 6 == 0 && splatModel.downloadSplatCount > maxCacheCount) {
-            const lodLasts: SplatLod[] = [];
-            for (const cube of splatModel.mapCube.values()) {
-                cube.lods[cube.lods.length - 1]?.downloadCount && lodLasts.push(cube.lods[cube.lods.length - 1]);
+            const downloadFiles: SplatFile[] = [];
+            for (let key of Object.keys(splatModel.splatTiles.files)) {
+                let file = splatModel.splatTiles.files[key];
+                if (file.downloadCount) downloadFiles.push(file);
             }
-            lodLasts.sort((a, b) => b.lastTime - a.lastTime); // 降序
+            downloadFiles.sort((a, b) => b.lastTime - a.lastTime); // 降序
             let cacheCnt = splatModel.downloadSplatCount;
             let removeCnt = 0;
-            while (lodLasts.length && cacheCnt > maxCacheCount) {
-                const lod = lodLasts.pop();
-                removeCnt += lod.downloadCount;
+            while (downloadFiles.length && cacheCnt > maxCacheCount) {
+                const file = downloadFiles.pop();
+                removeCnt += file.downloadCount;
                 cacheCnt -= removeCnt;
-
-                lod.downloadCount = 0;
-                lod.downloadData = null;
-                lod.abortController = null;
-                lod.lastTime = 0;
-                lod.spxHeader = null;
-                lod.status = DataStatus.None;
+                file.downloadCount = 0;
+                file.downloadData = null;
+                file.abortController = null;
+                file.lastTime = 0;
+                file.spxHeader = null;
+                file.status = DataStatus.None;
             }
             splatModel.downloadSplatCount -= removeCnt;
         }
@@ -774,41 +816,6 @@ export function setupSplatTextureManager(events: Events) {
                         cut.splatCount - cut.currentRenderCnt,
                     );
                     cut.currentRenderCnt += additionalPoints;
-                }
-            });
-        }
-    }
-
-    function allocatePointsLod(cubes: SplatCube[], maxPoints: number): void {
-        const weights = cubes.map(cube => 1 / (cube.currentDistance + 1e-6));
-        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
-        let totalRenderSplatCount = 0;
-        cubes.forEach((cube, index) => {
-            cube.currentRenderCnt = Math.min(Math.floor((weights[index] / totalWeight) * maxPoints), cube.currentRenderCnt);
-            if (cube.currentRenderCnt / cube.lods[cube.currentRenderLodIndex].count < 0.4) {
-                // 占比过小太难看，尝试取用低分辨率层级
-                const lod0 = cube.lods[0];
-                if (lod0?.downloadCount) {
-                    lod0.currentRenderCnt = lod0.downloadCount;
-                    lod0.lastTime = Date.now();
-                    cube.currentRenderCnt = lod0.currentRenderCnt;
-                    cube.currentRenderLodIndex = 0; // 强制切换层级
-                }
-            }
-            totalRenderSplatCount += cube.currentRenderCnt;
-        });
-        if (totalRenderSplatCount < maxPoints) {
-            const remainingPoints = maxPoints - totalRenderSplatCount;
-            const remainingWeights = cubes.map((c, index) => (c.currentRenderCnt < c.lods[c.currentRenderLodIndex].currentRenderCnt ? weights[index] : 0));
-            const remainingTotalWeight = remainingWeights.reduce((sum, weight) => sum + weight, 0);
-
-            cubes.forEach((cube, index) => {
-                if (remainingTotalWeight > 0 && cube.currentRenderCnt < cube.lods[cube.currentRenderLodIndex].currentRenderCnt) {
-                    const additionalPoints = Math.min(
-                        Math.floor((remainingWeights[index] / remainingTotalWeight) * remainingPoints),
-                        cube.lods[cube.currentRenderLodIndex].currentRenderCnt - cube.currentRenderCnt,
-                    );
-                    cube.currentRenderCnt += additionalPoints;
                 }
             });
         }
@@ -845,6 +852,11 @@ export function setupSplatTextureManager(events: Events) {
         disposed = true;
         splatModel?.abortController?.abort();
         splatModel?.map?.clear();
+        if (splatModel?.splatTiles) {
+            for (let file of Object.values(splatModel.splatTiles.files)) {
+                file.abortController?.abort();
+            }
+        }
         splatModel = null;
         textWatermarkData = null;
         texture0 = null;
@@ -914,21 +926,19 @@ export function setupSplatTextureManager(events: Events) {
         fire(Information, { cuts: `` });
     }
 
-    function addLod(splatCube3D: SplatCube3D, cube: SplatCube) {
+    function addLod(splatTiles: SplatTiles, splatFile: SplatFile) {
         if (disposed) return;
-        if (!splatCube3D || !cube) return;
+        if (!splatTiles || !splatFile) return;
 
         !splatModel && (splatModel = new SplatModel({ url: 'fake.spx' }));
-        !splatModel.splatCube3D && (splatModel.mapCube = new Map()) && (splatModel.fetchSet = new Set()) && (splatModel.splatCube3D = splatCube3D);
+        !splatModel.splatTiles && (splatModel.splatTiles = splatTiles);
+        fnResolveModelSplatCount(splatTiles.totalCount);
 
-        !splatModel.mapCube.has(cube.key) && splatModel.mapCube.set(cube.key, cube);
-
-        const lod = cube.lods.find(v => v.status == DataStatus.WaitFetch);
-        loadSpxLod(splatModel, lod);
+        loadSpxLod(splatModel, splatTiles, splatFile);
     }
 
     on(SplatTexdataManagerAddModel, (opts: ModelOptions, meta: MetaData) => add(opts, meta));
-    on(SplatTexdataManagerAddSplatLod, (splatCube3D: SplatCube3D, cube: SplatCube) => addLod(splatCube3D, cube));
+    on(SplatTexdataManagerAddSplatLod, (splatTiles: SplatTiles, splatFile: SplatFile) => addLod(splatTiles, splatFile));
     on(SplatTexdataManagerDataChanged, (msDuring: number = 10000) => Date.now() - lastPostDataTime < msDuring);
     on(SplatTexdataManagerDispose, () => dispose());
 

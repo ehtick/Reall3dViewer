@@ -73,7 +73,7 @@ export interface SplatMeshOptions {
     lightFactor?: number;
 
     /**
-     * Whether to display a watermark; defaults to true
+     * Whether to display a watermark; defaults to false
      */
     showWatermark?: boolean;
 

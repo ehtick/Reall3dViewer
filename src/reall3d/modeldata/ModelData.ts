@@ -4,7 +4,7 @@
 import { Matrix4, Vector3 } from 'three';
 import { CameraInfo } from '../controls/SetupCameraControls';
 import { ModelOptions } from './ModelOptions';
-import { SplatCube, SplatCube3D } from './SplatCube3D';
+import { SplatTiles } from './SplatTiles';
 
 /**
  * SPX file header information
@@ -125,9 +125,7 @@ export class SplatModel {
     public palettes?: Uint8Array;
 
     // ---------- LOD ----------
-    public splatCube3D: SplatCube3D;
-    public mapCube: Map<string, SplatCube>;
-    public fetchSet: Set<string>; // 下载统计
+    public splatTiles: SplatTiles;
     // -------------------------
 
     constructor(opts: ModelOptions, meta: MetaData = {}) {

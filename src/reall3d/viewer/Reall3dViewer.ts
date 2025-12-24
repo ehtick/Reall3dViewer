@@ -440,7 +440,7 @@ export class Reall3dViewer {
         }
 
         // 加载模型
-        await that.splatMesh.addModel({ url: meta.url }, meta);
+        that.splatMesh.addModel({ url: meta.url, baseUrl: sceneUrl }, meta);
         await fire(OnSetWaterMark, meta.watermark);
         fire(GetControls).updateRotateAxis();
     }
@@ -488,7 +488,7 @@ export class Reall3dViewer {
         }
 
         // 检查整理
-        meta.showWatermark = meta.showWatermark !== false; // 是否显示水印文字
+        meta.showWatermark = !!meta.showWatermark; // 是否显示水印文字
         meta.url = meta.url || modelOpts.url;
         delete meta.isLargeScene; // addModel为固定小场景模式
         if (!modelOpts.format) {

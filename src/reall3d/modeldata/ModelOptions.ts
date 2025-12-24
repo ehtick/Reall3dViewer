@@ -11,6 +11,11 @@ export interface ModelOptions {
     url: string;
 
     /**
+     * Base URL
+     */
+    baseUrl?: string;
+
+    /**
      * Model format (ply | splat | spx | spz | sog | obj), auto-detected by default
      */
     format?: 'ply' | 'splat' | 'spx' | 'spz' | 'sog' | 'obj';

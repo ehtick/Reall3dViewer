@@ -1,29 +1,26 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Matrix4, Plane, Vector3 } from 'three';
-import {
-    RunLoopByFrame,
-    GetViewProjectionMatrix,
-    GetCameraPosition,
-    SplatTexdataManagerAddSplatLod,
-    LodDownloadManagerAddLodMeta,
-} from '../events/EventConstants';
+import { RunLoopByFrame, SplatTexdataManagerAddSplatLod, LodDownloadManagerAddLodMeta } from '../events/EventConstants';
 import { Events } from '../events/Events';
-import { distanceToCube, extractFrustumPlanes, isSplatCubeVisible } from '../utils/CommonUtils';
+import { isMobile } from '../utils/consts/GlobalConstants';
 import { MetaData } from './ModelData';
-import { DataStatus, SplatCube, SplatCube3D } from './SplatCube3D';
+import { ModelOptions } from './ModelOptions';
+import { DataStatus, SplatFile, SplatTiles } from './SplatTiles';
 
-const MaxDownloadCount = 16;
+const MaxDownloadCount = isMobile ? 8 : 16;
+const splatFileSet = new Set<SplatFile>();
+
+export function todoDownload(splatFile: SplatFile) {
+    splatFile && !splatFile.status && splatFileSet.add(splatFile);
+}
 
 export function setupLodDownloadManager(events: Events) {
     let disposed: boolean;
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
 
-    const mapCube: Map<string, SplatCube> = new Map();
-    const tmpPlanes = new Array(6).fill(null).map(() => new Plane());
-    let splatCube3D: SplatCube3D;
+    let splatTiles: SplatTiles;
 
     fire(
         RunLoopByFrame,
@@ -32,83 +29,80 @@ export function setupLodDownloadManager(events: Events) {
         30,
     );
 
-    on(LodDownloadManagerAddLodMeta, async (meta: MetaData) => {
+    on(LodDownloadManagerAddLodMeta, async (opts: ModelOptions) => {
         try {
-            const res = await fetch(meta.url, { mode: 'cors', credentials: 'omit', cache: 'reload' });
+            const lodUrl = opts.baseUrl ? new URL(opts.url, opts.baseUrl).href : opts.url;
+            const res = await fetch(lodUrl, { mode: 'cors', credentials: 'omit', cache: 'reload' });
             if (res.status === 200) {
-                splatCube3D = await res.json();
+                splatTiles = await res.json();
+                splatTiles.fetchSet = new Set<string>();
+
+                for (let key of Object.keys(splatTiles.files)) {
+                    const file = splatTiles.files[key];
+                    file.url = new URL(file.url, lodUrl).href;
+                }
             } else {
                 return console.error('lod scene file fetch failed, status:', res.status);
             }
         } catch (e) {
             return console.error('lod scene file fetch failed', e.message);
         }
-
-        const cubes = splatCube3D?.cubes || [];
-        for (let cube of cubes) {
-            mapCube.set(cube.key, cube);
-        }
     });
 
-    function checkDownload() {
-        if (!splatCube3D) return; // 无数据
+    function checkTopLodDownloadStatus() {
+        if (splatTiles.topLodReady) return;
+        for (let key of Object.keys(splatTiles.files)) {
+            let file = splatTiles.files[key];
+            if (file.lod === 0 && !file.downloadData) return;
+        }
+        splatTiles.topLodReady = true;
+    }
 
-        const viewProjMatrix: Matrix4 = fire(GetViewProjectionMatrix);
-        const cameraPosition: Vector3 = fire(GetCameraPosition);
-        extractFrustumPlanes(viewProjMatrix, tmpPlanes); // 更新视锥体平面
+    function checkDownload() {
+        if (!splatTiles) return; // 无数据
+        checkTopLodDownloadStatus();
 
         // 遍历检查
         let fetchingCnt = 0;
         let todoCnt = 0;
-        for (let cube of mapCube.values()) {
-            for (let lod of cube.lods) {
-                !lod.status && todoCnt++;
-                lod.status && lod.status < DataStatus.FetchDone && fetchingCnt++;
+        let lod0Files: SplatFile[] = [];
+        for (let key of Object.keys(splatTiles.files)) {
+            let file = splatTiles.files[key];
+            if (file.status) {
+                file.status < DataStatus.FetchDone && fetchingCnt++;
+            } else {
+                todoCnt++;
+                file.lod === 0 && lod0Files.length < MaxDownloadCount && lod0Files.push(file);
             }
         }
-
         if (!todoCnt || fetchingCnt >= MaxDownloadCount) return; // 无可下载或已并发受限
 
-        // 可见格中有待处理的都汇总起来
-        let cubes: SplatCube[] = [];
-        for (let cube of mapCube.values()) {
-            if (!cube.lods.some(lod => !lod.status)) continue; // 无待处理时跳过
-            cube.currentDistance = distanceToCube(cameraPosition, cube); // 计算距离
-            const visible = isSplatCubeVisible(cameraPosition, tmpPlanes, cube);
-            if (!visible) {
-                // 不可见的周边10格准备预加载0层级数据，否则跳过
-                if (!(cube.currentDistance - cube.radius * 10 < 0 && cube.lods[0]?.downloadCount)) {
-                    continue; // 跳过
-                }
-            }
-
-            // 距离阈值相应的层级已处理时跳过
-            for (let i = 0; i < splatCube3D.lodDistances.length; i++) {
-                if (cube.currentDistance >= splatCube3D.lodDistances[i]) {
-                    const lod = cube.lods[i];
-                    if (!cube.lods[i].status) {
-                        // 初始化变量
-                        lod.downloadCount = 0;
-                        lod.currentRenderCnt = 0;
-                        lod.lastTime = Date.now();
-
-                        cube.currentFetchLodIndex = i;
-                        cubes.push(cube); // 所需层级待处理，加入队列
-                    }
-                    break;
-                }
-            }
+        // 顶层级优先下载
+        for (let splatFile of lod0Files) {
+            splatFile.downloadCount = 0;
+            splatFile.lastTime = Date.now();
+            splatFile.status = DataStatus.WaitFetch; // 待下载
+            fire(SplatTexdataManagerAddSplatLod, splatTiles, splatFile); // status会被更新
         }
+        if (lod0Files.length) return; // 让优先下载
 
-        // 可见格从近到远排序，确保近处先下载
-        cubes.sort((a, b) => a.currentDistance - b.currentDistance);
+        // 调整优先顺序
+        let todos = [...splatFileSet];
+        let dones = todos.filter(v => v.status);
+        todos = todos.filter(v => !v.status);
+        todos.sort((a, b) => a.currentDistance - b.currentDistance); // 从近到远排序
+        todos = todos.slice(0, Math.min(MaxDownloadCount - fetchingCnt, todos.length)); // 截取近处限制数内节点
 
-        // 控制下载并发数，推进下载
-        cubes = cubes.slice(0, MaxDownloadCount - fetchingCnt);
-        for (let cube of cubes) {
-            const lod = cube.lods[cube.currentFetchLodIndex];
-            lod.status = DataStatus.WaitFetch; // 待下载
-            fire(SplatTexdataManagerAddSplatLod, splatCube3D, cube); // g.status会被更新
+        // 待下载
+        for (let splatFile of todos) {
+            splatFile.downloadCount = 0;
+            splatFile.lastTime = Date.now();
+            splatFile.status = DataStatus.WaitFetch; // 待下载
+            fire(SplatTexdataManagerAddSplatLod, splatTiles, splatFile); // status会被更新
+            splatFileSet.delete(splatFile);
+        }
+        for (let file of dones) {
+            splatFileSet.delete(file);
         }
     }
 }

@@ -34,7 +34,7 @@ import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
 import { unzipSync } from 'fflate';
 import { SpxHeader } from '../modeldata/ModelData';
-import { SplatCube } from '../modeldata/SplatCube3D';
+import { SplatTileNode } from '../modeldata/SplatTiles';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -254,7 +254,7 @@ export function setupCommonUtils(events: Events) {
             fps !== undefined && setInfo('fps', fps);
             realFps !== undefined && setInfo('realFps', `raw ${realFps}`);
             sortTime !== undefined &&
-                setInfo('sort', `${sortTime} ms （L ${fire(GetOptions).qualityLevel || QualityLevels.Default5}, ${bucketBits} B, T ${sortType}）`);
+                setInfo('sort', `${sortTime} ms （L ${fire(GetOptions).qualityLevel || QualityLevels.Default5}, ${bucketBits || ''} B, T ${sortType || ''}）`);
             if (cuts !== undefined) {
                 if (lodTotalCount !== undefined) {
                     setInfo('cuts', cuts === '' ? '' : `${lodTotalCount}（${cuts} cuts）`);
@@ -797,40 +797,27 @@ export function isInverted(header: SpxHeader) {
     return ((header?.Flags || 0) & 0b10000000) > 0;
 }
 
-const v3Tmp = new Vector3();
-export function distanceToCube(cameraPosition: Vector3, cube: SplatCube): number {
-    return v3Tmp.fromArray(cube.center).distanceTo(cameraPosition) - cube.radius;
-}
-
-export function isSplatCubeVisible(cameraPosition: Vector3, planes: Plane[], cube: SplatCube): boolean {
-    // 快速排除
-    if (cube.currentDistance < 1e-6) return true;
-
-    // 视锥剔除
-    const center = v3Tmp.fromArray(cube.center);
-    for (let i = 0; i < 4; i++) {
-        const distance = planes[i].distanceToPoint(center); // 计算球心到平面的有符号距离
-        if (distance < -cube.radius) {
-            return false; // 若球体完全在平面外侧（负方向），则不可见
-        }
-    }
-    return true;
-}
-
 // 工具：从 viewProjMatrix 提取6个视锥体平面
 export function extractFrustumPlanes(matrix: Matrix4, planes: Plane[]): void {
     const m = matrix.elements;
+    let i = 0;
+    // 近平面 (z = -w)
+    planes[i++].set(new Vector3(m[3] + m[2], m[7] + m[6], m[11] + m[10]), m[15] + m[14]).normalize();
+    // 左平面 (x = -w)
+    planes[i++].set(new Vector3(m[3] + m[0], m[7] + m[4], m[11] + m[8]), m[15] + m[12]).normalize();
+    // 右平面 (x = w)
+    planes[i++].set(new Vector3(m[3] - m[0], m[7] - m[4], m[11] - m[8]), m[15] - m[12]).normalize();
+    // 底平面 (y = -w)
+    planes[i++].set(new Vector3(m[3] + m[1], m[7] + m[5], m[11] + m[9]), m[15] + m[13]).normalize();
+    // 顶平面 (y = w)
+    planes[i++].set(new Vector3(m[3] - m[1], m[7] - m[5], m[11] - m[9]), m[15] - m[13]).normalize();
+    // 远平面 (z = w)
+    planes[i++].set(new Vector3(m[3] - m[2], m[7] - m[6], m[11] - m[10]), m[15] - m[14]).normalize();
+}
 
-    // 左平面
-    planes[0].setComponents(m[3] + m[0], m[7] + m[4], m[11] + m[8], m[15] + m[12]).normalize();
-    // 右平面
-    planes[1].setComponents(m[3] - m[0], m[7] - m[4], m[11] - m[8], m[15] - m[12]).normalize();
-    // 底平面
-    planes[2].setComponents(m[3] + m[1], m[7] + m[5], m[11] + m[9], m[15] + m[13]).normalize();
-    // 顶平面
-    planes[3].setComponents(m[3] - m[1], m[7] - m[5], m[11] - m[9], m[15] - m[13]).normalize();
-    // 近平面
-    planes[4].setComponents(m[3] + m[2], m[7] + m[6], m[11] + m[10], m[15] + m[14]).normalize();
-    // 远平面
-    planes[5].setComponents(m[3] - m[2], m[7] - m[6], m[11] - m[10], m[15] - m[14]).normalize();
+const v3Tmp = new Vector3();
+export function computeSplatNodeDistance(planes: Plane[], node: SplatTileNode) {
+    const v3Center = v3Tmp.fromArray(node.center);
+    const distance = planes[0].distanceToPoint(v3Center); // 按近截面计算距离
+    return distance >= 0 ? Math.max(0, distance - node.radius) : Math.min(0, distance + node.radius);
 }
