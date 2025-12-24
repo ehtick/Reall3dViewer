@@ -91,6 +91,13 @@ function fnClick(className: string) {
         viewer.reset({ debugMode: true });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/bzg.spx`), 50); // Let it GC
         globalEv.fire(StopBgAudio);
+    } else if (className == 'lod') {
+        viewer?.dispose();
+        mapViewer?.dispose();
+        viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
+        viewer.reset({ debugMode: true });
+        setTimeout(() => viewer.addScene(`https://reall3d.com/reall3dviewer/lod-demo-251224/hgd-lod.scene.json`), 50); // Let it GC
+        globalEv.fire(StopBgAudio);
     } else if (className == 'lff-house') {
         viewer?.dispose();
         mapViewer?.dispose();
