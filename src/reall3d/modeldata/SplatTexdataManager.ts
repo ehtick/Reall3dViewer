@@ -52,7 +52,7 @@ import { loadPly } from './loaders/PlyLoader';
 import { loadSplat } from './loaders/SplatLoader';
 import { loadSpx } from './loaders/SpxLoader';
 import { loadSpz } from './loaders/SpzLoader';
-import { computeSplatNodeDistance, extractFrustumPlanes, isInverted, isNeedReload } from '../utils/CommonUtils';
+import { computeSplatNodeCameraDistance, computeSplatNodeDistance, extractFrustumPlanes, isInverted, isNeedReload } from '../utils/CommonUtils';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import {
     BlankingTimeOfLargeScene,
@@ -127,9 +127,6 @@ export function setupSplatTextureManager(events: Events) {
     });
 
     on(GetModelShDegree, async (): Promise<number> => {
-        const opts: SplatMeshOptions = fire(GetOptions);
-        if (opts.bigSceneMode) return 0; // 大场景不支持
-
         await promiseModelSplatCount;
         return splatModel.dataShDegree;
     });
@@ -187,6 +184,7 @@ export function setupSplatTextureManager(events: Events) {
             // 调色板
             if (!palettesUpdated && splatModel.palettes) {
                 fire(SplatUpdateShPalettesTexture, splatModel.palettes);
+                fire(SplatUpdateShDegree, splatModel.dataShDegree);
                 palettesUpdated = true;
             }
 
@@ -530,6 +528,7 @@ export function setupSplatTextureManager(events: Events) {
 
         // 视锥剔除
         const viewProjMatrix: Matrix4 = fire(GetViewProjectionMatrix);
+        const cameraPosition: Vector3 = fire(GetCameraPosition);
         extractFrustumPlanes(viewProjMatrix, frustumPlanes); // 更新视锥体平面
 
         const fnAddTargetLod = (splatTile: SplatTileNode, requireLevel: number, isFallback = false): number => {
@@ -577,40 +576,12 @@ export function setupSplatTextureManager(events: Events) {
             for (let distance of distances) {
                 if (distance < 0 || distance < node.radius) return -1; // 部分可见
             }
-            if (!node.fileKey) return 1; // 非文件节点不需继续判断
-
-            // 完全可见的文件节点，判断提示下载
-            const file = splatTiles.files[node.fileKey];
-            if (file.status) return 1; // 已下载不必继续
-
-            const nearDistance = Math.max(0, distances[0] - node.radius);
-            const farDistance = distances[0] + node.radius;
-
-            let nearLod = 0;
-            for (let i = 0; i < splatTiles.lodLevels; i++) {
-                if (nearDistance >= splatTiles.lodDistances[i]) {
-                    nearLod = i;
-                    break;
-                }
-            }
-            let farLod = 0;
-            for (let i = 0; i < splatTiles.lodLevels; i++) {
-                if (farDistance >= splatTiles.lodDistances[i]) {
-                    farLod = i;
-                    break;
-                }
-            }
-
-            if (nearLod <= file.lod && file.lod <= farLod) {
-                file.currentDistance = nearDistance;
-                todoDownload(file); // 提示下载
-            }
             return 1; // 完全可见
         };
 
         const calcRequireLodLevel = (leafNode: SplatTileNode) => {
             let requireLevel = -1;
-            const distance = computeSplatNodeDistance(frustumPlanes, leafNode);
+            const distance = computeSplatNodeCameraDistance(cameraPosition, leafNode);
             for (let i = 0; i < splatTiles.lodDistances.length; i++) {
                 if (!leafNode.lods[i]) continue; // 该块无此lod数据
 
@@ -755,7 +726,7 @@ export function setupSplatTextureManager(events: Events) {
 
         const cuts = `${visibleCuts}/${leafs.length}`;
         const lodTotalCount = splatTiles.totalCount;
-        fire(Information, { lodTotalCount, cuts, visibleSplatCount: texture.visibleSplatCount, modelSplatCount: texture.modelSplatCount });
+        fire(Information, { scene: 'large', lodTotalCount, cuts, visibleSplatCount: texture.visibleSplatCount, modelSplatCount: texture.modelSplatCount });
 
         // 所有顶层级下载完后起飞
         if (!flyOnceDone) {

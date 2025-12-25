@@ -170,6 +170,8 @@ export async function loadSpxLod(model: SplatModel, splatTiles: SplatTiles, spla
                     splatFile.downloadCount += spxBlock.splatCount;
                     model.downloadSplatCount += spxBlock.splatCount;
                 } else if (spxBlock.palettes) {
+                    model.palettes && console.warn('duplicate palettes');
+                    model.dataShDegree = splatFile.spxHeader.ShDegree;
                     model.palettes = spxBlock.palettes; // 调色板
                 } else {
                     // ignore
@@ -205,7 +207,6 @@ export async function loadSpxLod(model: SplatModel, splatTiles: SplatTiles, spla
             splatFile.status |= DataStatus.FetchFailed;
             splatFile.abortController.abort();
         }
-        console.info(splatFile.url);
     } finally {
         splatFile.status |= DataStatus.FetchDone;
         splatTiles.fetchSet.delete(splatFile.url);

@@ -821,3 +821,15 @@ export function computeSplatNodeDistance(planes: Plane[], node: SplatTileNode) {
     const distance = planes[0].distanceToPoint(v3Center); // 按近截面计算距离
     return distance >= 0 ? Math.max(0, distance - node.radius) : Math.min(0, distance + node.radius);
 }
+export function computeSplatNodeCameraDistance(cameraPosition: Vector3, node: SplatTileNode) {
+    const distance = v3Tmp.fromArray(node.center).distanceTo(cameraPosition);
+    return distance >= 0 ? Math.max(0, distance - node.radius) : Math.min(0, distance + node.radius);
+}
+
+export function getUrl(url: string, baseUrl: string): string {
+    try {
+        return baseUrl ? new URL(url, baseUrl).href : url;
+    } catch (e) {
+        return url;
+    }
+}

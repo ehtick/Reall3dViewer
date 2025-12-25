@@ -3,12 +3,11 @@
 // ==============================================
 import { RunLoopByFrame, SplatTexdataManagerAddSplatLod, LodDownloadManagerAddLodMeta } from '../events/EventConstants';
 import { Events } from '../events/Events';
-import { isMobile } from '../utils/consts/GlobalConstants';
-import { MetaData } from './ModelData';
+import { getUrl } from '../utils/CommonUtils';
 import { ModelOptions } from './ModelOptions';
 import { DataStatus, SplatFile, SplatTiles } from './SplatTiles';
 
-const MaxDownloadCount = isMobile ? 8 : 16;
+const MaxDownloadCount = 6;
 const splatFileSet = new Set<SplatFile>();
 
 export function todoDownload(splatFile: SplatFile) {
@@ -31,7 +30,7 @@ export function setupLodDownloadManager(events: Events) {
 
     on(LodDownloadManagerAddLodMeta, async (opts: ModelOptions) => {
         try {
-            const lodUrl = opts.baseUrl ? new URL(opts.url, opts.baseUrl).href : opts.url;
+            const lodUrl = getUrl(opts.url, opts.baseUrl);
             const res = await fetch(lodUrl, { mode: 'cors', credentials: 'omit', cache: 'reload' });
             if (res.status === 200) {
                 splatTiles = await res.json();
@@ -39,7 +38,7 @@ export function setupLodDownloadManager(events: Events) {
 
                 for (let key of Object.keys(splatTiles.files)) {
                     const file = splatTiles.files[key];
-                    file.url = new URL(file.url, lodUrl).href;
+                    file.url = getUrl(file.url, lodUrl);
                 }
             } else {
                 return console.error('lod scene file fetch failed, status:', res.status);
@@ -66,8 +65,7 @@ export function setupLodDownloadManager(events: Events) {
         let fetchingCnt = 0;
         let todoCnt = 0;
         let lod0Files: SplatFile[] = [];
-        for (let key of Object.keys(splatTiles.files)) {
-            let file = splatTiles.files[key];
+        for (let file of Object.values(splatTiles.files)) {
             if (file.status) {
                 file.status < DataStatus.FetchDone && fetchingCnt++;
             } else {
@@ -88,7 +86,7 @@ export function setupLodDownloadManager(events: Events) {
 
         // 调整优先顺序
         let todos = [...splatFileSet];
-        let dones = todos.filter(v => v.status);
+        let dones = todos.filter(v => v.status >= DataStatus.FetchDone);
         todos = todos.filter(v => !v.status);
         todos.sort((a, b) => a.currentDistance - b.currentDistance); // 从近到远排序
         todos = todos.slice(0, Math.min(MaxDownloadCount - fetchingCnt, todos.length)); // 截取近处限制数内节点

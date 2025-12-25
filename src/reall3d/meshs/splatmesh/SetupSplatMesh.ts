@@ -513,12 +513,9 @@ export function setupSplatMesh(events: Events) {
             material.uniformsNeedUpdate = true;
         });
         on(SplatUpdateShDegree, async (value: number) => {
-            if (fire(IsBigSceneMode)) return;
             const modelShDegree: number = await fire(GetModelShDegree);
-            if (value < 0) value = 0;
-            if (value > modelShDegree) value = modelShDegree;
-            currentDisplayShDegree = value;
-            material.uniforms[VarShDegree].value = value;
+            currentDisplayShDegree = Math.max(0, Math.min(value, modelShDegree));
+            material.uniforms[VarShDegree].value = currentDisplayShDegree;
             material.uniformsNeedUpdate = true;
             fire(Information, { shDegree: `${value} / max ${modelShDegree}` });
             fire(NotifyViewerNeedUpdate);
