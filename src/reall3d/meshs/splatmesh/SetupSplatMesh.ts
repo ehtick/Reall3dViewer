@@ -517,7 +517,7 @@ export function setupSplatMesh(events: Events) {
             currentDisplayShDegree = Math.max(0, Math.min(value, modelShDegree));
             material.uniforms[VarShDegree].value = currentDisplayShDegree;
             material.uniformsNeedUpdate = true;
-            fire(Information, { shDegree: `${value} / max ${modelShDegree}` });
+            fire(Information, { shDegree: `${currentDisplayShDegree} / max ${modelShDegree}` });
             fire(NotifyViewerNeedUpdate);
         });
         on(SplatUpdateFlagValue, (fvHide: number = 0, fvShow: number = 0) => {
