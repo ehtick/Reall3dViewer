@@ -3,6 +3,8 @@
 // ==============================================
 import { SpxHeader } from './ModelData';
 
+export const SplatLodJsonMagic = 'splat-lod';
+
 export interface SplatTiles {
     version: number;
     magic: string;

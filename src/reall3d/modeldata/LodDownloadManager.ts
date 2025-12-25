@@ -7,7 +7,7 @@ import { getUrl } from '../utils/CommonUtils';
 import { ModelOptions } from './ModelOptions';
 import { DataStatus, SplatFile, SplatTiles } from './SplatTiles';
 
-const MaxDownloadCount = 6;
+const MaxDownloadCount = 5; // 通常浏览器默认限制同一网站来源最多6个并发，这里留一个作余地
 const splatFileSet = new Set<SplatFile>();
 
 export function todoDownload(splatFile: SplatFile) {
@@ -82,7 +82,7 @@ export function setupLodDownloadManager(events: Events) {
             splatFile.status = DataStatus.WaitFetch; // 待下载
             fire(SplatTexdataManagerAddSplatLod, splatTiles, splatFile); // status会被更新
         }
-        if (lod0Files.length) return; // 让优先下载
+        if (lod0Files.length) return; // 可能内含调色板，让优先下载完
 
         // 调整优先顺序
         let todos = [...splatFileSet];
