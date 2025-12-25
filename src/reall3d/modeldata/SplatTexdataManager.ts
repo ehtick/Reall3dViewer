@@ -65,6 +65,7 @@ import { loadSog } from './loaders/SogLoader';
 import { setupLodDownloadManager, todoDownload } from './LodDownloadManager';
 import { loadSpxLod } from './loaders/SpxLodLoader';
 import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
+import { hashString } from 'three/src/nodes/core/NodeUtils.js';
 
 /**
  * 纹理数据管理
@@ -78,6 +79,7 @@ export function setupSplatTextureManager(events: Events) {
 
     let runCounter = 0;
     let flyOnceDone = false;
+    let lastLodHash: number = 0;
 
     let textWatermarkData: Uint8Array = null; // 水印数据
     let splatModel: SplatModel;
@@ -657,6 +659,22 @@ export function setupSplatTextureManager(events: Events) {
                 reduceLod(maxLod);
             }
         }
+
+        // 检查是否忽略
+        const chks = reduceLeafs.filter(v => v.currentRenderLod > 0);
+        chks.sort((a, b) => {
+            if (a.lods[a.currentRenderLod].fileKey === b.lods[a.currentRenderLod].fileKey) {
+                return a.lods[a.currentRenderLod].offset - b.lods[a.currentRenderLod].offset;
+            }
+            return a.lods[a.currentRenderLod].fileKey < b.lods[a.currentRenderLod].fileKey ? -1 : 1;
+        });
+        let chkKey = '';
+        for (let node of chks) {
+            chkKey += node.lods[node.currentRenderLod].fileKey + ',' + node.lods[node.currentRenderLod].offset + ';';
+        }
+        const lodHash = hashString(chkKey);
+        if (!!fire(GetSplatActivePoints) && lastLodHash === lodHash) return;
+        lastLodHash = lodHash;
 
         // 合并
         const sysTime = Date.now();
