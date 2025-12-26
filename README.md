@@ -26,7 +26,7 @@
 - [x] Support per-model settings via `*.meta.json` file
 - [x] Built-in rendering quality levels with adaptive optimization (v2.0.0+ 🌟)
 - [x] Built-in optimized sorting types to fine-tune performance for diverse scenarios (v2.0.0+ 🌟)
-- [x] Support large-scene rendering using precomputed LOD (v2.4.0+ 🌟)
+- [x] Support large-scene rendering using preset LOD (v2.4.0+ 🌟)
 
 
 #### Live demo
