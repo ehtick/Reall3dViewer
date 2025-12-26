@@ -21,12 +21,12 @@
 ## Features
 - [x] Support formats: `.ply`, `.splat`, `.spx`, `.spz(v2,v3)`, `.sog(v1,v2)`
 - [x] Support mark and measurement tools
-- [x] Support text watermarking
 - [x] Support 1st to 3rd degree spherical harmonics
 - [x] Support map-integrated model rendering
 - [x] Support per-model settings via `*.meta.json` file
 - [x] Built-in rendering quality levels with adaptive optimization (v2.0.0+ 🌟)
 - [x] Built-in optimized sorting types to fine-tune performance for diverse scenarios (v2.0.0+ 🌟)
+- [x] Support large-scene rendering using precomputed LOD (v2.4.0+ 🌟)
 
 
 #### Live demo
