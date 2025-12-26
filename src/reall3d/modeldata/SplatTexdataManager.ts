@@ -66,6 +66,7 @@ import { setupLodDownloadManager, todoDownload } from './LodDownloadManager';
 import { loadSpxLod } from './loaders/SpxLodLoader';
 import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
 import { hashString } from 'three/src/nodes/core/NodeUtils.js';
+import { loadSogLod } from './loaders/SogLodLoader';
 
 /**
  * 纹理数据管理
@@ -526,6 +527,7 @@ export function setupSplatTextureManager(events: Events) {
 
         const v3Tmp = new Vector3();
         const splatTiles = splatModel.splatTiles;
+
         if (!splatTiles.topLodReady) return;
 
         // 视锥剔除
@@ -534,6 +536,15 @@ export function setupSplatTextureManager(events: Events) {
         extractFrustumPlanes(viewProjMatrix, frustumPlanes); // 更新视锥体平面
 
         const fnAddTargetLod = (splatTile: SplatTileNode, requireLevel: number, isFallback = false): number => {
+            if (!splatTiles.lodTargets.includes(requireLevel)) {
+                if (requireLevel >= 0) {
+                    fnAddTargetLod(splatTile, requireLevel - 1, true);
+                } else {
+                    splatTile.currentRenderLod = -1; // 找不到
+                }
+                return splatTile.currentRenderLod;
+            }
+
             !isFallback && todoDownload(splatTiles.files[splatTile.lods[requireLevel]?.fileKey]);
 
             const tileMapping = splatTile.lods[requireLevel];
@@ -588,7 +599,7 @@ export function setupSplatTextureManager(events: Events) {
                 if (!leafNode.lods[i]) continue; // 该块无此lod数据
 
                 if (distance >= splatTiles.lodDistances[i]) {
-                    requireLevel = i;
+                    requireLevel = splatTiles.lodTargets[i];
                     break;
                 }
             }
@@ -656,6 +667,10 @@ export function setupSplatTextureManager(events: Events) {
                 for (const reduceNode of reduceLeafs) {
                     maxLod = Math.max(maxLod, reduceNode.currentRenderLod);
                 }
+                if (maxLod < 1) {
+                    console.warn('invalid tiles');
+                    break;
+                }
                 reduceLod(maxLod);
             }
         }
@@ -663,14 +678,15 @@ export function setupSplatTextureManager(events: Events) {
         // 检查是否忽略
         const chks = reduceLeafs.filter(v => v.currentRenderLod > 0);
         chks.sort((a, b) => {
-            if (a.lods[a.currentRenderLod].fileKey === b.lods[a.currentRenderLod].fileKey) {
-                return a.lods[a.currentRenderLod].offset - b.lods[a.currentRenderLod].offset;
+            if (a.lods[a.currentRenderLod].fileKey === b.lods[b.currentRenderLod].fileKey) {
+                return a.lods[a.currentRenderLod].offset - b.lods[b.currentRenderLod].offset;
             }
-            return a.lods[a.currentRenderLod].fileKey < b.lods[a.currentRenderLod].fileKey ? -1 : 1;
+            return a.lods[a.currentRenderLod].fileKey < b.lods[b.currentRenderLod].fileKey ? -1 : 1;
         });
         let chkKey = '';
         for (let node of chks) {
-            chkKey += node.lods[node.currentRenderLod].fileKey + ',' + node.lods[node.currentRenderLod].offset + ';';
+            let oMapping = node.lods[node.currentRenderLod];
+            chkKey += `${oMapping.fileKey},${oMapping.offset};`;
         }
         const lodHash = hashString(chkKey);
         if (!!fire(GetSplatActivePoints) && lastLodHash === lodHash) return;
@@ -758,7 +774,7 @@ export function setupSplatTextureManager(events: Events) {
         // 缓存整理
         if (!splatModel?.splatTiles) return;
 
-        const maxCacheCount = isMobile ? splatModel.splatTiles.mobileCacheCount || 600_0000 : splatModel.splatTiles.pcCacheCount || 3000_0000;
+        const maxCacheCount = isMobile ? splatModel.splatTiles.mobileLodCacheCount || 600_0000 : splatModel.splatTiles.pcLodCacheCount || 3000_0000;
         if (splatModel.downloadSplatCount < maxCacheCount) return;
 
         if (runCounter++ % 6 == 0 && splatModel.downloadSplatCount > maxCacheCount) {
@@ -923,7 +939,13 @@ export function setupSplatTextureManager(events: Events) {
         !splatModel.splatTiles && (splatModel.splatTiles = splatTiles);
         fnResolveModelSplatCount(splatTiles.totalCount);
 
-        loadSpxLod(splatModel, splatTiles, splatFile);
+        if (splatFile.url.endsWith('.spx')) {
+            loadSpxLod(splatModel, splatTiles, splatFile);
+        } else if (splatFile.url.endsWith('.sog') || splatFile.url.endsWith('meta.json')) {
+            loadSogLod(splatModel, splatTiles, splatFile);
+        } else {
+            console.error('Unsupported format:', splatFile.url);
+        }
     }
 
     on(SplatTexdataManagerAddModel, (opts: ModelOptions, meta: MetaData) => add(opts, meta));

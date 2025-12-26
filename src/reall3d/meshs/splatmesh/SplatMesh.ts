@@ -200,8 +200,8 @@ export class SplatMesh extends Mesh {
             atOpts.distance = meta.audio?.distance;
         }
         that.audioText = new AudioText(atOpts);
-        if (meta.url?.endsWith('.lod.json')) {
-            that.events.fire(LodDownloadManagerAddLodMeta, opts);
+        if (meta.url?.endsWith('.lod.json') || meta.url?.endsWith('lod-meta.json')) {
+            that.events.fire(LodDownloadManagerAddLodMeta, opts, meta);
         } else {
             that.events.fire(SplatTexdataManagerAddModel, opts, meta);
         }

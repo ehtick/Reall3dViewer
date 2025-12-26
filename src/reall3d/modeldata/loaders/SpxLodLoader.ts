@@ -27,12 +27,9 @@ export async function loadSpxLod(model: SplatModel, splatTiles: SplatTiles, spla
         const contentLength = parseInt(req.headers.get('content-length') || '0');
         const dataSize = contentLength - SpxHeaderSize;
         if (dataSize < SplatDataSize20) {
-            console.warn('data empty', model.opts.url);
             splatFile.status |= DataStatus.Invalid;
             return;
         }
-
-        model.fileSize += contentLength;
 
         let headChunks: Uint8Array[] = [];
         let headChunk = new Uint8Array(SpxHeaderSize);
@@ -86,7 +83,6 @@ export async function loadSpxLod(model: SplatModel, splatTiles: SplatTiles, spla
                 }
 
                 splatFile.spxHeader = h;
-                model.modelSplatCount += h.SplatCount;
                 model.dataShDegree = h.ShDegree;
                 headChunks = null;
                 headChunk = null;
@@ -200,7 +196,7 @@ export async function loadSpxLod(model: SplatModel, splatTiles: SplatTiles, spla
         }
     } catch (e) {
         if (e.name === 'AbortError') {
-            console.warn('Fetch Abort', model.opts.url);
+            console.warn('Fetch Abort', splatFile.url);
             splatFile.status |= DataStatus.FetchAborted;
         } else {
             console.error(e);

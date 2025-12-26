@@ -1,11 +1,13 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { RunLoopByFrame, SplatTexdataManagerAddSplatLod, LodDownloadManagerAddLodMeta } from '../events/EventConstants';
+import { RunLoopByFrame, SplatTexdataManagerAddSplatLod, LodDownloadManagerAddLodMeta, GetOptions } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { getUrl } from '../utils/CommonUtils';
+import { isMobile } from '../utils/consts/GlobalConstants';
+import { MetaData } from './ModelData';
 import { ModelOptions } from './ModelOptions';
-import { DataStatus, SplatFile, SplatTiles } from './SplatTiles';
+import { DataStatus, SplatFile, SplatLodJsonMagic, SplatTiles, traveSplatTree } from './SplatTiles';
 
 const MaxDownloadCount = 5; // 通常浏览器默认限制同一网站来源最多6个并发，这里留一个作余地
 const splatFileSet = new Set<SplatFile>();
@@ -28,18 +30,92 @@ export function setupLodDownloadManager(events: Events) {
         30,
     );
 
-    on(LodDownloadManagerAddLodMeta, async (opts: ModelOptions) => {
+    on(LodDownloadManagerAddLodMeta, async (opts: ModelOptions, sceneMeta: MetaData) => {
+        const lodUrl = getUrl(opts.url, opts.baseUrl);
+
+        if (lodUrl.endsWith('lod-meta.json')) {
+            let lodMeta: any = null;
+            try {
+                const res = await fetch(lodUrl, { mode: 'cors', credentials: 'omit', cache: 'reload' });
+                if (res.status === 200) {
+                    lodMeta = await res.json();
+                } else {
+                    return console.error('lod scene file fetch failed, status:', res.status);
+                }
+            } catch (e) {
+                return console.error('lod scene file fetch failed', e.message);
+            }
+
+            const files = {};
+            for (let i = 0; i < lodMeta.filenames.length; i++) {
+                files[i + ''] = { url: lodMeta.filenames[i] };
+            }
+            lodMeta.files = files;
+            delete lodMeta.filenames;
+
+            let totalCount = 0;
+            let lodLevels: number = lodMeta.lodLevels;
+            traveSplatTree(lodMeta.tree, node => {
+                const nd = node as any;
+                const { center, radius } = calcCenterRadius(nd.bound.min, nd.bound.max);
+                nd.center = center;
+                nd.radius = radius;
+                delete nd.bound;
+
+                if (nd.lods) {
+                    const lods = [];
+                    for (let key of Object.keys(nd.lods)) {
+                        const lod = lodLevels - parseInt(key) - 1;
+                        const obj = nd.lods[key];
+                        const fileKey = obj.file + '';
+                        lods[lod] = { fileKey, offset: obj.offset, count: obj.count };
+                        files[fileKey].lod = lod;
+                        totalCount += obj.count;
+                    }
+                    nd.lods = lods;
+                }
+            });
+
+            splatTiles = lodMeta;
+            splatTiles.version = 1;
+            splatTiles.magic = SplatLodJsonMagic;
+            splatTiles.totalCount = totalCount;
+            splatTiles.pcLodTargets = sceneMeta.pcLodTargets;
+            splatTiles.mobileLodTargets = sceneMeta.mobileLodTargets;
+            splatTiles.pcLodDistances = sceneMeta.pcLodDistances;
+            splatTiles.mobileLodDistances = sceneMeta.mobileLodDistances;
+            splatTiles.pcLodCacheCount = sceneMeta.pcLodCacheCount;
+            splatTiles.mobileLodCacheCount = sceneMeta.mobileLodCacheCount;
+
+            splatTiles.fetchSet = new Set<string>();
+            splatTiles.lodTargets = getLodTargets(splatTiles, true);
+            splatTiles.lodDistances = getLodDistances(splatTiles);
+
+            for (let key of Object.keys(splatTiles.files)) {
+                const file = splatTiles.files[key];
+                file.url = getUrl(file.url, lodUrl);
+            }
+            splatTiles.environment && (splatTiles.environment = getUrl(splatTiles.environment, lodUrl));
+
+            // console.log(JSON.parse(JSON.stringify(splatTiles)));
+            return;
+        }
+
         try {
-            const lodUrl = getUrl(opts.url, opts.baseUrl);
             const res = await fetch(lodUrl, { mode: 'cors', credentials: 'omit', cache: 'reload' });
             if (res.status === 200) {
                 splatTiles = await res.json();
                 splatTiles.fetchSet = new Set<string>();
+                splatTiles.lodTargets = getLodTargets(splatTiles);
+                splatTiles.lodDistances = getLodDistances(splatTiles);
 
                 for (let key of Object.keys(splatTiles.files)) {
                     const file = splatTiles.files[key];
                     file.url = getUrl(file.url, lodUrl);
                 }
+                splatTiles.environment && (splatTiles.environment = getUrl(splatTiles.environment, lodUrl));
+
+                // console.log(JSON.parse(JSON.stringify(splatTiles)));
             } else {
                 return console.error('lod scene file fetch failed, status:', res.status);
             }
@@ -103,4 +179,55 @@ export function setupLodDownloadManager(events: Events) {
             splatFileSet.delete(file);
         }
     }
+
+    function getLodTargets(splatTiles: SplatTiles, isLodMeta = false): number[] {
+        let lodTargets = [...new Set((isMobile ? splatTiles.mobileLodTargets : splatTiles.pcLodTargets) || [])];
+        if (lodTargets && lodTargets.length > 1 && lodTargets.length < splatTiles.lodLevels) {
+            if (isLodMeta) {
+                for (let i = 0; i < lodTargets.length; i++) {
+                    lodTargets[i] = splatTiles.lodLevels - lodTargets[i] - 1;
+                }
+            }
+        } else {
+            lodTargets = [];
+            for (let i = 0; i < splatTiles.lodLevels; i++) {
+                lodTargets.push(i);
+            }
+        }
+
+        lodTargets.sort((a, b) => a - b); // 升序
+        lodTargets[0] = 0;
+        return lodTargets;
+    }
+
+    function getLodDistances(splatTiles: SplatTiles): number[] {
+        const tgtLodCount = splatTiles.lodTargets.length;
+        let lodDistances = [...new Set((isMobile ? splatTiles.mobileLodDistances : splatTiles.pcLodDistances) || [])];
+
+        if (lodDistances.length == tgtLodCount) {
+            lodDistances.sort((a, b) => b - a); // 降序
+            lodDistances[lodDistances.length - 1] = 0; // 尾部确保0
+        } else if (lodDistances.length == tgtLodCount - 1) {
+            lodDistances.sort((a, b) => b - a); // 降序
+            lodDistances.push(0);
+        } else {
+            // 设定有误就重置
+            lodDistances = [];
+            for (let i = tgtLodCount; i > 1; i--) {
+                lodDistances.push(i * 20);
+            }
+            lodDistances.push(0);
+        }
+
+        return lodDistances;
+    }
+}
+
+function calcCenterRadius(mins: any, maxs: any) {
+    const center = [(maxs[0] + mins[0]) / 2, (maxs[1] + mins[1]) / 2, (maxs[2] + mins[2]) / 2];
+    const sizeX = maxs[0] - mins[0];
+    const sizeY = maxs[1] - mins[1];
+    const sizeZ = maxs[2] - mins[2];
+    const radius = Math.sqrt(sizeX * sizeX + sizeY * sizeY + sizeZ * sizeZ) / 2;
+    return { center, radius };
 }

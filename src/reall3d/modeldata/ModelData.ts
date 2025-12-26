@@ -145,7 +145,7 @@ export class SplatModel {
                 that.opts.format = 'ply';
             } else if (opts.url?.endsWith('.spz')) {
                 that.opts.format = 'spz';
-            } else if (opts.url?.endsWith('.sog')) {
+            } else if (opts.url?.endsWith('.sog') || opts.url?.endsWith('meta.json')) {
                 that.opts.format = 'sog';
             } else {
                 console.error('unknown format!');
@@ -275,4 +275,24 @@ export interface MetaData {
     WGS84?: number[];
     /** Model URL */
     url?: string;
+
+    /**
+     * Target LOD levels to select from available data levels.
+     * For example, if data contains levels 0~6, you may select only three levels [0,1,6] for actual use.
+     * Defaults to all available levels in the data.
+     */
+    pcLodTargets?: number[];
+    mobileLodTargets?: number[];
+
+    /**
+     * Distance thresholds to switch between LOD levels.
+     * Different camera distances determine which LOD level to render.
+     * For three LOD levels, define two split points [100,50],
+     * meaning: beyond 100 units uses lowest detail, within 50 units uses highest detail.
+     */
+    pcLodDistances?: number[];
+    mobileLodDistances?: number[];
+
+    mobileLodCacheCount?: number;
+    pcLodCacheCount?: number;
 }
