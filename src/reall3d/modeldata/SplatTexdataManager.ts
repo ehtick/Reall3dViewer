@@ -516,7 +516,8 @@ export function setupSplatTextureManager(events: Events) {
         const txtWatermarkData = textWatermarkData;
         const watermarkCount = splatModel.watermarkCount; // 待合并的水印数（模型数据部分）
         const textWatermarkCount = (txtWatermarkData?.byteLength || 0) / 32; // 待合并的水印数（可动态变化的文字水印部分）
-        const maxDataMergeCount = maxRenderCount - watermarkCount - textWatermarkCount; // 最大数据合并点数
+        const environmentCount = 0; // (splatModel.splatTiles.environment as SplatFile)?.downloadCount || 0;
+        const maxDataMergeCount = maxRenderCount - watermarkCount - textWatermarkCount - environmentCount; // 最大数据合并点数
 
         fire(UpdateFetchStatus, splatModel.splatTiles.fetchSet.size);
         fire(Information, { modelSplatCount: splatModel.downloadSplatCount + textWatermarkCount });
@@ -714,15 +715,21 @@ export function setupSplatTextureManager(events: Events) {
             }
         }
 
+        if (environmentCount) {
+            mergeSplatData.set((splatTiles.environment as SplatFile).downloadData.subarray(0, environmentCount * 32), mergeDataCount * 32);
+            mergeDataCount += environmentCount;
+        }
         if (watermarkCount) {
             mergeSplatData.set(splatModel.watermarkData.subarray(0, watermarkCount * 32), mergeDataCount * 32);
+            mergeDataCount += watermarkCount;
         }
         if (textWatermarkCount) {
             mergeSplatData.set(txtWatermarkData.subarray(0, textWatermarkCount * 32), (mergeDataCount + watermarkCount) * 32);
+            mergeDataCount += textWatermarkCount;
         }
 
         // 保险起见以最终数据数量为准
-        const totalRenderSplatCount = mergeDataCount + watermarkCount + textWatermarkCount;
+        const totalRenderSplatCount = mergeDataCount; // + watermarkCount + textWatermarkCount;
         const xyz = new Float32Array(totalRenderSplatCount * 3);
         const mins: number[] = [f32s[0], f32s[1], f32s[2]];
         const maxs: number[] = [f32s[0], f32s[1], f32s[2]];

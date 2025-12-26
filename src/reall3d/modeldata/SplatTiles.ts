@@ -17,7 +17,7 @@ export interface SplatTiles {
     // 总Splat数量
     totalCount: number;
     // 环境模型
-    environment?: string;
+    environment?: string | SplatFile;
     // 手机缓存Splat数量的阈值，高于此值时触发检查丢弃
     mobileLodCacheCount?: number;
     // PC缓存Splat数量的阈值，高于此值时触发检查丢弃
@@ -57,7 +57,7 @@ export interface SplatTiles {
 export interface SplatFile {
     fileKey: string;
     url: string;
-    lod: number;
+    lod?: number;
 
     // 状态
     status?: DataStatus;

@@ -95,7 +95,9 @@ export function setupLodDownloadManager(events: Events) {
                 const file = splatTiles.files[key];
                 file.url = getUrl(file.url, lodUrl);
             }
-            splatTiles.environment && (splatTiles.environment = getUrl(splatTiles.environment, lodUrl));
+            if (splatTiles.environment) {
+                splatTiles.environment = { fileKey: 'environment', url: getUrl(splatTiles.environment as string, lodUrl) };
+            }
 
             // console.log(JSON.parse(JSON.stringify(splatTiles)));
             return;
@@ -113,7 +115,9 @@ export function setupLodDownloadManager(events: Events) {
                     const file = splatTiles.files[key];
                     file.url = getUrl(file.url, lodUrl);
                 }
-                splatTiles.environment && (splatTiles.environment = getUrl(splatTiles.environment, lodUrl));
+                if (splatTiles.environment) {
+                    splatTiles.environment = { fileKey: 'environment', url: getUrl(splatTiles.environment as string, lodUrl) };
+                }
 
                 // console.log(JSON.parse(JSON.stringify(splatTiles)));
             } else {
@@ -141,6 +145,9 @@ export function setupLodDownloadManager(events: Events) {
         let fetchingCnt = 0;
         let todoCnt = 0;
         let lod0Files: SplatFile[] = [];
+        if ((splatTiles?.environment as SplatFile)?.url && !(splatTiles.environment as SplatFile).status) {
+            lod0Files.push(splatTiles.environment as SplatFile);
+        }
         for (let file of Object.values(splatTiles.files)) {
             if (file.status) {
                 file.status < DataStatus.FetchDone && fetchingCnt++;
