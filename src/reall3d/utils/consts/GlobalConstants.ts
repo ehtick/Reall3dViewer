@@ -6,7 +6,7 @@ export const ViewerVersion = 'v2.4-dev'; // Reall3dViewer 版本
 export const isMobile = !navigator.userAgent.includes('cloudphone') && navigator.userAgent.includes('Mobi');
 export const HalfChars = 'QWERTYUIOPLKJHGFDSAZXCVBNM1234567890qwertyuioplkjhgfdsazxcvbnm`~!@#$%^&*()-_=+\\|]}[{\'";::,<.>//? \t';
 export const BlankingTimeOfSmallScene = isMobile ? 600 : 300;
-export const BlankingTimeOfLargeScene = isMobile ? 2000 : 300;
+export const BlankingTimeOfLargeScene = isMobile ? 2000 : 500;
 export const BinHeaderSize = 140;
 export const SpxHeaderSize = 128;
 export const DataSize36 = 36;

@@ -10,7 +10,7 @@ import { MetaData } from './ModelData';
 import { ModelOptions } from './ModelOptions';
 import { DataStatus, SplatFile, SplatLodJsonMagic, SplatTiles, traveSplatTree } from './SplatTiles';
 
-const MaxDownloadCount = 5; // 通常浏览器默认限制同一网站来源最多6个并发，这里留一个作余地
+const MaxDownloadCount = 6; // 通常浏览器默认限制同一网站来源最多6个并发
 const splatFileSet = new Set<SplatFile>();
 
 export function todoDownload(splatFile: SplatFile) {
@@ -107,9 +107,18 @@ export function setupLodDownloadManager(events: Events) {
         try {
             const res = await fetch(lodUrl, { mode: 'cors', credentials: 'omit', cache: 'reload' });
             if (res.status === 200) {
-                splatTiles = await res.json();
+                let lodJson = await res.json();
+
+                splatTiles = lodJson;
+                splatTiles.pcLodTargets = sceneMeta.pcLodTargets;
+                splatTiles.mobileLodTargets = sceneMeta.mobileLodTargets;
+                splatTiles.pcLodDistances = sceneMeta.pcLodDistances;
+                splatTiles.mobileLodDistances = sceneMeta.mobileLodDistances;
+                splatTiles.pcLodCacheCount = sceneMeta.pcLodCacheCount;
+                splatTiles.mobileLodCacheCount = sceneMeta.mobileLodCacheCount;
+
                 splatTiles.fetchSet = new Set<string>();
-                splatTiles.lodTargets = getLodTargets(splatTiles);
+                splatTiles.lodTargets = getLodTargets(splatTiles, false);
                 splatTiles.lodDistances = getLodDistances(splatTiles);
 
                 for (let key of Object.keys(splatTiles.files)) {
@@ -205,6 +214,7 @@ export function setupLodDownloadManager(events: Events) {
 
         lodTargets.sort((a, b) => a - b); // 升序
         lodTargets[0] = 0;
+
         return lodTargets;
     }
 
@@ -226,6 +236,11 @@ export function setupLodDownloadManager(events: Events) {
             }
             lodDistances.push(0);
         }
+
+        delete splatTiles.pcLodTargets;
+        delete splatTiles.mobileLodTargets;
+        delete splatTiles.pcLodDistances;
+        delete splatTiles.mobileLodDistances;
 
         return lodDistances;
     }

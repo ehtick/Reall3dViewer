@@ -81,7 +81,7 @@ import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { setupMark } from '../meshs/mark/SetupMark';
 import { setupApi } from '../api/SetupApi';
 import { MarkData } from '../meshs/mark/data/MarkData';
-import { setupCommonUtils } from '../utils/CommonUtils';
+import { getUrl, setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
 import { isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/ModelData';
@@ -442,7 +442,7 @@ export class Reall3dViewer {
         }
 
         // 加载模型
-        that.splatMesh.addModel({ url: meta.url, baseUrl: sceneUrl }, meta);
+        that.splatMesh.addModel({ url: meta.url, baseUrl: getUrl(sceneUrl, location.href) }, meta);
         await fire(OnSetWaterMark, meta.watermark);
         fire(GetControls).updateRotateAxis();
     }

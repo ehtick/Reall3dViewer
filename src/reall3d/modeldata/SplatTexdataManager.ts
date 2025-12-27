@@ -84,8 +84,8 @@ export function setupSplatTextureManager(events: Events) {
 
     let textWatermarkData: Uint8Array = null; // 水印数据
     let splatModel: SplatModel;
-    let texture0: SplatTexdata = { index: 0, version: 0 };
-    let texture1: SplatTexdata = { index: 1, version: 0 };
+    let texture0: SplatTexdata = { index: 0, version: 0, activeTime: 0 };
+    let texture1: SplatTexdata = { index: 1, version: 0, activeTime: 0 };
     let mergeRunning: boolean = false;
     const isBigSceneMode: boolean = fire(IsBigSceneMode);
     let initBoundBox: boolean = false;
@@ -525,7 +525,7 @@ export function setupSplatTextureManager(events: Events) {
 
         let texture: SplatTexdata = texture0.version <= texture1.version ? texture0 : texture1;
         if (texture0.version && ((!texture.index && !texture1.active) || (texture.index && !texture0.active))) return; // 待渲染
-        if (Date.now() - texture.activeTime < BlankingTimeOfLargeScene) return;
+        if (Date.now() - Math.max(texture0.activeTime, texture1.activeTime) < BlankingTimeOfLargeScene) return;
 
         const v3Tmp = new Vector3();
         const splatTiles = splatModel.splatTiles;
@@ -585,8 +585,13 @@ export function setupSplatTextureManager(events: Events) {
                 distances[i] = distance;
             }
             node.currentVisible = true;
-            node.currentDistance = distances[0] >= 0 ? Math.max(0, distances[0] - node.radius) : Math.min(0, distances[0] + node.radius);
-            if (node.lods) return 1; // 叶节点按完全可见处理
+            if (node.lods) {
+                // 叶节点按完全可见处理
+                node.currentDistance = computeSplatNodeCameraDistance(cameraPosition, node);
+                return 1;
+            } else {
+                node.currentDistance = distances[0] >= 0 ? Math.max(0, distances[0] - node.radius) : Math.min(0, distances[0] + node.radius);
+            }
 
             for (let distance of distances) {
                 if (distance < 0 || distance < node.radius) return -1; // 部分可见
