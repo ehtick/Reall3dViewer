@@ -868,6 +868,7 @@ export function setupSplatTextureManager(events: Events) {
             for (let file of Object.values(splatModel.splatTiles.files)) {
                 file.abortController?.abort();
             }
+            (splatModel.splatTiles.environment as SplatFile)?.abortController?.abort();
         }
         splatModel = null;
         textWatermarkData = null;
