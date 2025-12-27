@@ -52,7 +52,7 @@ import { loadPly } from './loaders/PlyLoader';
 import { loadSplat } from './loaders/SplatLoader';
 import { loadSpx } from './loaders/SpxLoader';
 import { loadSpz } from './loaders/SpzLoader';
-import { computeSplatNodeCameraDistance, computeSplatNodeDistance, extractFrustumPlanes, isInverted, isNeedReload } from '../utils/CommonUtils';
+import { computeSplatNodeCameraDistance, extractFrustumPlanes, isInverted, isNeedReload } from '../utils/CommonUtils';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import {
     BlankingTimeOfLargeScene,
@@ -511,12 +511,13 @@ export function setupSplatTextureManager(events: Events) {
     async function mergeAndUploadLodLargeSceneData() {
         if (disposed) return;
 
+        const enableEnvironment: boolean = (fire(GetOptions) as SplatMeshOptions).enableEnvironment;
         const maxRenderCount = await fire(GetMaxRenderCount);
         const { texwidth, texheight } = fire(ComputeTextureWidthHeight, maxRenderCount);
         const txtWatermarkData = textWatermarkData;
         const watermarkCount = splatModel.watermarkCount; // 待合并的水印数（模型数据部分）
         const textWatermarkCount = (txtWatermarkData?.byteLength || 0) / 32; // 待合并的水印数（可动态变化的文字水印部分）
-        const environmentCount = 0; // (splatModel.splatTiles.environment as SplatFile)?.downloadCount || 0;
+        const environmentCount = enableEnvironment ? (splatModel.splatTiles.environment as SplatFile)?.downloadCount || 0 : 0;
         const maxDataMergeCount = maxRenderCount - watermarkCount - textWatermarkCount - environmentCount; // 最大数据合并点数
 
         fire(UpdateFetchStatus, splatModel.splatTiles.fetchSet.size);
@@ -752,7 +753,7 @@ export function setupSplatTextureManager(events: Events) {
         texture.txdata = ui32s;
         texture.xyz = xyz;
         texture.renderSplatCount = totalRenderSplatCount;
-        texture.visibleSplatCount = currentTotalVisibleCnt + splatModel.watermarkCount + textWatermarkCount;
+        texture.visibleSplatCount = currentTotalVisibleCnt + splatModel.watermarkCount + textWatermarkCount + environmentCount;
         texture.modelSplatCount = splatModel.downloadSplatCount + textWatermarkCount;
         texture.watermarkCount = watermarkCount + textWatermarkCount;
         texture.minX = mins[0];

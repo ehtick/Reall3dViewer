@@ -126,6 +126,11 @@ export interface SplatMeshOptions {
      * 最小可渲染透明度
      */
     minAlpha?: number;
+
+    /**
+     * Environment(skybox) flag. Defaults to false.
+     */
+    enableEnvironment?: boolean;
 }
 
 /** 过渡效果 */

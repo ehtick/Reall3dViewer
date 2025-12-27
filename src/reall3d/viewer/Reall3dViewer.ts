@@ -423,6 +423,8 @@ export class Reall3dViewer {
         // 重置
         const opts: Reall3dViewerOptions = { ...meta, ...(meta.cameraInfo || {}) };
         opts.bigSceneMode = meta.url.endsWith('.json') || !!meta.isLargeScene;
+        opts.enableEnvironment = (fire(GetOptions) as Reall3dViewerOptions).enableEnvironment;
+        opts.enableEnvironment && !meta.qualityLevel && (opts.qualityLevel = QualityLevels.L9);
         that.reset({ ...opts });
 
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;

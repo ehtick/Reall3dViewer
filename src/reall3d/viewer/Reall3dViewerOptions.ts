@@ -214,4 +214,9 @@ export interface Reall3dViewerOptions {
      * Auto play background audio (defaults to false)
      */
     autoPlayBgAudio?: boolean;
+
+    /**
+     * Environment(skybox) flag. Defaults to false.
+     */
+    enableEnvironment?: boolean;
 }

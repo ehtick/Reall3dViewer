@@ -3,6 +3,7 @@
 // ==============================================
 import { RunLoopByFrame, SplatTexdataManagerAddSplatLod, LodDownloadManagerAddLodMeta, GetOptions } from '../events/EventConstants';
 import { Events } from '../events/Events';
+import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { getUrl } from '../utils/CommonUtils';
 import { isMobile } from '../utils/consts/GlobalConstants';
 import { MetaData } from './ModelData';
@@ -95,7 +96,7 @@ export function setupLodDownloadManager(events: Events) {
                 const file = splatTiles.files[key];
                 file.url = getUrl(file.url, lodUrl);
             }
-            if (splatTiles.environment) {
+            if ((fire(GetOptions) as SplatMeshOptions).enableEnvironment && splatTiles.environment) {
                 splatTiles.environment = { fileKey: 'environment', url: getUrl(splatTiles.environment as string, lodUrl) };
             }
 
@@ -115,7 +116,7 @@ export function setupLodDownloadManager(events: Events) {
                     const file = splatTiles.files[key];
                     file.url = getUrl(file.url, lodUrl);
                 }
-                if (splatTiles.environment) {
+                if ((fire(GetOptions) as SplatMeshOptions).enableEnvironment && splatTiles.environment) {
                     splatTiles.environment = { fileKey: 'environment', url: getUrl(splatTiles.environment as string, lodUrl) };
                 }
 

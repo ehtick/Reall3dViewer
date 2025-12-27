@@ -219,6 +219,7 @@ export function copyGsViewerOptions(gsViewerOptions: Reall3dViewerOptions): Spla
     opts.sortType = gsViewerOptions.sortType;
     opts.disableTransitionEffectOnLoad = !!gsViewerOptions.disableTransitionEffectOnLoad;
     opts.transitionEffect = gsViewerOptions.transitionEffect || TransitionEffects.ModelCenterCirccle;
+    opts.enableEnvironment = !!gsViewerOptions.enableEnvironment;
 
     return opts;
 }
