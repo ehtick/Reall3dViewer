@@ -295,4 +295,9 @@ export interface MetaData {
 
     mobileLodCacheCount?: number;
     pcLodCacheCount?: number;
+
+    /**
+     * Environment(skybox) flag. Defaults to false.
+     */
+    enableEnvironment?: boolean;
 }

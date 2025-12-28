@@ -423,7 +423,7 @@ export class Reall3dViewer {
         // 重置
         const opts: Reall3dViewerOptions = { ...meta, ...(meta.cameraInfo || {}) };
         opts.bigSceneMode = meta.url.endsWith('.json') || !!meta.isLargeScene;
-        opts.enableEnvironment = (fire(GetOptions) as Reall3dViewerOptions).enableEnvironment;
+        opts.enableEnvironment = meta.enableEnvironment === undefined ? (fire(GetOptions) as Reall3dViewerOptions).enableEnvironment : !!meta.enableEnvironment;
         opts.enableEnvironment && !meta.qualityLevel && (opts.qualityLevel = QualityLevels.L9);
         that.reset({ ...opts });
 
