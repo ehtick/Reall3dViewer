@@ -40,7 +40,7 @@ Fixed-length header for format identification, containing bounding box data for 
 |             |     bit 5 | Flag 6: Reserved      | Reserved |
 |             |     bit 6 | Flag 7: Reserved      | Reserved |
 |             |     bit 7 | Flag 8: Large Scene   | Default small scene `0` |
-| 54          | uint8     | LOD                   | Max LOD of Large Scene                             |
+| 54          | uint8     | Reserved              | Reserved                         |
 | 55          | uint8     | Reserved              | Reserved                                 |
 | 56–63       | -         | Reserved              | Reserved                                        |
 | 64–123      | ASCII     | Comment               | Maximum 60 ASCII characters                    |
