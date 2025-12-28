@@ -273,7 +273,8 @@ export interface MetaData {
     transform?: number[];
     /** Geolocation (EPSG:4326 WGS 84) */
     WGS84?: number[];
-    /** Model URL */
+
+    /** Model URL | lod-meta.json | *.lod.json */
     url?: string;
 
     /**
