@@ -10,7 +10,7 @@ import { MetaData } from './ModelData';
 import { ModelOptions } from './ModelOptions';
 import { DataStatus, SplatFile, SplatLodJsonMagic, SplatTiles, traveSplatTree } from './SplatTiles';
 
-const MaxDownloadCount = 6; // 通常浏览器默认限制同一网站来源最多6个并发
+const MaxDownloadCount = 7;
 const splatFileSet = new Set<SplatFile>();
 
 export function todoDownload(splatFile: SplatFile) {
