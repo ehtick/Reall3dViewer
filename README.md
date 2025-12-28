@@ -79,6 +79,10 @@ npm install @reall3d/reall3dviewer
 const viewer = new Reall3dViewer({ root: '#gsviewer' });
 viewer.addModel(`https://reall3d.com/demo-models/yz.spx`);
 
+# preset-lod rendering
+const viewer = new Reall3dViewer({ root: '#gsviewer' });
+viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
+
 # use splat mesh
 const splatMesh = new SplatMesh({ renderer, scene, controls});
 splatMesh.addModel({ url: 'https://reall3d.com/demo-models/yz.spx' });
