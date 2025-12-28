@@ -397,7 +397,7 @@ export class Reall3dViewer {
     }
 
     /**
-     * 添加场景
+     * 添加大场景
      * @param sceneUrl 场景地址
      */
     public async addScene(sceneUrl: string) {
@@ -443,7 +443,7 @@ export class Reall3dViewer {
 
         // 加载模型
         that.splatMesh.addModel({ url: meta.url, baseUrl: getUrl(sceneUrl, location.href) }, meta);
-        await fire(OnSetWaterMark, meta.watermark);
+        await fire(OnSetWaterMark, meta.watermark || meta.name);
         fire(GetControls).updateRotateAxis();
     }
 
@@ -530,7 +530,7 @@ export class Reall3dViewer {
             await fire(OnLoadAndRenderObj, modelOpts.url);
         } else {
             this.splatMesh.addModel(modelOpts, meta);
-            await fire(OnSetWaterMark, meta.watermark);
+            await fire(OnSetWaterMark, meta.watermark || meta.name);
         }
 
         // @ts-ignore
