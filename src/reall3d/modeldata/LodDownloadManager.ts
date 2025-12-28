@@ -32,7 +32,7 @@ export function setupLodDownloadManager(events: Events) {
     );
 
     on(LodDownloadManagerAddLodMeta, async (opts: ModelOptions, sceneMeta: MetaData) => {
-        const lodUrl = getUrl(opts.url, opts.baseUrl);
+        const lodUrl = getUrl(opts.url, /^(http:|https:)/.test(sceneMeta.url) ? sceneMeta.url : opts.baseUrl);
 
         if (lodUrl.endsWith('lod-meta.json')) {
             let lodMeta: any = null;
