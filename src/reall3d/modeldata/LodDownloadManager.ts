@@ -199,7 +199,7 @@ export function setupLodDownloadManager(events: Events) {
 
     function getLodTargets(splatTiles: SplatTiles, isLodMeta = false): number[] {
         let lodTargets = [...new Set((isMobile ? splatTiles.mobileLodTargets : splatTiles.pcLodTargets) || [])];
-        if (lodTargets && lodTargets.length > 1 && lodTargets.length < splatTiles.lodLevels) {
+        if (lodTargets && lodTargets.length > 0 && lodTargets.length < splatTiles.lodLevels) {
             if (isLodMeta) {
                 for (let i = 0; i < lodTargets.length; i++) {
                     lodTargets[i] = splatTiles.lodLevels - lodTargets[i] - 1;
@@ -213,7 +213,6 @@ export function setupLodDownloadManager(events: Events) {
         }
 
         lodTargets.sort((a, b) => a - b); // 升序
-        lodTargets[0] = 0;
 
         return lodTargets;
     }
