@@ -542,7 +542,7 @@ export function setupSplatTextureManager(events: Events) {
                 if (requireLevel >= 0) {
                     fnAddTargetLod(splatTile, requireLevel - 1, true);
                 } else {
-                    splatTile.currentRenderLod = -1; // 找不到
+                    splatTile.currentRenderLod = -1;
                 }
                 return splatTile.currentRenderLod;
             }
@@ -554,7 +554,7 @@ export function setupSplatTextureManager(events: Events) {
                 if (requireLevel >= 0) {
                     fnAddTargetLod(splatTile, requireLevel - 1, true);
                 } else {
-                    splatTile.currentRenderLod = -1; // 找不到
+                    splatTile.currentRenderLod = -1;
                 }
             } else {
                 const file = splatTiles.files[tileMapping.fileKey];
@@ -564,7 +564,7 @@ export function setupSplatTextureManager(events: Events) {
                     if (requireLevel >= 0) {
                         fnAddTargetLod(splatTile, requireLevel - 1, true);
                     } else {
-                        splatTile.currentRenderLod = -1; // 找不到
+                        splatTile.currentRenderLod = -1;
                     }
                 }
             }
@@ -687,7 +687,7 @@ export function setupSplatTextureManager(events: Events) {
 
         // 检查是否忽略
         if (coarsestTooLarge) {
-            leafs.sort((a, b) => (a.currentVisible ? -1 : b.currentVisible ? 1 : a.currentDistance - b.currentDistance)); // 可见、距离升序
+            leafs.sort((a, b) => (a.currentVisible ? -1 : b.currentVisible ? 1 : a.currentDistance - b.currentDistance));
             let cnt = 0;
             let total = environmentCount + watermarkCount + textWatermarkCount;
             for (let node of leafs) {
