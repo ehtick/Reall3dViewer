@@ -67,6 +67,7 @@ import { loadSpxLod } from './loaders/SpxLodLoader';
 import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
 import { hashString } from 'three/src/nodes/core/NodeUtils.js';
 import { loadSogLod } from './loaders/SogLodLoader';
+import { loadSpzLod } from './loaders/SpzLodLoader';
 
 /**
  * 纹理数据管理
@@ -973,6 +974,8 @@ export function setupSplatTextureManager(events: Events) {
 
         if (splatFile.url.endsWith('.spx')) {
             loadSpxLod(splatModel, splatTiles, splatFile);
+        } else if (splatFile.url.endsWith('.spz')) {
+            loadSpzLod(splatModel, splatTiles, splatFile);
         } else if (splatFile.url.endsWith('.sog') || splatFile.url.endsWith('meta.json')) {
             loadSogLod(splatModel, splatTiles, splatFile);
         } else {
