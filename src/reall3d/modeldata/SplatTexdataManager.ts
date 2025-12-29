@@ -638,6 +638,7 @@ export function setupSplatTextureManager(events: Events) {
         // 数量检查
         let sumCurrentSplatCount = 0;
         let leafs: SplatTileNode[] = []; // 所有叶节点
+        let targetLeafs: SplatTileNode[] = leafs;
         let reduceLeafs: SplatTileNode[] = []; // 降级处理时的目标范围
         let visibleCuts = 0;
         traveSplatTree(splatTiles.tree, leaf => {
@@ -650,6 +651,7 @@ export function setupSplatTextureManager(events: Events) {
         });
         let currentTotalVisibleCnt = visibleCuts > 0 ? sumCurrentSplatCount : 0;
 
+        let coarsestTooLarge = false;
         if (sumCurrentSplatCount > maxDataMergeCount) {
             const reduceLod = (tgtLod: number) => {
                 for (let i = 0; i < reduceLeafs.length; i++) {
@@ -675,7 +677,8 @@ export function setupSplatTextureManager(events: Events) {
                     maxLod = Math.max(maxLod, reduceNode.currentRenderLod);
                 }
                 if (maxLod < 1) {
-                    console.warn('invalid tiles');
+                    console.warn('Coarsest LOD data is too large');
+                    coarsestTooLarge = true;
                     break;
                 }
                 reduceLod(maxLod);
@@ -683,21 +686,36 @@ export function setupSplatTextureManager(events: Events) {
         }
 
         // 检查是否忽略
-        const chks = reduceLeafs.filter(v => v.currentRenderLod > 0);
-        chks.sort((a, b) => {
-            if (a.lods[a.currentRenderLod].fileKey === b.lods[b.currentRenderLod].fileKey) {
-                return a.lods[a.currentRenderLod].offset - b.lods[b.currentRenderLod].offset;
+        if (coarsestTooLarge) {
+            leafs.sort((a, b) => (a.currentVisible ? -1 : b.currentVisible ? 1 : a.currentDistance - b.currentDistance)); // 可见、距离升序
+            let cnt = 0;
+            let total = environmentCount + watermarkCount + textWatermarkCount;
+            for (let node of leafs) {
+                total += node.lods[0]?.count || 0;
+                if (total > maxDataMergeCount) {
+                    break;
+                }
+                cnt++;
             }
-            return a.lods[a.currentRenderLod].fileKey < b.lods[b.currentRenderLod].fileKey ? -1 : 1;
-        });
-        let chkKey = '';
-        for (let node of chks) {
-            let oMapping = node.lods[node.currentRenderLod];
-            chkKey += `${oMapping.fileKey},${oMapping.offset};`;
+            targetLeafs = leafs.slice(0, cnt);
+            lastLodHash = hashString(Date.now() + '');
+        } else {
+            const chks = reduceLeafs.filter(v => v.currentRenderLod > 0);
+            chks.sort((a, b) => {
+                if (a.lods[a.currentRenderLod].fileKey === b.lods[b.currentRenderLod].fileKey) {
+                    return a.lods[a.currentRenderLod].offset - b.lods[b.currentRenderLod].offset;
+                }
+                return a.lods[a.currentRenderLod].fileKey < b.lods[b.currentRenderLod].fileKey ? -1 : 1;
+            });
+            let chkKey = '';
+            for (let node of chks) {
+                let oMapping = node.lods[node.currentRenderLod];
+                chkKey += `${oMapping.fileKey},${oMapping.offset};`;
+            }
+            const lodHash = hashString(chkKey);
+            if (!!fire(GetSplatActivePoints) && lastLodHash === lodHash) return;
+            lastLodHash = lodHash;
         }
-        const lodHash = hashString(chkKey);
-        if (!!fire(GetSplatActivePoints) && lastLodHash === lodHash) return;
-        lastLodHash = lodHash;
 
         // 合并
         const sysTime = Date.now();
@@ -710,7 +728,7 @@ export function setupSplatTextureManager(events: Events) {
         let mergeDataCount = 0;
 
         if (visibleCuts > 0) {
-            for (let node of leafs) {
+            for (let node of targetLeafs) {
                 const tileMapping = node.lods[node.currentRenderLod];
                 if (!tileMapping) continue;
 

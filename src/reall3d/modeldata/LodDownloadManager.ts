@@ -140,11 +140,18 @@ export function setupLodDownloadManager(events: Events) {
 
     function checkTopLodDownloadStatus() {
         if (splatTiles.topLodReady) return;
+        let ready = true;
+        let cnt = 0;
         for (let key of Object.keys(splatTiles.files)) {
             let file = splatTiles.files[key];
-            if (file.lod === 0 && !file.downloadData) return;
+            if (file.lod === 0) {
+                if (++cnt > 4) {
+                    return (splatTiles.topLodReady = true);
+                }
+                !file.downloadData && (ready = false);
+            }
         }
-        splatTiles.topLodReady = true;
+        splatTiles.topLodReady = ready;
     }
 
     function checkDownload() {
