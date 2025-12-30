@@ -243,6 +243,10 @@ export interface MetaData {
     flyTargets?: number[];
     /** Fly duration */
     flyDuration?: number;
+    /** Enable joystick, default to false */
+    pcEnableJoystick?: boolean;
+    /** Enable joystick, default to false */
+    mobileEnableJoystick?: boolean;
 
     /** Audio */
     audio?: any;

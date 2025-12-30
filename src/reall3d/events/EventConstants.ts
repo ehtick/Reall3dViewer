@@ -469,6 +469,10 @@ export const GetRenderQualityLevel = i++;
 export const GetSortType = i++;
 /** 更新排序类型 */
 export const UpdateSortType = i++;
+/** 显示虚拟摇杆 */
+export const ShowJoystick = i++;
+/** 销毁虚拟摇杆 */
+export const JoystickDispose = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

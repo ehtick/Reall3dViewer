@@ -50,6 +50,7 @@ import {
     GetAabbCenter,
     FlySavePositions,
     StopBgAudio,
+    FlyingPause,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -92,7 +93,8 @@ export function setupEventListener(events: Events) {
     });
     on(StopAutoRotate, (flyDisable: boolean = true) => {
         fire(GetControls).autoRotate = fire(GetOptions).autoRotate = false;
-        flyDisable && fire(FlyDisable);
+        // flyDisable && fire(FlyDisable);
+        flyDisable && fire(FlyingPause);
     });
 
     on(RotateAt, (rotateLeft: boolean = true) => {

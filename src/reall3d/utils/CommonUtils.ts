@@ -833,3 +833,12 @@ export function getUrl(url: string, baseUrl: string): string {
         return url;
     }
 }
+
+export function addDynamicStyles(css: string) {
+    const id = 'reall3dviewer-joystick-styles';
+    if (!css || document.getElementById(id)) return;
+    const styleElement = document.createElement('style');
+    styleElement.id = id;
+    styleElement.appendChild(document.createTextNode(css));
+    document.head.appendChild(styleElement);
+}

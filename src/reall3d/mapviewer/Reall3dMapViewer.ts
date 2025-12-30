@@ -40,6 +40,7 @@ import {
     ClearFlyPosition,
     FlySavePositions,
     OnSetFlyDuration,
+    JoystickDispose,
 } from '../events/EventConstants';
 import { initMapViewerOptions, initTileMap, setupMapUtils } from './utils/MapUtils';
 import { setupCommonUtils } from '../utils/CommonUtils';
@@ -242,6 +243,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
 
         const canvas = that.renderer.domElement;
 
+        that.events.fire(JoystickDispose);
         that.events.fire(CSS3DRendererDispose);
         that.events.fire(MapSceneTraverseDispose);
         that.renderer.clear();

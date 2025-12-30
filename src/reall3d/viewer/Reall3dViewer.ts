@@ -65,6 +65,8 @@ import {
     IsDebugMode,
     OnSetFlyDuration,
     StopBgAudio,
+    ShowJoystick,
+    JoystickDispose,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -451,6 +453,8 @@ export class Reall3dViewer {
         that.splatMesh.addModel({ url: meta.url, baseUrl: getUrl(sceneUrl, location.href) }, meta);
         await fire(OnSetWaterMark, meta.watermark || meta.name);
         fire(GetControls).updateRotateAxis();
+
+        ((isMobile && meta.mobileEnableJoystick) || (!isMobile && meta.pcEnableJoystick)) && fire(ShowJoystick);
     }
 
     /**
@@ -541,6 +545,7 @@ export class Reall3dViewer {
 
         // @ts-ignore
         isMobile && fire(GetControls)._dollyOut?.(0.7); // 手机适当缩小
+        ((isMobile && meta.mobileEnableJoystick) || (!isMobile && meta.pcEnableJoystick)) && fire(ShowJoystick);
     }
 
     /**
@@ -626,6 +631,7 @@ export class Reall3dViewer {
         const renderer: WebGLRenderer = fire(GetRenderer);
         const canvas = renderer.domElement as HTMLCanvasElement;
 
+        fire(JoystickDispose);
         fire(CommonUtilsDispose);
         fire(ViewerUtilsDispose);
         fire(CSS3DRendererDispose);

@@ -25,10 +25,14 @@ import {
     FlyingPause,
     FlyingPlay,
     OnSetFlyDuration,
+    ShowJoystick,
+    JoystickDispose,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
 import { MetaData } from '../modeldata/ModelData';
 import { ScenesJsonData } from '../mapviewer/Reall3dMapViewer';
+import { addDynamicStyles } from '../utils/CommonUtils';
+import nipplejs from 'nipplejs';
 
 export function setupFlying(events: Events) {
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
@@ -152,7 +156,13 @@ export function setupFlying(events: Events) {
     let flySpeed = 1;
     let curvePos: CatmullRomCurve3 | null;
     let curveTgt: CatmullRomCurve3 | null;
+    let isFlying = false;
+    let manager: nipplejs.JoystickManager = null;
     on(Flying, (force: boolean) => {
+        if (!flyPositions.length) return;
+        if (!force && !fire(GetControls).autoRotate) return; // 避免在非自动旋转模式下执行
+        isFlying = true;
+
         t = 0;
         flyTotalTime = flyDuration;
         flyStartTime = Date.now();
@@ -162,8 +172,6 @@ export function setupFlying(events: Events) {
         flySpeed = 1;
         curvePos = null;
         curveTgt = null;
-        if (!flyPositions.length) return;
-        if (!force && !fire(GetControls).autoRotate) return; // 避免在非自动旋转模式下执行
 
         const controls: CameraControls = fire(GetControls);
 
@@ -188,7 +196,14 @@ export function setupFlying(events: Events) {
     });
 
     // 1,2,4,-2,-4
-    on(FlyingPlay, (speed: number, elapsed: number) => {
+    on(FlyingPlay, (speed: number, elapsed: number, force = false, forceSpeed = false) => {
+        if (!isFlying && !force) return;
+        speed = Math.max(-4, Math.min(4, speed));
+
+        if (forceSpeed) {
+            return (flySpeed = speed);
+        }
+
         if (elapsed) {
             flyElapsed = elapsed * flyDuration;
         }
@@ -196,12 +211,17 @@ export function setupFlying(events: Events) {
         if (flyPauseTime) {
             flyElapsedTime = Date.now();
             flyPauseTime = 0;
+            flySpeed = speed = speed < 0 ? -1 : 1;
+        } else {
+            flySpeed != speed && (flySpeed += speed > flySpeed ? 1 : -1);
         }
 
         if (!flyEnable) {
             fire(Flying, true);
+            flySpeed = 1;
         }
-        flySpeed = speed;
+
+        return flySpeed;
     });
 
     on(
@@ -226,4 +246,67 @@ export function setupFlying(events: Events) {
         },
         true,
     );
+
+    const JoystickCss = `#reall3dviewer-joystick-container {position: absolute;bottom: 20px;left: calc(50vw - 50px);width: 100px;height: 100px;z-index: 999999;} #reall3dviewer-joystick-container.close {visibility: hidden;} @media (max-width: 768px) {#reall3dviewer-joystick-container {bottom: 50px;}}`;
+    on(ShowJoystick, (show = true) => {
+        addDynamicStyles(JoystickCss);
+        const id = 'reall3dviewer-joystick-container';
+        let dom: HTMLDivElement = document.querySelector(`#${id}`);
+        if (dom) return show ? dom.classList.remove('close') : dom.classList.add('close');
+        if (!show) return;
+
+        dom = document.createElement('div');
+        dom.id = id;
+        document.body.appendChild(dom);
+
+        initJoystick();
+    });
+
+    on(JoystickDispose, (show = true) => {
+        manager?.destroy();
+        let dom = document.getElementById('reall3dviewer-joystick-container');
+        dom && dom.parentNode.removeChild(dom);
+        dom = document.getElementById('reall3dviewer-joystick-styles');
+        dom && dom.parentNode.removeChild(dom);
+    });
+
+    function initJoystick() {
+        const options: nipplejs.JoystickManagerOptions = {
+            zone: document.getElementById('reall3dviewer-joystick-container'), // 指定摇杆所在的 DOM 元素
+            mode: 'static', // 摇杆模式，可选 'static'（静态）或 'dynamic'（动态）
+            position: { left: '50%', top: '50%' }, // 摇杆的初始位置
+            color: '#cccccccc', // 摇杆的颜色
+            size: 100, // 摇杆的大小
+            lockY: true,
+        };
+
+        let lastManagerTime = performance.now();
+        manager = nipplejs.create(options);
+        manager.on('move', function (evt, data: nipplejs.JoystickOutputData) {
+            if (performance.now() - lastManagerTime < 100) return;
+
+            // 计算 Y 轴偏移距离
+            const yOffset = data.distance * Math.sin(data.angle.radian);
+            // 计算 Y 轴偏移比例
+            const maxDistance = options.size / 2; // 最大移动距离为摇杆半径
+            let yRatio = yOffset / maxDistance;
+
+            // 判断方向
+            let speed = 0.00001;
+            if (yRatio > 0) {
+                speed = yRatio < 0.01 ? 1 : 1 + 4 * yRatio;
+            } else if (yRatio < 0) {
+                if (yRatio > -0.2) {
+                    speed = 1 + yRatio * 5;
+                } else {
+                    speed = -1 + yRatio * 4;
+                }
+            }
+
+            fire(FlyingPlay, speed);
+            lastManagerTime = performance.now();
+        });
+
+        manager.on('end', (evt, data) => fire(FlyingPlay, 1, 0, false, true));
+    }
 }
