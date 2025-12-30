@@ -265,6 +265,8 @@ export class Reall3dViewer {
             opts.maxRenderCountOfPc = 10240 * 10000;
             opts.qualityLevel = 9; // 主要目的为确认模型质量，按最高级别设置
             opts.disableTransitionEffectOnLoad = false;
+            opts.maxDistance = 10000;
+            opts.disableRightClickFocus = false;
             that.reset(opts);
             if (isSceneJson) {
                 await that.addScene(url);
@@ -424,7 +426,8 @@ export class Reall3dViewer {
         if (!meta.url.endsWith('.spx') && !meta.url.endsWith('.json')) return console.error('The format is unsupported in the large scene mode', meta.url);
 
         // 重置
-        const opts: Reall3dViewerOptions = { ...meta, ...(meta.cameraInfo || {}) };
+        const orgOpts: Reall3dViewerOptions = fire(GetOptions);
+        const opts: Reall3dViewerOptions = { root: orgOpts.root, ...meta, ...(meta.cameraInfo || {}) };
         opts.bigSceneMode = meta.url.endsWith('.json') || !!meta.isLargeScene;
         opts.enableEnvironment = meta.enableEnvironment === undefined ? (fire(GetOptions) as Reall3dViewerOptions).enableEnvironment : !!meta.enableEnvironment;
         opts.enableEnvironment && !meta.qualityLevel && (opts.qualityLevel = QualityLevels.L9);
