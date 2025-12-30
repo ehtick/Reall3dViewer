@@ -112,7 +112,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         that.resize();
         that.renderer.setAnimationLoop(that.animate.bind(that));
         // @ts-ignore
-        isMobile && that.controls._dollyOut?.(0.75); // 手机适当缩小
+        isMobile && that.controls._dollyOut?.(0.7); // 手机适当缩小
 
         on(ViewerDispose, () => that.dispose());
 

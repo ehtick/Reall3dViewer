@@ -437,7 +437,7 @@ export class Reall3dViewer {
 
         // 按元数据调整更新相机、标注等信息
         that.splatMesh.meta = meta;
-        isMobile && (meta.cameraInfo?.position || meta.cameraInfo?.lookAt) && that.events.fire(GetControls)._dollyOut(0.75); // 手机适当缩小
+        isMobile && (meta.cameraInfo?.position || meta.cameraInfo?.lookAt) && that.events.fire(GetControls)._dollyOut(0.7); // 手机适当缩小
 
         if (opts.bigSceneMode) {
             fire(OnSetFlyPositions, meta.flyPositions || []);
@@ -540,7 +540,7 @@ export class Reall3dViewer {
         }
 
         // @ts-ignore
-        isMobile && fire(GetControls)._dollyOut?.(0.75); // 手机适当缩小
+        isMobile && fire(GetControls)._dollyOut?.(0.7); // 手机适当缩小
     }
 
     /**
