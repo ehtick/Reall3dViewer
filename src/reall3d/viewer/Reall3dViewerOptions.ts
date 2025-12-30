@@ -206,6 +206,11 @@ export interface Reall3dViewerOptions {
     disableTransitionEffectOnLoad?: boolean;
 
     /**
+     * disable right click focus effect; defaults to false
+     */
+    disableRightClickFocus?: boolean;
+
+    /**
      * transition effect type; defaults to ModelCenterCirccle
      */
     transitionEffect?: TransitionEffects;

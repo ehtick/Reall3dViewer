@@ -367,6 +367,9 @@ export class Reall3dViewer {
                 !opts.markMode && fire(ClearMarkPoint);
                 fire(GetControls).autoRotate = fire(GetOptions).autoRotate = false;
             }
+            if (opts.disableRightClickFocus !== undefined) {
+                viewOpts.disableRightClickFocus = opts.disableRightClickFocus;
+            }
         }
 
         const controls: CameraControls = fire(GetControls);

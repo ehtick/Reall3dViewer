@@ -217,6 +217,8 @@ export function setupEventListener(events: Events) {
 
     on(SelectPointAndLookAt, async (x: number, y: number) => {
         if (mouseState.move) return; // 鼠标有移动时忽略
+        if ((fire(GetOptions) as Reall3dViewerOptions).disableRightClickFocus) return; // 禁用右击聚焦时忽略
+
         const rs: Vector3[] = await fire(RaycasterRayIntersectPoints, x, y);
         if (rs.length) {
             fire(CameraSetLookAt, rs[0], true, false); // 最后参数false时平移效果，true时旋转效果

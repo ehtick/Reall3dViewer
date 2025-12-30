@@ -143,6 +143,7 @@ export function initGsViewerOptions(options: Reall3dViewerOptions): Reall3dViewe
     opts.qualityLevel ??= QualityLevels.Default5;
     opts.sortType ??= SortTypes.Default1;
     opts.transitionEffect ??= TransitionEffects.ModelCenterCirccle;
+    opts.disableRightClickFocus ??= false;
 
     return opts;
 }
