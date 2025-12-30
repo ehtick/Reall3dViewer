@@ -63,11 +63,9 @@ import {
 } from '../utils/consts/GlobalConstants';
 import { loadSog } from './loaders/SogLoader';
 import { setupLodDownloadManager, todoDownload } from './LodDownloadManager';
-import { loadSpxLod } from './loaders/SpxLodLoader';
 import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
 import { hashString } from 'three/src/nodes/core/NodeUtils.js';
-import { loadSogLod } from './loaders/SogLodLoader';
-import { loadSpzLod } from './loaders/SpzLodLoader';
+import { loadLodSplatFile } from './loaders/LodSplatFileLoader';
 
 /**
  * 纹理数据管理
@@ -794,7 +792,6 @@ export function setupSplatTextureManager(events: Events) {
         const lodTotalCount = splatTiles.totalCount;
         fire(Information, { scene: 'large', lodTotalCount, cuts, visibleSplatCount: texture.visibleSplatCount, modelSplatCount: texture.modelSplatCount });
 
-        // 所有顶层级下载完后起飞
         if (!flyOnceDone) {
             flyOnceDone = true;
             const opts: SplatMeshOptions = fire(GetOptions);
@@ -972,15 +969,7 @@ export function setupSplatTextureManager(events: Events) {
         !splatModel.splatTiles && (splatModel.splatTiles = splatTiles);
         fnResolveModelSplatCount(splatTiles.totalCount);
 
-        if (splatFile.url.endsWith('.spx')) {
-            loadSpxLod(splatModel, splatTiles, splatFile);
-        } else if (splatFile.url.endsWith('.spz')) {
-            loadSpzLod(splatModel, splatTiles, splatFile);
-        } else if (splatFile.url.endsWith('.sog') || splatFile.url.endsWith('meta.json')) {
-            loadSogLod(splatModel, splatTiles, splatFile);
-        } else {
-            console.error('Unsupported format:', splatFile.url);
-        }
+        loadLodSplatFile(splatModel, splatTiles, splatFile);
     }
 
     on(SplatTexdataManagerAddModel, (opts: ModelOptions, meta: MetaData) => add(opts, meta));
