@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <title>reall3dviewer-samples-use-npm-package</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="0" />
+        <link rel="icon" href="/favicon.ico" />
+    </head>
+
+    <body style="background: black; height: 100vh; margin: 0px; overflow: hidden">
+        <div id="viewer1" style="width: 100dvw; height: 100dvh; position: absolute; top: 0; left: 0">
+            <span style="position: absolute; color: white; padding-left: 10px">Preset-LOD Rendering (Demo)</span>
+        </div>
+
+        <script type="module">
+            // execute "npm run build-pkg" to enable
+            import { Reall3dViewer } from '@reall3d/reall3dviewer';
+
+            const viewer1 = new Reall3dViewer({ root: '#viewer1', enableKeyboard: true, background: '#333333' });
+            viewer1.addScene(`hgd-lod.scene.json`);
+        </script>
+    </body>
+</html>

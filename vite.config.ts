@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import postcss from '@vituum/vite-plugin-postcss';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import glsl from 'vite-plugin-glsl';
+import path from 'path';
+// @ts-ignore
+import postcss from '@vituum/vite-plugin-postcss';
 
 export default defineConfig({
     plugins: [
@@ -27,6 +29,11 @@ export default defineConfig({
         pure: ['console.log', 'console.debug'],
     },
 
+    resolve: {
+        alias: {
+            '@reall3d/reall3dviewer': path.resolve(__dirname, './pkg/dist/pkg.js'),
+        },
+    },
     build: {
         chunkSizeWarningLimit: 2048,
         sourcemap: false,
