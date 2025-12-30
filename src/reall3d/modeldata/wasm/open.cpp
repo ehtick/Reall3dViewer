@@ -441,16 +441,17 @@ int spxSh3(void *o, void *b) {
 }
 
 /**
- * 把spx【22】格式的数据块解析为纹理
+ * 把spx【22|23】格式的数据块解析为纹理
  * @param o: 输出用字节数组（纹理32*n）
  * @param b: 输入的块字节数组
- *           【22】splat22（点数4 + 格式4 + 数据20或22*n）
+ *           【22|23】点数4 + 格式4 + 数据20或22*n
  *           数据排列 [x0...]+[y0...]+[z0...]+[x1...]+[y1...]+[z1...]+[x2...]+[y2...]+[z2...]+[sx...]+[sy...]+[sz...]+[r...]+[g...]+[b...]+[a...]+[rw...]+[rx...]+[ry...]+[rz...]
  *                  +[p0...]+[p1...] (球谐系数级别大于0时存在)
  * @param d: 球谐系数级别（0~3）
+ * @param e: 坐标Log编码次数(0 或 1)
  * @return: 0-成功
  */
-int spxSplat22(void *o, void *b, int d) {
+int spxSplat22(void *o, void *b, int d, int e) {
     uint8_t *ui8sInput = (uint8_t *)b;
     uint32_t *ui32sInput = (uint32_t *)b;
 
@@ -506,9 +507,9 @@ int spxSplat22(void *o, void *b, int d) {
         x = static_cast<float>(i32x) / 4096.0f;
         y = static_cast<float>(i32y) / 4096.0f;
         z = static_cast<float>(i32z) / 4096.0f;
-        x = decodeLog(x, 1);
-        y = decodeLog(y, 1);
-        z = decodeLog(z, 1);
+        x = decodeLog(x, e);
+        y = decodeLog(y, e);
+        z = decodeLog(z, e);
 
         sx = std::exp((float)s0 / 16.0f - 10.0f);
         sy = std::exp((float)s1 / 16.0f - 10.0f);
@@ -528,16 +529,17 @@ int spxSplat22(void *o, void *b, int d) {
 }
 
 /**
- * 把spx【220】格式的数据块解析为纹理
+ * 把spx【220|230】格式的数据块解析为纹理
  * @param o: 输出用字节数组（纹理32*n）
  * @param b: 输入的块字节数组
- *           【220】splat220（点数4 + 格式4 + 数据24或28*n）
+ *           【220|230】点数4 + 格式4 + 数据24或28*n
  *           数据排列 [x0,y0,z0,255...x1,y1,z1,255...x2,y2,z2,255...]+[sx,sy,sz,255...]+[r,g,b,a...]+[rx,ry,rz,ri...]+[p0,p1,0,255...]
  *                  +[p0,p1,0,255...] (球谐系数级别大于0时存在)
  * @param d: 球谐系数级别（0~3）
+ * @param e: 坐标Log编码次数(0 或 1)
  * @return: 0-成功
  */
-int spxSplat220(void *o, void *b, int d) {
+int spxSplat220(void *o, void *b, int d, int e) {
     uint8_t *ui8sInput = (uint8_t *)b;
     uint32_t *ui32sInput = (uint32_t *)b;
 
@@ -594,9 +596,9 @@ int spxSplat220(void *o, void *b, int d) {
         x = static_cast<float>(i32x) / 4096.0f;
         y = static_cast<float>(i32y) / 4096.0f;
         z = static_cast<float>(i32z) / 4096.0f;
-        x = decodeLog(x, 1);
-        y = decodeLog(y, 1);
-        z = decodeLog(z, 1);
+        x = decodeLog(x, e);
+        y = decodeLog(y, e);
+        z = decodeLog(z, e);
 
         sx = std::exp((float)s0 / 16.0f - 10.0f);
         sy = std::exp((float)s1 / 16.0f - 10.0f);
@@ -636,14 +638,14 @@ int spxSplat220(void *o, void *b, int d) {
  * 把spx格式的数据块解析为纹理
  * @param o: 输出用字节数组（纹理32*n或球谐系数16*n）
  * @param b: 输入的块字节数组
- *           【19】splat19（点数4 + 格式4 + 数据19*n）
- *           【10019】splat19（点数4 + 格式4 + log编码次数4 + 数据19*n）【废弃】
- *           【20】splat20（点数4 + 格式4 + 数据20*n）
+ *           【19】点数4 + 格式4 + 数据19*n
+ *           【10019】点数4 + 格式4 + log编码次数4 + 数据19*n【废弃】
+ *           【20】点数4 + 格式4 + 数据20*n
  *           【1】每点含9字节的1级球谐系数（点数4 + 格式4 + 数据9*n）
  *           【2】每点含24字节的1级加2级球谐系数（点数4 + 格式4 + 数据(9+15)*n）
  *           【3】每点含21字节的3级球谐系数（点数4 + 格式4 + 数据(21)*n）
- *           【22 】splat22 （点数4 + 格式4 + 数据20或22*n）
- *           【220】splat220（点数4 + 格式4 + 数据20或22*n的纹理结构）
+ *           【22|23】点数4 + 格式4 + 数据20或22*n
+ *           【220|230】点数4 + 格式4 + 数据20或22*n的纹理结构
  * @param d: 球谐系数级别（0~3）
  * @return: 0-成功，1-失败(不支持的版本)
  */
@@ -652,9 +654,13 @@ EXTERN EMSCRIPTEN_KEEPALIVE int D(void *o, void *b, int d) {
     uint32_t bf = ui32sInput[1];
 
     if (bf == 220)
-        return spxSplat220(o, b, d);
+        return spxSplat220(o, b, d, 1);
+    else if (bf == 230)
+        return spxSplat220(o, b, d, 0);
     else if (bf == 22)
-        return spxSplat22(o, b, d);
+        return spxSplat22(o, b, d, 1);
+    else if (bf == 23)
+        return spxSplat22(o, b, d, 0);
     else if (bf == 10019)
         return spxSplat19(o, b, 12);
     else if (bf == 19)

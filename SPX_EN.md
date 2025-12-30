@@ -78,7 +78,7 @@ he data block format encompasses both open and exclusive formats. The reserved r
 <br>
 
 
-✅  Open Format `22`, basic data (Optimized for Encoding/Decoding Performance)
+✅  Open Format `22`, basic data (for use when more focus on encoding/decoding performance)
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
@@ -97,7 +97,15 @@ he data block format encompasses both open and exclusive formats. The reserved r
 
 
 
-✅  Open Format `220`, basic data (Optimized for compression ratio)
+✅  Open Format `23`, basic data (for large-scale scenes where more focus is on encoding/decoding performance)
+
+
+Same as format `22`, but `x,y,z` coordinates are not Log-encoded, resulting in smaller errors.
+
+
+
+
+✅  Open Format `220`, basic data (for use when more focus on compression ratio)
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
@@ -116,7 +124,14 @@ he data block format encompasses both open and exclusive formats. The reserved r
 
 
 
-✅  Open Format `8`, palettes of SH (Auto-selected by strategy, no manual specification required)
+✅  Open Format `230`, basic data (for use when more focus on compression ratio)
+
+
+Same as format `220`, but `x,y,z` coordinates are not Log-encoded, resulting in smaller errors.
+
+
+
+✅  Open Format `8`, palettes of SH (auto-selected by strategy, no manual specification required)
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |
@@ -131,7 +146,7 @@ he data block format encompasses both open and exclusive formats. The reserved r
 
 
 
-✅  Open Format `9`, palettes of SH , webp encoding (Auto-selected by strategy, no manual specification required)
+✅  Open Format `9`, palettes of SH , webp encoding (auto-selected by strategy, no manual specification required)
 
 
 | Byte Offset | Type      | Field Name            | Description                                                                 |

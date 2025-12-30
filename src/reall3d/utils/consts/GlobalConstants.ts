@@ -26,8 +26,12 @@ export const SpxOpenFormat0 = 0;
 
 /** 【spx中定义的公开数据块格式】Open Block Content Format 22, basic data */
 export const SpxBlockFormatData22 = 22;
+/** 【spx中定义的公开数据块格式】Open Block Content Format 22, basic data */
+export const SpxBlockFormatData23 = 23;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 22, basic data, webp encoding */
 export const SpxBlockFormatData220 = 220;
+/** 【spx中定义的公开数据块格式】Open Block Content Format 22, basic data, webp encoding */
+export const SpxBlockFormatData230 = 230;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 8, sh palettes */
 export const SpxBlockFormatSH8 = 8;
 /** 【spx中定义的公开数据块格式】Open Block Content Format 9, sh palettes, webp encoding */
