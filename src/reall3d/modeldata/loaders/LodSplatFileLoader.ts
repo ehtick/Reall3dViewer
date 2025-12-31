@@ -39,6 +39,7 @@ export async function loadLodSplatFile(splatModel: SplatModel, splatTiles: Splat
 
         splatModel.downloadSplatCount += warpModel.downloadSplatCount;
         splatModel.dataShDegree = Math.max(splatModel.dataShDegree, warpModel.dataShDegree);
+        !splatModel.palettes && warpModel.palettes && (splatModel.palettes = warpModel.palettes);
     } else {
         splatFile.status |= DataStatus.FetchDone | DataStatus.FetchFailed;
     }
