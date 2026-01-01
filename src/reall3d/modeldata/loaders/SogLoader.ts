@@ -141,7 +141,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
     const { rgba: centroids, width } = meta.shN ? await webpToRgba(mapFile.get(meta.shN.files[0])) : { rgba: null, width: 0 };
     const { rgba: labels } = meta.shN ? await webpToRgba(mapFile.get(meta.shN.files[1])) : { rgba: null };
 
-    if (shDegree > 0 && !isV1) {
+    if (shDegree > 0 && centroids?.byteLength && !isV1) {
         if (width == 960) {
             const palettes = new Uint8Array(centroids.length);
             for (let i = 0; i < centroids.length; i++) {
@@ -223,7 +223,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
         }
 
         const rs = await parseSplatToTexdata(ui8sData, processCnt);
-        if (shDegree > 0) {
+        if (shDegree > 0 && labels?.byteLength) {
             for (let i = 0; i < processCnt; i++) {
                 rs[i * 32 + 12] = labels[(i + startCnt) * 4];
                 rs[i * 32 + 13] = labels[(i + startCnt) * 4 + 1];

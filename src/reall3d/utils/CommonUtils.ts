@@ -725,6 +725,7 @@ export async function sh123To3(data123: Uint8Array): Promise<Uint8Array> {
 }
 
 export async function webpToRgba(webps: Uint8Array): Promise<{ width: number; height: number; rgba: Uint8Array }> {
+    if (!webps) return { width: 0, height: 0, rgba: new Uint8Array(0) };
     const blob = new Blob([webps as any], { type: 'image/webp' });
     const url = URL.createObjectURL(blob);
     const bmp = await createImageBitmap(await fetch(url).then(r => r.blob()));
