@@ -28,7 +28,7 @@ if (url) {
     viewer = new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
     // viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.v3.spx`);
 
-    viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
+    viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd-lod01234.scene.json`);
 
     initDevMode();
 }
