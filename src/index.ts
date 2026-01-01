@@ -98,7 +98,7 @@ function fnClick(className: string) {
         mapViewer?.dispose();
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
-        setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd.scene.json`), 50); // Let it GC
+        setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd.scene.json`), 50); // Let it GC
         globalEv.fire(StopBgAudio);
     } else if (className == 'lff-house') {
         viewer?.dispose();
