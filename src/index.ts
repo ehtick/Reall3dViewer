@@ -28,7 +28,7 @@ if (url) {
     viewer = new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
     // viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.v3.spx`);
 
-    viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd.scene.json`);
+    viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
 
     initDevMode();
 }
@@ -98,7 +98,7 @@ function fnClick(className: string) {
         mapViewer?.dispose();
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
-        setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd.scene.json`), 50); // Let it GC
+        setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`), 50); // Let it GC
         globalEv.fire(StopBgAudio);
     } else if (className == 'lff-house') {
         viewer?.dispose();
