@@ -10,7 +10,7 @@
   "pcLodDistances": [80,40],
   "pcLodCacheCount": 50000000,
   "maxRenderCountOfPc": 3200000,
-  "url": "https://reall3d.com/demo-models/lod-v1/hgd-lod01234/hgd.lod.json",
+  "url": "https://reall3d.com/demo-models/lod-v1/hgd/hgd.lod.json",
   "cameraInfo": {
     "position": [-100,-275,120],
     "lookUp": [0,-1,0],
