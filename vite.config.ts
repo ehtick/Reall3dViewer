@@ -31,7 +31,7 @@ export default defineConfig({
 
     resolve: {
         alias: {
-            '@reall3d/reall3dviewer': path.resolve(__dirname, './pkg/dist/pkg.js'),
+            '@reall3d/reall3dviewer': path.resolve(__dirname, './pkg'),
         },
     },
     build: {
