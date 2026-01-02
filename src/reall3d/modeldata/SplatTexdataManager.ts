@@ -806,7 +806,7 @@ export function setupSplatTextureManager(events: Events) {
         const maxCacheCount = isMobile ? splatModel.splatTiles.mobileLodCacheCount || 600_0000 : splatModel.splatTiles.pcLodCacheCount || 3000_0000;
         if (splatModel.downloadSplatCount < maxCacheCount) return;
 
-        if (runCounter++ % 6 == 0 && splatModel.downloadSplatCount > maxCacheCount) {
+        if (runCounter++ % 3 == 0 && splatModel.downloadSplatCount > maxCacheCount) {
             const downloadFiles: SplatFile[] = [];
             for (let key of Object.keys(splatModel.splatTiles.files)) {
                 let file = splatModel.splatTiles.files[key];
