@@ -2,6 +2,7 @@
   "name": "Preset-LOD Rendering (demo using lod-meta.json)",
   "version": "1.0",
   "autoRotate": false,
+  "enableEnvironment": false,
   "mobileLodTargets": [4, 3, 1],
   "mobileLodDistances": [100, 50],
   "mobileLodCacheCount": 5000000,
