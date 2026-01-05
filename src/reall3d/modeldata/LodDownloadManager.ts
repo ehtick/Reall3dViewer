@@ -55,7 +55,6 @@ export function setupLodDownloadManager(events: Events) {
             delete lodMeta.filenames;
 
             let totalCount = 0;
-            let lodLevels: number = lodMeta.lodLevels;
             traveSplatTree(lodMeta.tree, node => {
                 const nd = node as any;
                 const { center, radius } = calcCenterRadius(nd.bound.min, nd.bound.max);
@@ -66,7 +65,7 @@ export function setupLodDownloadManager(events: Events) {
                 if (nd.lods) {
                     const lods = [];
                     for (let key of Object.keys(nd.lods)) {
-                        const lod = lodLevels - parseInt(key) - 1;
+                        const lod = parseInt(key);
                         const obj = nd.lods[key];
                         const fileKey = obj.file + '';
                         lods[lod] = { fileKey, offset: obj.offset, count: obj.count };
@@ -89,7 +88,7 @@ export function setupLodDownloadManager(events: Events) {
             splatTiles.mobileLodCacheCount = sceneMeta.mobileLodCacheCount;
 
             splatTiles.fetchSet = new Set<string>();
-            splatTiles.lodTargets = getLodTargets(splatTiles, true);
+            splatTiles.lodTargets = getLodTargets(splatTiles);
             splatTiles.lodDistances = getLodDistances(splatTiles);
 
             for (let key of Object.keys(splatTiles.files)) {
@@ -118,7 +117,7 @@ export function setupLodDownloadManager(events: Events) {
                 splatTiles.mobileLodCacheCount = sceneMeta.mobileLodCacheCount;
 
                 splatTiles.fetchSet = new Set<string>();
-                splatTiles.lodTargets = getLodTargets(splatTiles, false);
+                splatTiles.lodTargets = getLodTargets(splatTiles);
                 splatTiles.lodDistances = getLodDistances(splatTiles);
 
                 for (let key of Object.keys(splatTiles.files)) {
@@ -144,7 +143,7 @@ export function setupLodDownloadManager(events: Events) {
         let cnt = 0;
         for (let key of Object.keys(splatTiles.files)) {
             let file = splatTiles.files[key];
-            if (file.lod === 0) {
+            if (file.lod === splatTiles.lodLevels - 1) {
                 if (++cnt > 4) {
                     return (splatTiles.topLodReady = true);
                 }
@@ -170,7 +169,7 @@ export function setupLodDownloadManager(events: Events) {
                 file.status < DataStatus.FetchDone && fetchingCnt++;
             } else {
                 todoCnt++;
-                file.lod === 0 && lod0Files.length < MaxDownloadCount && lod0Files.push(file);
+                file.lod === splatTiles.lodLevels - 1 && lod0Files.length < MaxDownloadCount && lod0Files.push(file);
             }
         }
         if (!todoCnt || fetchingCnt >= MaxDownloadCount) return; // 无可下载或已并发受限
@@ -204,23 +203,15 @@ export function setupLodDownloadManager(events: Events) {
         }
     }
 
-    function getLodTargets(splatTiles: SplatTiles, isLodMeta = false): number[] {
+    function getLodTargets(splatTiles: SplatTiles): number[] {
         let lodTargets = [...new Set((isMobile ? splatTiles.mobileLodTargets : splatTiles.pcLodTargets) || [])];
-        if (lodTargets && lodTargets.length > 0 && lodTargets.length < splatTiles.lodLevels) {
-            if (isLodMeta) {
-                for (let i = 0; i < lodTargets.length; i++) {
-                    lodTargets[i] = splatTiles.lodLevels - lodTargets[i] - 1;
-                }
-            }
-        } else {
+        if (!lodTargets?.length || lodTargets.length >= splatTiles.lodLevels) {
             lodTargets = [];
             for (let i = 0; i < splatTiles.lodLevels; i++) {
                 lodTargets.push(i);
             }
         }
-
         lodTargets.sort((a, b) => a - b); // 升序
-
         return lodTargets;
     }
 
@@ -229,18 +220,18 @@ export function setupLodDownloadManager(events: Events) {
         let lodDistances = [...new Set((isMobile ? splatTiles.mobileLodDistances : splatTiles.pcLodDistances) || [])];
 
         if (lodDistances.length == tgtLodCount) {
-            lodDistances.sort((a, b) => b - a); // 降序
-            lodDistances[lodDistances.length - 1] = 0; // 尾部确保0
+            lodDistances.sort((a, b) => a - b); // 升序
+            lodDistances[0] = 0; // 确保首个0
         } else if (lodDistances.length == tgtLodCount - 1) {
-            lodDistances.sort((a, b) => b - a); // 降序
             lodDistances.push(0);
+            lodDistances.sort((a, b) => a - b); // 升序
         } else {
             // 设定有误就重置
             lodDistances = [];
-            for (let i = tgtLodCount; i > 1; i--) {
+            for (let i = 0; i < tgtLodCount; i++) {
                 lodDistances.push(i * 20);
             }
-            lodDistances.push(0);
+            lodDistances.sort((a, b) => a - b); // 升序
         }
 
         delete splatTiles.pcLodTargets;

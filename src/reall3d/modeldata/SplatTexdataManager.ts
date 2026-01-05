@@ -528,6 +528,7 @@ export function setupSplatTextureManager(events: Events) {
 
         const v3Tmp = new Vector3();
         const splatTiles = splatModel.splatTiles;
+        const topLod = splatTiles.lodLevels - 1;
 
         if (!splatTiles.topLodReady) return;
 
@@ -538,10 +539,10 @@ export function setupSplatTextureManager(events: Events) {
 
         const fnAddTargetLod = (splatTile: SplatTileNode, requireLevel: number, isFallback = false): number => {
             if (!splatTiles.lodTargets.includes(requireLevel)) {
-                if (requireLevel >= 0) {
-                    fnAddTargetLod(splatTile, requireLevel - 1, true);
+                if (requireLevel < splatTiles.lodLevels) {
+                    fnAddTargetLod(splatTile, requireLevel + 1, true);
                 } else {
-                    splatTile.currentRenderLod = -1;
+                    splatTile.currentRenderLod = splatTiles.lodLevels;
                 }
                 return splatTile.currentRenderLod;
             }
@@ -550,20 +551,20 @@ export function setupSplatTextureManager(events: Events) {
 
             const tileMapping = splatTile.lods[requireLevel];
             if (!tileMapping) {
-                if (requireLevel >= 0) {
-                    fnAddTargetLod(splatTile, requireLevel - 1, true);
+                if (requireLevel < splatTiles.lodLevels) {
+                    fnAddTargetLod(splatTile, requireLevel + 1, true);
                 } else {
-                    splatTile.currentRenderLod = -1;
+                    splatTile.currentRenderLod = topLod;
                 }
             } else {
                 const file = splatTiles.files[tileMapping.fileKey];
                 if (file?.downloadCount) {
                     splatTile.currentRenderLod = requireLevel;
                 } else {
-                    if (requireLevel >= 0) {
-                        fnAddTargetLod(splatTile, requireLevel - 1, true);
+                    if (requireLevel < splatTiles.lodLevels) {
+                        fnAddTargetLod(splatTile, requireLevel + 1, true);
                     } else {
-                        splatTile.currentRenderLod = -1;
+                        splatTile.currentRenderLod = topLod;
                     }
                 }
             }
@@ -599,10 +600,11 @@ export function setupSplatTextureManager(events: Events) {
         };
 
         const calcRequireLodLevel = (leafNode: SplatTileNode) => {
-            let requireLevel = -1;
+            let requireLevel = splatTiles.lodLevels;
             const distance = computeSplatNodeCameraDistance(cameraPosition, leafNode);
-            for (let i = 0; i < splatTiles.lodDistances.length; i++) {
-                if (!leafNode.lods[i]) continue; // 该块无此lod数据
+            // lodDistances/lodTargets都已升序
+            for (let i = splatTiles.lodDistances.length - 1; i >= 0; i--) {
+                if (!leafNode.lods[splatTiles.lodTargets[i]]) continue; // 该块无此lod数据
 
                 if (distance >= splatTiles.lodDistances[i]) {
                     requireLevel = splatTiles.lodTargets[i];
@@ -613,13 +615,13 @@ export function setupSplatTextureManager(events: Events) {
         };
 
         traveSplatTree(splatTiles.tree, node => {
-            const state = checkSplatNodeVisible(node); // 内含提示下载
+            const state = checkSplatNodeVisible(node);
             if (state == 0) {
                 // 完全不可见，旗下全部叶节点直接设定
                 traveSplatTree(node, nd => {
                     if (nd.lods) {
                         nd.currentVisible = false;
-                        nd.currentRenderLod = 0;
+                        nd.currentRenderLod = topLod;
                     }
                 });
                 return false;
@@ -645,20 +647,20 @@ export function setupSplatTextureManager(events: Events) {
 
             leaf.currentVisible && visibleCuts++;
             leafs.push(leaf);
-            leaf.currentRenderLod > 0 && reduceLeafs.push(leaf);
+            leaf.currentRenderLod < topLod && reduceLeafs.push(leaf);
             sumCurrentSplatCount += leaf.lods[leaf.currentRenderLod]?.count || 0; // 块中不一定各lod都有数据
         });
         let currentTotalVisibleCnt = visibleCuts > 0 ? sumCurrentSplatCount : 0;
 
-        let coarsestTooLarge = false;
+        let topTooLarge = false;
         if (sumCurrentSplatCount > maxDataMergeCount) {
             const reduceLod = (tgtLod: number) => {
                 for (let i = 0; i < reduceLeafs.length; i++) {
                     const reduceNode = reduceLeafs[i];
                     if (reduceNode.currentRenderLod != tgtLod) continue;
 
-                    const newLod = fnAddTargetLod(reduceNode, tgtLod - 1);
-                    if (newLod >= 0) {
+                    const newLod = fnAddTargetLod(reduceNode, tgtLod + 1);
+                    if (newLod < splatTiles.lodLevels) {
                         sumCurrentSplatCount += reduceNode.lods[newLod].count - reduceNode.lods[tgtLod].count;
                         if (sumCurrentSplatCount <= maxDataMergeCount) break;
                     } else {
@@ -671,26 +673,32 @@ export function setupSplatTextureManager(events: Events) {
             reduceLeafs.sort((a, b) => b.currentDistance - a.currentDistance); // 按距离降序
 
             while (sumCurrentSplatCount > maxDataMergeCount) {
-                let maxLod = 0;
+                let minLod = splatTiles.lodLevels;
                 for (const reduceNode of reduceLeafs) {
-                    maxLod = Math.max(maxLod, reduceNode.currentRenderLod);
+                    minLod = Math.min(minLod, reduceNode.currentRenderLod);
                 }
-                if (maxLod < 1) {
-                    console.warn('Coarsest LOD data is too large');
-                    coarsestTooLarge = true;
+                if (minLod >= topLod) {
+                    console.warn('Top LOD data is too large');
+                    topTooLarge = true;
                     break;
                 }
-                reduceLod(maxLod);
+                reduceLod(minLod);
             }
         }
 
         // 检查是否忽略
-        if (coarsestTooLarge) {
-            leafs.sort((a, b) => (a.currentVisible ? -1 : b.currentVisible ? 1 : a.currentDistance - b.currentDistance));
+        if (topTooLarge) {
+            leafs.sort((a, b) => {
+                if (a.currentVisible !== b.currentVisible) {
+                    return a.currentVisible ? -1 : 1;
+                } else {
+                    return a.currentDistance - b.currentDistance;
+                }
+            });
             let cnt = 0;
             let total = environmentCount + watermarkCount + textWatermarkCount;
             for (let node of leafs) {
-                total += node.lods[0]?.count || 0;
+                total += node.lods[topLod]?.count || 0;
                 if (total > maxDataMergeCount) {
                     break;
                 }
@@ -699,7 +707,7 @@ export function setupSplatTextureManager(events: Events) {
             targetLeafs = leafs.slice(0, cnt);
             lastLodHash = hashString(Date.now() + '');
         } else {
-            const chks = reduceLeafs.filter(v => v.currentRenderLod > 0);
+            const chks = reduceLeafs.filter(v => v.currentRenderLod < topLod);
             chks.sort((a, b) => {
                 if (a.lods[a.currentRenderLod].fileKey === b.lods[b.currentRenderLod].fileKey) {
                     return a.lods[a.currentRenderLod].offset - b.lods[b.currentRenderLod].offset;
@@ -732,6 +740,8 @@ export function setupSplatTextureManager(events: Events) {
                 if (!tileMapping) continue;
 
                 const file = splatTiles.files[tileMapping.fileKey];
+                if (!file.downloadData) continue;
+
                 file.lastTime = Date.now();
                 mergeSplatData.set(file.downloadData.subarray(tileMapping.offset * 32, (tileMapping.offset + tileMapping.count) * 32), mergeDataCount * 32);
                 mergeDataCount += tileMapping.count;
