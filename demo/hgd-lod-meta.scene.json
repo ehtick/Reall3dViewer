@@ -3,7 +3,7 @@
   "version": "1.0",
   "autoRotate": false,
   "enableEnvironment": false,
-  "mobileLodTargets": [4, 3, 1],
+  "mobileLodTargets": [4, 3, 2],
   "mobileLodDistances": [100, 50],
   "mobileLodCacheCount": 5000000,
   "maxRenderCountOfMobile": 2200000,
