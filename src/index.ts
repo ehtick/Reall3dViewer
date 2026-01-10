@@ -21,7 +21,7 @@ const shDegree = 3;
 let viewer: Reall3dViewer;
 let mapViewer: Reall3dMapViewer;
 if (url) {
-    viewer = new Reall3dViewer({ debugMode });
+    viewer = new Reall3dViewer({ debugMode, maxRenderCountOfPc: 3000_0000 });
     url.endsWith('.scene.json') ? viewer.addScene(url) : viewer.addModel(url);
     debugMode && initDevMode(true);
 } else {
