@@ -124,7 +124,7 @@ export function setupLodDownloadManager(events: Events) {
                     const file = splatTiles.files[key];
                     file.url = getUrl(file.url, lodUrl);
                 }
-                if ((fire(GetOptions) as SplatMeshOptions).enableEnvironment && splatTiles.environment) {
+                if ((fire(GetOptions) as SplatMeshOptions)?.enableEnvironment && splatTiles.environment) {
                     splatTiles.environment = { fileKey: 'environment', url: getUrl(splatTiles.environment as string, lodUrl) };
                 }
 
