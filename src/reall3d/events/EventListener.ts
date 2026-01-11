@@ -212,20 +212,16 @@ export function setupEventListener(events: Events) {
             !opts.bigSceneMode && window.open('/editor/index.html?url=' + encodeURIComponent((fire(GetSplatMesh) as SplatMesh).meta.url));
             keySet.clear();
         } else if (keySet.has('KeyW')) {
-            fire(MovePlayer, keySet.has('KeyW'), keySet.has('KeyS'), keySet.has('KeyA'), keySet.has('KeyD'), keySet.has('ShiftLeft'));
-            // moveForward(fire(GetControls), 0.15);
+            moveForward(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyS')) {
-            fire(MovePlayer, keySet.has('KeyW'), keySet.has('KeyS'), keySet.has('KeyA'), keySet.has('KeyD'));
-            // moveBackward(fire(GetControls), 0.15);
+            moveBackward(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyA')) {
-            fire(MovePlayer, keySet.has('KeyW'), keySet.has('KeyS'), keySet.has('KeyA'), keySet.has('KeyD'));
-            // moveLeft(fire(GetControls), 0.15);
+            moveLeft(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyD')) {
-            fire(MovePlayer, keySet.has('KeyW'), keySet.has('KeyS'), keySet.has('KeyA'), keySet.has('KeyD'));
-            // moveRight(fire(GetControls), 0.15);
+            moveRight(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyQ')) {
             rotateTargetLeft(fire(GetControls));
