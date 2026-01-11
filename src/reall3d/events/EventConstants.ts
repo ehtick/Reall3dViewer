@@ -473,6 +473,19 @@ export const UpdateSortType = i++;
 export const ShowJoystick = i++;
 /** 销毁虚拟摇杆 */
 export const JoystickDispose = i++;
+/** 取玩家 */
+export const GetPlayer = i++;
+/** 移动玩家(前后左右) */
+export const MovePlayer = i++;
+/** 移动玩家(按角度) */
+export const MovePlayerByAngle = i++;
+/** 移动玩家(到目标点) */
+export const MovePlayerToTarget = i++;
+
+/** 渲染器销毁 */
+export const OnViewerDispose = i++;
+/** 添加虚拟地面 */
+export const AddVirtualGround = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

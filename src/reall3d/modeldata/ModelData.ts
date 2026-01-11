@@ -305,4 +305,9 @@ export interface MetaData {
      * Environment(skybox) flag. Defaults to false.
      */
     enableEnvironment?: boolean;
+
+    /**
+     * View mode. 1:First-Person View, 3:Third-Person View.
+     */
+    viewMode?: number;
 }

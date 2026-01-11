@@ -27,12 +27,16 @@ import {
     OnSetFlyDuration,
     ShowJoystick,
     JoystickDispose,
+    GetOptions,
+    MovePlayerByAngle,
+    RunLoopByFrame,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
 import { MetaData } from '../modeldata/ModelData';
 import { ScenesJsonData } from '../mapviewer/Reall3dMapViewer';
 import { addDynamicStyles } from '../utils/CommonUtils';
 import nipplejs from 'nipplejs';
+import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 
 export function setupFlying(events: Events) {
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
@@ -247,7 +251,7 @@ export function setupFlying(events: Events) {
         true,
     );
 
-    const JoystickCss = `#reall3dviewer-joystick-container {position: absolute;bottom: 20px;left: calc(50vw - 50px);width: 100px;height: 100px;z-index: 999999;} #reall3dviewer-joystick-container.close {visibility: hidden;} @media (max-width: 768px) {#reall3dviewer-joystick-container {bottom: 50px;}}`;
+    const JoystickCss = `#reall3dviewer-joystick-container {position: absolute;bottom: 100px;left: calc(50vw - 50px);width: 100px;height: 100px;z-index: 999999;} #reall3dviewer-joystick-container.close {visibility: hidden;} @media (max-width: 768px) {#reall3dviewer-joystick-container {bottom: 50px;}}`;
     on(ShowJoystick, (show = true) => {
         addDynamicStyles(JoystickCss);
         const id = 'reall3dviewer-joystick-container';
@@ -271,19 +275,37 @@ export function setupFlying(events: Events) {
     });
 
     function initJoystick() {
+        const opts: Reall3dViewerOptions = fire(GetOptions);
         const options: nipplejs.JoystickManagerOptions = {
             zone: document.getElementById('reall3dviewer-joystick-container'), // 指定摇杆所在的 DOM 元素
             mode: 'static', // 摇杆模式，可选 'static'（静态）或 'dynamic'（动态）
             position: { left: '50%', top: '50%' }, // 摇杆的初始位置
             color: '#cccccccc', // 摇杆的颜色
             size: 100, // 摇杆的大小
-            lockY: true,
+            lockY: opts.viewMode !== 3,
         };
+
+        let degree = 0;
+        let stopMove = true;
+        fire(
+            RunLoopByFrame,
+            () => {
+                !stopMove && fire(MovePlayerByAngle, degree);
+            },
+            () => opts.viewMode === 3,
+            6,
+        );
 
         let lastManagerTime = performance.now();
         manager = nipplejs.create(options);
         manager.on('move', function (evt, data: nipplejs.JoystickOutputData) {
             if (performance.now() - lastManagerTime < 100) return;
+
+            if (opts.viewMode === 3) {
+                degree = data.angle.degree + 90;
+                stopMove = false;
+                return;
+            }
 
             // 计算 Y 轴偏移距离
             const yOffset = data.distance * Math.sin(data.angle.radian);
@@ -307,6 +329,13 @@ export function setupFlying(events: Events) {
             lastManagerTime = performance.now();
         });
 
-        manager.on('end', (evt, data) => fire(FlyingPlay, 1, 0, false, true));
+        manager.on('end', (evt, data) => {
+            if (opts.viewMode === 3) {
+                stopMove = true;
+                return;
+            }
+
+            fire(FlyingPlay, 1, 0, false, true);
+        });
     }
 }

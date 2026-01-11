@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import '../style/style.less';
-import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4, Camera } from 'three';
+import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4, Camera, Group } from 'three';
 import {
     GetCurrentDisplayShDegree,
     GetModelShDegree,
@@ -88,6 +88,7 @@ import { setupFlying } from '../controls/SetupFlying';
 import { isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/ModelData';
 import { globalEv } from '../events/GlobalEV';
+import { setupPlayer } from '../scene/SetupPlayer';
 
 /**
  * Built-in Gaussian Splatting model viewer
@@ -165,6 +166,7 @@ export class Reall3dViewer {
         setupRaycaster(events);
         setupFocusMarker(events);
         setupFlying(events);
+        setupPlayer(events);
 
         that.splatMesh = new SplatMesh(copyGsViewerOptions(opts));
         on(GetSplatMesh, () => that.splatMesh);
@@ -433,6 +435,7 @@ export class Reall3dViewer {
         opts.bigSceneMode = meta.url.endsWith('.json') || !!meta.isLargeScene;
         opts.enableEnvironment = meta.enableEnvironment === undefined ? (fire(GetOptions) as Reall3dViewerOptions).enableEnvironment : !!meta.enableEnvironment;
         opts.enableEnvironment && !meta.qualityLevel && (opts.qualityLevel = QualityLevels.L9);
+        opts.viewMode = meta.viewMode;
         that.reset({ ...opts });
 
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;

@@ -1,0 +1,398 @@
+import {
+    AnimationAction,
+    AnimationClip,
+    AnimationMixer,
+    Clock,
+    Group,
+    Matrix4,
+    Mesh,
+    MeshStandardMaterial,
+    PerspectiveCamera,
+    Quaternion,
+    Scene,
+    Vector3,
+    MathUtils,
+} from 'three';
+import { Events } from '../events/Events';
+import {
+    OnViewerUpdate,
+    GetScene,
+    GetControls,
+    GetCamera,
+    GetPlayer,
+    MovePlayer,
+    MovePlayerByAngle,
+    MovePlayerToTarget,
+    GetOptions,
+} from '../events/EventConstants';
+import { GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
+import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
+
+export function setupPlayer(events: Events) {
+    let disposed: boolean = false;
+    const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
+    const fire = (key: number, ...args: any): any => events.fire(key, ...args);
+
+    const opts: Reall3dViewerOptions = fire(GetOptions);
+    const scene: Scene = fire(GetScene);
+    const orbitControls: OrbitControls = fire(GetControls);
+    const camera: PerspectiveCamera = fire(GetCamera);
+    let loading = false;
+    let ready = false;
+    orbitControls.enablePan = false;
+
+    let player: Group;
+    let mixer: AnimationMixer | null = null;
+    let clock = new Clock();
+    let actions: PlayerActions | null = null;
+    let handleTimeout: any = null;
+    let angleHandleTimeout: any = null;
+
+    let isMovingToTarget = false; // 是否正在向目标点移动
+    let targetPosition: Vector3 | null = null; // 目标点（地面投影）
+    const targetReachThreshold = 0.1; // 到达目标的距离阈值（避免精度问题）
+    const walkTimeThreshold = 5; // 步行耗时阈值（秒）
+
+    // 角色控制配置
+    const characterControls: CharacterControls = {
+        key: [0, 0, 0], // [前后(相机视角), 左右(相机视角), 是否奔跑]
+        ease: new Vector3(),
+        position: new Vector3(122.47224066721247, 1.5, -37.783964755157584),
+        up: new Vector3(0, 1, 0),
+        rotate: new Quaternion(),
+        current: 'Idle',
+        fadeDuration: 0.5,
+        runVelocity: 10, // 奔跑速度
+        walkVelocity: 2, // 行走速度
+        rotateSpeed: 0.1,
+        moveAngle: null, // 摇杆偏离角度（弧度，相对于相机视角）
+        moveIntensity: 0, // 摇杆移动力度（0~1，0=无移动，1=最大速度）
+    };
+
+    on(GetPlayer, () => player);
+
+    on(MovePlayer, (forward?: boolean, backward?: boolean, left?: boolean, right?: boolean, run?: boolean) => {
+        if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+
+        // 向目标移动时，优先中断目标移动
+        stopMoveToTarget();
+
+        if (handleTimeout) {
+            clearTimeout(handleTimeout);
+            handleTimeout = null;
+        }
+
+        characterControls.moveAngle = null;
+        characterControls.moveIntensity = 0;
+
+        characterControls.key[0] = forward ? -1 : backward ? 1 : 0;
+        characterControls.key[1] = right ? 1 : left ? -1 : 0;
+        characterControls.key[2] = run ? 1 : 0;
+
+        handleTimeout = setTimeout(() => (characterControls.key = [0, 0, 0]), 500);
+    });
+
+    on(MovePlayerByAngle, (angle = 0, intensity = 1) => {
+        if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+
+        // 向目标移动时，优先中断目标移动
+        stopMoveToTarget();
+
+        if (angleHandleTimeout) {
+            clearTimeout(angleHandleTimeout);
+            angleHandleTimeout = null;
+        }
+        characterControls.key = [0, 0, 0];
+
+        const clampIntensity = MathUtils.clamp(intensity, 0, 1);
+
+        if (clampIntensity <= 0) {
+            characterControls.moveAngle = null;
+            characterControls.moveIntensity = 0;
+            characterControls.key[2] = 0;
+            return;
+        }
+
+        characterControls.key[2] = 0;
+        const radAngle = MathUtils.degToRad(-angle);
+
+        characterControls.moveAngle = radAngle;
+        characterControls.moveIntensity = clampIntensity;
+
+        angleHandleTimeout = setTimeout(() => {
+            characterControls.moveAngle = null;
+            characterControls.moveIntensity = 0;
+            characterControls.key[2] = 0;
+        }, 500);
+    });
+
+    /**
+     * 让角色向指定目标点移动（新增水平距离最大值限制）
+     * @param targetWorldPos 世界坐标系目标点
+     * @param maxHorizontalDistance 最大距离阈值
+     */
+    on(MovePlayerToTarget, (targetWorldPos?: Vector3, maxHorizontalDistance: number = 100) => {
+        if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+        if (!targetWorldPos) return;
+
+        if (Math.abs(targetWorldPos.y - characterControls.position.y) > 100) return; // 超过高度时忽略
+
+        // 中断原有控制
+        stopMoveToTarget();
+        characterControls.key = [0, 0, 0];
+        characterControls.moveAngle = null;
+        characterControls.moveIntensity = 0;
+
+        // 1. 计算目标点的地面投影（Y轴与角色保持一致，水平移动）
+        const targetProjected = new Vector3(targetWorldPos.x, characterControls.position.y, targetWorldPos.z);
+
+        // 2. 计算角色到目标投影点的方向和距离
+        const directionToTarget = new Vector3(
+            targetProjected.x - characterControls.position.x,
+            0, // 仅计算水平方向
+            targetProjected.z - characterControls.position.z,
+        );
+        let distance = directionToTarget.length();
+
+        // 限制最大水平距离
+        let limitedTarget = targetProjected; // 默认使用原目标点
+        if (distance > maxHorizontalDistance) {
+            // 超过最大值时，沿方向取最大距离的点
+            directionToTarget.normalize(); // 归一化方向向量
+            limitedTarget = new Vector3(
+                characterControls.position.x + directionToTarget.x * maxHorizontalDistance,
+                characterControls.position.y,
+                characterControls.position.z + directionToTarget.z * maxHorizontalDistance,
+            );
+            // 更新距离为最大值
+            distance = maxHorizontalDistance;
+        }
+
+        // 3. 判断是否需要移动（距离小于阈值则跳过）
+        if (distance < targetReachThreshold) return; // 已在目标点，无需移动
+
+        // 4. 判断是否需要奔跑：步行耗时>阈值时长则奔跑
+        const walkTime = distance / characterControls.walkVelocity;
+        const needRun = walkTime > walkTimeThreshold;
+
+        // 5. 设置目标移动状态（使用限定后的目标点）
+        isMovingToTarget = true;
+        targetPosition = limitedTarget; // 替换为限定后的目标点
+        characterControls.key[2] = needRun ? 1 : 0; // 标记是否奔跑（复用key[2]字段）
+    });
+
+    on(
+        OnViewerUpdate,
+        () => {
+            if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+            loadCharacterModelOnce();
+            updateCharacter();
+        },
+        true,
+    );
+
+    // 停止向目标移动的辅助函数
+    function stopMoveToTarget() {
+        isMovingToTarget = false;
+        targetPosition = null;
+    }
+
+    function loadCharacterModelOnce() {
+        if (loading) return;
+        loading = true;
+
+        const loader = new GLTFLoader();
+        loader.load(
+            'Soldier.glb',
+            gltf => {
+                const model = gltf.scene;
+                model.rotation.x = Math.PI;
+
+                player = new Group();
+                player.add(model);
+
+                model.traverse((object: any) => {
+                    if (object.isMesh) {
+                        const mesh = object as Mesh;
+                        mesh.castShadow = true;
+                        mesh.receiveShadow = true;
+
+                        if (mesh.material instanceof MeshStandardMaterial) {
+                            mesh.material.metalness = 1.0;
+                            mesh.material.roughness = 0.2;
+                            mesh.material.color.set(1, 1, 1);
+                            if (mesh.material.map) {
+                                mesh.material.metalnessMap = mesh.material.map;
+                            }
+                        }
+                    }
+                });
+
+                mixer = new AnimationMixer(model);
+                const animations = gltf.animations as AnimationClip[];
+
+                actions = {
+                    Idle: mixer.clipAction(animations[0]),
+                    Walk: mixer.clipAction(animations[3]),
+                    Run: mixer.clipAction(animations[1]),
+                };
+
+                Object.entries(actions).forEach(([key, action]) => {
+                    action.enabled = true;
+                    action.setEffectiveTimeScale(1);
+                    action.setEffectiveWeight(key === 'Idle' ? 1 : 0);
+                });
+                actions.Idle.play();
+
+                player.position.copy(characterControls.position);
+
+                scene.add(player);
+
+                ready = true;
+                console.debug('模型加载完成，动画初始化成功');
+            },
+            () => {},
+            error => {
+                console.error('model load failed!', error);
+                loading = false;
+            },
+        );
+    }
+
+    /**
+     * 更新角色状态
+     */
+    function updateCharacter(): void {
+        if (!ready) return;
+
+        const delta = clock.getDelta();
+        const { key, ease, position, up, rotate, current, fadeDuration, runVelocity, walkVelocity, rotateSpeed, moveAngle, moveIntensity } = characterControls;
+
+        let moveVector = new Vector3(0, 0, 0);
+        let hasMoveInput = false;
+
+        if (isMovingToTarget && targetPosition) {
+            // 优先处理向目标点移动
+            hasMoveInput = true;
+
+            // 1. 计算角色到目标点的方向向量（水平）
+            const direction = new Vector3(position.x - targetPosition.x, 0, position.z - targetPosition.z);
+
+            // 2. 判断是否到达目标点
+            const distance = direction.length();
+            if (distance < 1) key[2] = 0; // 跑到边上变行走
+
+            if (distance < targetReachThreshold) {
+                stopMoveToTarget(); // 到达目标，停止移动
+                hasMoveInput = false;
+            } else {
+                // 3. 归一化方向向量，计算移动向量
+                direction.normalize();
+                // 适配模型朝向（乘-1）
+                moveVector = direction.multiplyScalar(-1);
+            }
+        } else if (moveAngle !== null && moveIntensity > 0) {
+            // 兼容原有摇杆角度移动
+            hasMoveInput = true;
+            const cameraForward = new Vector3();
+            camera.getWorldDirection(cameraForward);
+            cameraForward.y = 0;
+            cameraForward.normalize();
+
+            const cameraRight = new Vector3();
+            cameraRight.crossVectors(up, cameraForward).normalize();
+
+            const targetDirection = new Vector3();
+            targetDirection.x = Math.sin(moveAngle) * cameraRight.x + Math.cos(moveAngle) * cameraForward.x;
+            targetDirection.z = Math.sin(moveAngle) * cameraRight.z + Math.cos(moveAngle) * cameraForward.z;
+            targetDirection.normalize();
+
+            moveVector = targetDirection.multiplyScalar(-1 * moveIntensity);
+        } else if (key[0] !== 0 || key[1] !== 0) {
+            // 兼容原有前后左右移动
+            hasMoveInput = true;
+            const cameraDirection = new Vector3();
+            camera.getWorldDirection(cameraDirection);
+            cameraDirection.y = 0;
+            cameraDirection.normalize();
+
+            const cameraRight = new Vector3();
+            cameraRight.crossVectors(up, cameraDirection).normalize();
+
+            moveVector.addScaledVector(cameraDirection, key[0] * -1);
+            moveVector.addScaledVector(cameraRight, key[1]);
+            if (moveVector.length() > 0) moveVector.normalize();
+        }
+
+        // 动画切换逻辑
+        const play: 'Idle' | 'Walk' | 'Run' = hasMoveInput ? (key[2] ? 'Run' : 'Walk') : 'Idle';
+
+        if (current !== play) {
+            const currentAction = actions[play];
+            const oldAction = actions[current];
+            characterControls.current = play;
+
+            currentAction.reset();
+            currentAction.weight = 1.0;
+            currentAction.stopFading();
+            oldAction.stopFading();
+
+            if (play !== 'Idle') {
+                currentAction.time = oldAction.time * (currentAction.getClip().duration / oldAction.getClip().duration);
+            }
+
+            (oldAction as any)._scheduleFading(fadeDuration, oldAction.getEffectiveWeight(), 0);
+            (currentAction as any)._scheduleFading(fadeDuration, currentAction.getEffectiveWeight(), 1);
+            currentAction.play();
+        }
+
+        // 角色移动+转向
+        if (play !== 'Idle') {
+            const baseVelocity = play === 'Run' ? runVelocity : walkVelocity;
+            // 目标移动时力度为1，摇杆/前后左右时复用原有逻辑
+            const finalIntensity = isMovingToTarget ? 1 : moveIntensity || 1;
+            const finalVelocity = baseVelocity * finalIntensity;
+            moveVector.multiplyScalar(finalVelocity * delta);
+
+            // 角色转向：朝向移动方向
+            if (moveVector.length() > 0) {
+                const targetMatrix = new Matrix4();
+                targetMatrix.lookAt(new Vector3(0, 0, 0), moveVector.clone().negate(), up);
+                rotate.setFromRotationMatrix(targetMatrix);
+                player.quaternion.rotateTowards(rotate, rotateSpeed);
+            }
+
+            // 更新位置
+            position.add(moveVector);
+            player.position.copy(position);
+            orbitControls.target.copy(position).add(new Vector3(0, -1.7, 0));
+            orbitControls.object.position.add(moveVector);
+        }
+
+        // 更新动画和控制器
+        mixer.update(delta);
+    }
+}
+
+/** 角色控制配置接口 */
+interface CharacterControls {
+    key: [number, number, number];
+    ease: Vector3;
+    position: Vector3;
+    up: Vector3;
+    rotate: Quaternion;
+    current: 'Idle' | 'Walk' | 'Run';
+    fadeDuration: number;
+    runVelocity: number;
+    walkVelocity: number;
+    rotateSpeed: number;
+    moveAngle: number | null;
+    moveIntensity: number;
+}
+
+/** 动画动作集合接口 */
+interface PlayerActions {
+    Idle: AnimationAction;
+    Walk: AnimationAction;
+    Run: AnimationAction;
+}

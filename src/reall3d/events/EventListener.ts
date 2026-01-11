@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Matrix4, PerspectiveCamera, Vector3, Scene, Quaternion } from 'three';
+import { Matrix4, PerspectiveCamera, Vector3, Scene, Quaternion, Group } from 'three';
 import { Events } from './Events';
 import {
     GetCanvas,
@@ -51,6 +51,10 @@ import {
     FlySavePositions,
     StopBgAudio,
     FlyingPause,
+    MovePlayer,
+    MovePlayerByAngle,
+    MovePlayerToTarget,
+    GetPlayer,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -148,6 +152,23 @@ export function setupEventListener(events: Events) {
             return;
         }
 
+        if (opts.viewMode === 3) {
+            const forward = keySet.has('KeyW') || keySet.has('ArrowUp');
+            const backward = keySet.has('KeyS') || keySet.has('ArrowDown');
+            const left = keySet.has('KeyA') || keySet.has('ArrowLeft');
+            const right = keySet.has('KeyD') || keySet.has('ArrowRight');
+            const run = keySet.has('ShiftLeft') || keySet.has('ShiftRight') || keySet.has('ControlLeft') || keySet.has('ControlRight');
+            fire(MovePlayer, forward, backward, left, right, run);
+            if (keySet.has('KeyY')) {
+                fire(FlySavePositions, false);
+                fire(MetaSaveSmallSceneCameraInfo);
+                const player: Group = fire(GetPlayer);
+                console.debug(player?.position);
+                keySet.clear();
+            }
+            return;
+        }
+
         if (keySet.has('Space')) {
             opts.bigSceneMode ? fire(SplatSetPointcloudMode) : fire(SplatSwitchDisplayMode);
             keySet.clear();
@@ -191,16 +212,20 @@ export function setupEventListener(events: Events) {
             !opts.bigSceneMode && window.open('/editor/index.html?url=' + encodeURIComponent((fire(GetSplatMesh) as SplatMesh).meta.url));
             keySet.clear();
         } else if (keySet.has('KeyW')) {
-            moveForward(fire(GetControls), 0.15);
+            fire(MovePlayer, keySet.has('KeyW'), keySet.has('KeyS'), keySet.has('KeyA'), keySet.has('KeyD'), keySet.has('ShiftLeft'));
+            // moveForward(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyS')) {
-            moveBackward(fire(GetControls), 0.15);
+            fire(MovePlayer, keySet.has('KeyW'), keySet.has('KeyS'), keySet.has('KeyA'), keySet.has('KeyD'));
+            // moveBackward(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyA')) {
-            moveLeft(fire(GetControls), 0.15);
+            fire(MovePlayer, keySet.has('KeyW'), keySet.has('KeyS'), keySet.has('KeyA'), keySet.has('KeyD'));
+            // moveLeft(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyD')) {
-            moveRight(fire(GetControls), 0.15);
+            fire(MovePlayer, keySet.has('KeyW'), keySet.has('KeyS'), keySet.has('KeyA'), keySet.has('KeyD'));
+            // moveRight(fire(GetControls), 0.15);
             keySet.clear();
         } else if (keySet.has('KeyQ')) {
             rotateTargetLeft(fire(GetControls));
@@ -219,11 +244,16 @@ export function setupEventListener(events: Events) {
 
     on(SelectPointAndLookAt, async (x: number, y: number) => {
         if (mouseState.move) return; // 鼠标有移动时忽略
-        if ((fire(GetOptions) as Reall3dViewerOptions).disableRightClickFocus) return; // 禁用右击聚焦时忽略
+        const opts: Reall3dViewerOptions = fire(GetOptions);
+        if (opts.disableRightClickFocus) return; // 禁用右击聚焦时忽略
 
         const rs: Vector3[] = await fire(RaycasterRayIntersectPoints, x, y);
         if (rs.length) {
-            fire(CameraSetLookAt, rs[0], true, false); // 最后参数false时平移效果，true时旋转效果
+            if (opts.viewMode === 3) {
+                fire(MovePlayerToTarget, rs[0]);
+            } else {
+                fire(CameraSetLookAt, rs[0], true, false); // 最后参数false时平移效果，true时旋转效果
+            }
         }
     });
 
@@ -256,22 +286,35 @@ export function setupEventListener(events: Events) {
 
         if (disposed || e.code === 'F5') return;
         e.preventDefault();
+
+        lastActionTome = Date.now();
+        const opts: Reall3dViewerOptions = fire(GetOptions);
+        if (opts.viewMode === 3) {
+            keySet.add(e.code);
+            return;
+        }
+
         if (e.code !== 'KeyR') {
             keySet.add(e.code);
             fire(StopAutoRotate);
         }
-        lastActionTome = Date.now();
     };
 
     const keyupEventListener = (e: KeyboardEvent) => {
         if (e.target['type'] === 'text') return;
 
         if (disposed) return;
+        lastActionTome = Date.now();
+        const opts: Reall3dViewerOptions = fire(GetOptions);
+        if (opts.viewMode === 3) {
+            keySet.delete(e.code);
+            return;
+        }
+
         e.code === 'KeyR' && keySet.add(e.code);
         if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
             fire(ControlsUpdateRotateAxis);
         }
-        lastActionTome = Date.now();
     };
 
     on(
@@ -587,128 +630,129 @@ export function setupEventListener(events: Events) {
         canvas.removeEventListener('touchend', canvasTouchendEventListener);
         window.removeEventListener('resize', resize);
     });
-}
 
-// 使用当前相机的up向量定义水平面
-function moveCameraHorizontal(controls, direction, step = 0.012) {
-    // 使用相机的up向量作为平面法线
-    const planeNormal = controls.object.up.clone().normalize();
+    // 使用当前相机的up向量定义水平面
+    function moveCameraHorizontal(controls, direction, step = 0.012) {
+        // 使用相机的up向量作为平面法线
+        const planeNormal = controls.object.up.clone().normalize();
 
-    // 将方向向量投影到以up向量为法线的平面上
-    const projectedDirection = new Vector3().copy(direction).projectOnPlane(planeNormal).normalize();
+        // 将方向向量投影到以up向量为法线的平面上
+        const projectedDirection = new Vector3().copy(direction).projectOnPlane(planeNormal).normalize();
 
-    const moveVector = projectedDirection.multiplyScalar(step);
-    controls.object.position.add(moveVector);
-    controls.target.add(moveVector);
-    controls.update();
-}
-// 左移
-function moveLeft(controls, step = 0.2) {
-    const direction = new Vector3();
-    controls.object.getWorldDirection(direction);
-    const leftDir = new Vector3().crossVectors(controls.object.up, direction).normalize();
+        const moveVector = projectedDirection.multiplyScalar(step);
 
-    moveCameraHorizontal(controls, leftDir, step);
-}
-// 右移
-function moveRight(controls, step = 0.2) {
-    const direction = new Vector3();
-    controls.object.getWorldDirection(direction);
-    const rightDir = new Vector3().crossVectors(controls.object.up, direction).normalize().negate();
+        controls.object.position.add(moveVector);
+        controls.target.add(moveVector);
+        controls.update();
+    }
+    // 左移
+    function moveLeft(controls, step = 0.2) {
+        const direction = new Vector3();
+        controls.object.getWorldDirection(direction);
+        const leftDir = new Vector3().crossVectors(controls.object.up, direction).normalize();
 
-    moveCameraHorizontal(controls, rightDir, step);
-}
-// 前进
-function moveForward(controls, step = 0.2) {
-    const forwardDir = new Vector3();
-    controls.object.getWorldDirection(forwardDir);
-    moveCameraHorizontal(controls, forwardDir, step);
-}
-// 后退
-function moveBackward(controls, step = 0.2) {
-    const backwardDir = new Vector3();
-    controls.object.getWorldDirection(backwardDir).negate();
-    moveCameraHorizontal(controls, backwardDir, step);
-}
+        moveCameraHorizontal(controls, leftDir, step);
+    }
+    // 右移
+    function moveRight(controls, step = 0.2) {
+        const direction = new Vector3();
+        controls.object.getWorldDirection(direction);
+        const rightDir = new Vector3().crossVectors(controls.object.up, direction).normalize().negate();
 
-/**
- * 相机位置不变，目标点顺时针转动（像人转动头部）
- * @param {OrbitControls} controls - 轨道控制器
- * @param {number} angle - 转动角度（弧度制）
- */
-function rotateTargetClockwise(controls, angle = 0.006) {
-    // 获取相机当前位置和目标点位置
-    const cameraPosition = controls.object.position.clone();
-    const targetPosition = controls.target.clone();
+        moveCameraHorizontal(controls, rightDir, step);
+    }
+    // 前进
+    function moveForward(controls, step = 0.2) {
+        const forwardDir = new Vector3();
+        controls.object.getWorldDirection(forwardDir);
+        moveCameraHorizontal(controls, forwardDir, step);
+    }
+    // 后退
+    function moveBackward(controls, step = 0.2) {
+        const backwardDir = new Vector3();
+        controls.object.getWorldDirection(backwardDir).negate();
+        moveCameraHorizontal(controls, backwardDir, step);
+    }
 
-    // 计算相机到目标的向量
-    const direction = new Vector3().subVectors(targetPosition, cameraPosition);
+    /**
+     * 相机位置不变，目标点顺时针转动（像人转动头部）
+     * @param {OrbitControls} controls - 轨道控制器
+     * @param {number} angle - 转动角度（弧度制）
+     */
+    function rotateTargetClockwise(controls, angle = 0.006) {
+        // 获取相机当前位置和目标点位置
+        const cameraPosition = controls.object.position.clone();
+        const targetPosition = controls.target.clone();
 
-    // 获取相机的上方向（旋转轴）
-    const upVector = controls.object.up.clone().normalize();
+        // 计算相机到目标的向量
+        const direction = new Vector3().subVectors(targetPosition, cameraPosition);
 
-    // 创建四元数表示顺时针旋转
-    const quaternion = new Quaternion();
-    quaternion.setFromAxisAngle(upVector, -angle); // 负角度表示顺时针
+        // 获取相机的上方向（旋转轴）
+        const upVector = controls.object.up.clone().normalize();
 
-    // 应用旋转到方向向量
-    direction.applyQuaternion(quaternion);
+        // 创建四元数表示顺时针旋转
+        const quaternion = new Quaternion();
+        quaternion.setFromAxisAngle(upVector, -angle); // 负角度表示顺时针
 
-    // 计算新的目标点位置
-    const newTargetPosition = new Vector3().addVectors(cameraPosition, direction);
+        // 应用旋转到方向向量
+        direction.applyQuaternion(quaternion);
 
-    // 更新目标点
-    controls.target.copy(newTargetPosition);
-    controls.update();
-}
-// 左看
-function rotateTargetLeft(controls) {
-    rotateTargetClockwise(controls, -0.01);
-}
-// 右看
-function rotateTargetRight(controls) {
-    rotateTargetClockwise(controls, 0.01);
-}
+        // 计算新的目标点位置
+        const newTargetPosition = new Vector3().addVectors(cameraPosition, direction);
 
-/**
- * 相机位置不变，目标点上下转动（像人抬头低头）
- * @param {OrbitControls} controls - 轨道控制器
- * @param {number} angle - 转动角度（弧度制），正数为抬头，负数为低头
- */
-function rotateTargetVertical(controls, angle = 0.006) {
-    // 获取相机当前位置和目标点位置
-    const cameraPosition = controls.object.position.clone();
-    const targetPosition = controls.target.clone();
+        // 更新目标点
+        controls.target.copy(newTargetPosition);
+        controls.update();
+    }
+    // 左看
+    function rotateTargetLeft(controls) {
+        rotateTargetClockwise(controls, -0.01);
+    }
+    // 右看
+    function rotateTargetRight(controls) {
+        rotateTargetClockwise(controls, 0.01);
+    }
 
-    // 计算相机到目标的向量
-    const direction = new Vector3().subVectors(targetPosition, cameraPosition);
+    /**
+     * 相机位置不变，目标点上下转动（像人抬头低头）
+     * @param {OrbitControls} controls - 轨道控制器
+     * @param {number} angle - 转动角度（弧度制），正数为抬头，负数为低头
+     */
+    function rotateTargetVertical(controls, angle = 0.006) {
+        // 获取相机当前位置和目标点位置
+        const cameraPosition = controls.object.position.clone();
+        const targetPosition = controls.target.clone();
 
-    // 获取相机的右侧方向（用于垂直旋转的轴）
-    const forwardDir = new Vector3();
-    controls.object.getWorldDirection(forwardDir);
-    const rightVector = new Vector3().crossVectors(controls.object.up, forwardDir).normalize();
+        // 计算相机到目标的向量
+        const direction = new Vector3().subVectors(targetPosition, cameraPosition);
 
-    // 创建四元数表示垂直旋转
-    const quaternion = new Quaternion();
-    quaternion.setFromAxisAngle(rightVector, angle);
+        // 获取相机的右侧方向（用于垂直旋转的轴）
+        const forwardDir = new Vector3();
+        controls.object.getWorldDirection(forwardDir);
+        const rightVector = new Vector3().crossVectors(controls.object.up, forwardDir).normalize();
 
-    // 应用旋转到方向向量
-    direction.applyQuaternion(quaternion);
+        // 创建四元数表示垂直旋转
+        const quaternion = new Quaternion();
+        quaternion.setFromAxisAngle(rightVector, angle);
 
-    // 计算新的目标点位置
-    const newTargetPosition = new Vector3().addVectors(cameraPosition, direction);
+        // 应用旋转到方向向量
+        direction.applyQuaternion(quaternion);
 
-    // 更新目标点
-    controls.target.copy(newTargetPosition);
-    controls.update();
-}
+        // 计算新的目标点位置
+        const newTargetPosition = new Vector3().addVectors(cameraPosition, direction);
 
-// 抬头
-function rotateTargetUp(controls, angle = 0.01) {
-    rotateTargetVertical(controls, -angle);
-}
+        // 更新目标点
+        controls.target.copy(newTargetPosition);
+        controls.update();
+    }
 
-// 低头
-function rotateTargetDown(controls, angle = 0.01) {
-    rotateTargetVertical(controls, angle);
+    // 抬头
+    function rotateTargetUp(controls, angle = 0.01) {
+        rotateTargetVertical(controls, -angle);
+    }
+
+    // 低头
+    function rotateTargetDown(controls, angle = 0.01) {
+        rotateTargetVertical(controls, angle);
+    }
 }
