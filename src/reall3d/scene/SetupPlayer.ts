@@ -39,7 +39,6 @@ export function setupPlayer(events: Events) {
     const camera: PerspectiveCamera = fire(GetCamera);
     let loading = false;
     let ready = false;
-    orbitControls.enablePan = false;
 
     let player: Group;
     let mixer: AnimationMixer | null = null;
@@ -185,6 +184,8 @@ export function setupPlayer(events: Events) {
         OnViewerUpdate,
         () => {
             if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+            orbitControls.enablePan && (orbitControls.enablePan = false);
+
             loadCharacterModelOnce();
             updateCharacter();
         },
