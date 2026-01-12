@@ -23,6 +23,7 @@ import {
     ClearFlyPosition,
     Flying,
     FlySavePositions,
+    OnViewerDispose,
 } from '../../events/EventConstants';
 import { SplatMesh } from '../../meshs/splatmesh/SplatMesh';
 import { MarkDistanceLine } from '../../meshs/mark/MarkDistanceLine';
@@ -446,20 +447,24 @@ export function setupMapEventListener(events: Events) {
     canvas.addEventListener('touchmove', canvasTouchmoveEventListener, { passive: false });
     canvas.addEventListener('touchend', canvasTouchendEventListener, { passive: false });
 
-    on(EventListenerDispose, () => {
-        disposed = true;
-        window.removeEventListener('keydown', keydownEventListener);
-        window.removeEventListener('keyup', keyupEventListener);
-        window.removeEventListener('blur', blurEventListener);
-        window.removeEventListener('wheel', wheelEventListener);
-        canvas.removeEventListener('contextmenu', canvasContextmenuEventListener);
-        canvas.removeEventListener('mousedown', canvasMousedownEventListener);
-        canvas.removeEventListener('mousemove', canvasMousemoveEventListener);
-        canvas.removeEventListener('mouseup', canvasMouseupEventListener);
-        canvas.removeEventListener('touchstart', canvasTouchstartEventListener);
-        canvas.removeEventListener('touchmove', canvasTouchmoveEventListener);
-        canvas.removeEventListener('touchend', canvasTouchendEventListener);
-    });
+    on(
+        OnViewerDispose,
+        () => {
+            disposed = true;
+            window.removeEventListener('keydown', keydownEventListener);
+            window.removeEventListener('keyup', keyupEventListener);
+            window.removeEventListener('blur', blurEventListener);
+            window.removeEventListener('wheel', wheelEventListener);
+            canvas.removeEventListener('contextmenu', canvasContextmenuEventListener);
+            canvas.removeEventListener('mousedown', canvasMousedownEventListener);
+            canvas.removeEventListener('mousemove', canvasMousemoveEventListener);
+            canvas.removeEventListener('mouseup', canvasMouseupEventListener);
+            canvas.removeEventListener('touchstart', canvasTouchstartEventListener);
+            canvas.removeEventListener('touchmove', canvasTouchmoveEventListener);
+            canvas.removeEventListener('touchend', canvasTouchendEventListener);
+        },
+        true,
+    );
 
     on(SelectPointAndLookAt, async (x: number, y: number) => {
         const rs: Vector3[] = await fire(RaycasterRayIntersectPoints, x, y);

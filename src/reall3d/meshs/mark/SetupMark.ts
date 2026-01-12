@@ -8,7 +8,6 @@ import {
     ComputePlansArea,
     ComputePlansCenter,
     ComputePoint3Area,
-    CSS3DRendererDispose,
     GetCamera,
     GetCSS3DRenderer,
     GetMarkWarpElement,
@@ -37,6 +36,7 @@ import {
     OnSetFlyTargets,
     GetSplatMesh,
     GetControls,
+    OnViewerDispose,
 } from './../../events/EventConstants';
 import { MarkMultiLines } from './MarkMultiLines';
 import { CSS3DRenderer } from 'three/examples/jsm/Addons.js';
@@ -72,8 +72,8 @@ export function setupMark(events: Events) {
 
     on(GetMarkWarpElement, () => divMarkWarp);
     on(GetCSS3DRenderer, () => css3DRenderer);
-    on(CSS3DRendererDispose, () => document.body.removeChild(divMarkWarp));
     on(OnViewerUpdate, () => css3DRenderer.render(fire(GetScene), fire(GetCamera)), true);
+    on(OnViewerDispose, () => document.body.removeChild(divMarkWarp), true);
 
     on(AddMarkToWeakRef, (mark: any) => {
         const name: string = mark?.getMarkData?.()?.name || mark?.name;

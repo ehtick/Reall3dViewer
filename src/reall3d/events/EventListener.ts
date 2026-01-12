@@ -55,6 +55,7 @@ import {
     MovePlayerByAngle,
     MovePlayerToTarget,
     GetPlayer,
+    OnViewerDispose,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -611,21 +612,25 @@ export function setupEventListener(events: Events) {
         renderer.setSize(width, height);
     }
 
-    on(EventListenerDispose, () => {
-        disposed = true;
-        window.removeEventListener('keydown', keydownEventListener);
-        window.removeEventListener('keyup', keyupEventListener);
-        window.removeEventListener('blur', blurEventListener);
-        window.removeEventListener('wheel', wheelEventListener);
-        canvas.removeEventListener('contextmenu', canvasContextmenuEventListener);
-        canvas.removeEventListener('mousedown', canvasMousedownEventListener);
-        canvas.removeEventListener('mousemove', canvasMousemoveEventListener);
-        canvas.removeEventListener('mouseup', canvasMouseupEventListener);
-        canvas.removeEventListener('touchstart', canvasTouchstartEventListener);
-        canvas.removeEventListener('touchmove', canvasTouchmoveEventListener);
-        canvas.removeEventListener('touchend', canvasTouchendEventListener);
-        window.removeEventListener('resize', resize);
-    });
+    on(
+        OnViewerDispose,
+        () => {
+            disposed = true;
+            window.removeEventListener('keydown', keydownEventListener);
+            window.removeEventListener('keyup', keyupEventListener);
+            window.removeEventListener('blur', blurEventListener);
+            window.removeEventListener('wheel', wheelEventListener);
+            canvas.removeEventListener('contextmenu', canvasContextmenuEventListener);
+            canvas.removeEventListener('mousedown', canvasMousedownEventListener);
+            canvas.removeEventListener('mousemove', canvasMousemoveEventListener);
+            canvas.removeEventListener('mouseup', canvasMouseupEventListener);
+            canvas.removeEventListener('touchstart', canvasTouchstartEventListener);
+            canvas.removeEventListener('touchmove', canvasTouchmoveEventListener);
+            canvas.removeEventListener('touchend', canvasTouchendEventListener);
+            window.removeEventListener('resize', resize);
+        },
+        true,
+    );
 
     // 使用当前相机的up向量定义水平面
     function moveCameraHorizontal(controls, direction, step = 0.012) {

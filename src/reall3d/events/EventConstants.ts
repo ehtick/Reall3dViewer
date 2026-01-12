@@ -249,8 +249,6 @@ export const GetMarkWarpElement = i++;
 /** 取CSS3DRenderer */
 export const GetCSS3DRenderer = i++;
 
-/** 销毁 */
-export const CSS3DRendererDispose = i++;
 /** 添加标注弱引用缓存 */
 export const AddMarkToWeakRef = i++;
 /** 从弱引用缓存取标注对象 */
@@ -471,8 +469,6 @@ export const GetSortType = i++;
 export const UpdateSortType = i++;
 /** 显示虚拟摇杆 */
 export const ShowJoystick = i++;
-/** 销毁虚拟摇杆 */
-export const JoystickDispose = i++;
 /** 取玩家 */
 export const GetPlayer = i++;
 /** 移动玩家(前后左右) */

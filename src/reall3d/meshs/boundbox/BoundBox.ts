@@ -5,10 +5,14 @@ import { Object3D, BufferGeometry, LineBasicMaterial, LineSegments, Vector3, Flo
 
 export class BoundBox extends Object3D {
     private boxLines: LineSegments;
+    public mins: number[] = [0, 0, 0];
+    public maxs: number[] = [0, 0, 0];
 
     constructor(minX: number = 0, minY: number = 0, minZ: number = 0, maxX: number = 0, maxY: number = 0, maxZ: number = 0) {
         super();
         const that = this;
+        that.mins = [minX, minY, minZ];
+        that.maxs = [maxX, maxY, maxZ];
         const geometry = new BufferGeometry();
         const material = new LineBasicMaterial({ color: '#ffffff' });
         // material.transparent = true;

@@ -2,9 +2,9 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { Matrix4, Vector3 } from 'three';
-import { CameraInfo } from '../controls/SetupCameraControls';
 import { ModelOptions } from './ModelOptions';
 import { SplatTiles } from './SplatTiles';
+import { MetaData } from './MetaData';
 
 /**
  * SPX file header information
@@ -197,117 +197,4 @@ export enum ModelStatus {
     FetchFailed,
     /** Invalid model format or data */
     Invalid,
-}
-
-/**
- * Metadata
- */
-export interface MetaData {
-    /** Name */
-    name?: string;
-    /** Version */
-    version?: string;
-    /** Update date (YYYYMMDD) */
-    updateDate?: number;
-
-    /** Enable auto-rotation */
-    autoRotate?: boolean;
-    /** Enable debug mode */
-    debugMode?: boolean;
-    /** Enable point-cloud rendering */
-    pointcloudMode?: boolean;
-    /** Maximum render count for mobile */
-    maxRenderCountOfMobile?: number;
-    /** Maximum render count for PC */
-    maxRenderCountOfPc?: number;
-    /** Maximum download count for mobile splats */
-    mobileDownloadLimitSplatCount?: number;
-    /** Maximum download count for PC splats */
-    pcDownloadLimitSplatCount?: number;
-
-    /** Meter scale factor */
-    meterScale?: number;
-    /** Text watermark */
-    watermark?: string;
-    /** Display watermark */
-    showWatermark?: boolean;
-    /** Display bounding box */
-    showBoundBox?: boolean;
-    /** Camera parameters */
-    cameraInfo?: CameraInfo;
-    /** Annotations */
-    marks?: any[];
-    /** Fly-through camera positions */
-    flyPositions?: number[];
-    /** Fly-through camera look-at points */
-    flyTargets?: number[];
-    /** Fly duration */
-    flyDuration?: number;
-    /** Enable joystick, default to false */
-    pcEnableJoystick?: boolean;
-    /** Enable joystick, default to false */
-    mobileEnableJoystick?: boolean;
-
-    /** Audio */
-    audio?: any;
-
-    /** render quality level */
-    qualityLevel?: number;
-    /** sort type */
-    sortType?: number;
-    /** depth near rate */
-    depthNearRate?: number;
-    /** depth near value */
-    depthNearValue?: number;
-    /** 最小可渲染直径像素 */
-    minPixelDiameter?: number;
-    /** 最大直径像素 */
-    maxPixelDiameter?: number;
-    /** 最小可渲染透明度 */
-    minAlpha?: number;
-
-    /** Enable particle loading effect (small scenes) */
-    particleMode?: boolean;
-
-    /** is large scene */
-    isLargeScene?: boolean;
-    /** cut size */
-    cutSize?: number;
-    /** Transformation matrix */
-    transform?: number[];
-    /** Geolocation (EPSG:4326 WGS 84) */
-    WGS84?: number[];
-
-    /** Model URL | lod-meta.json | *.lod.json */
-    url?: string;
-
-    /**
-     * Target LOD levels to select from available data levels.
-     * For example, if data contains levels 0~6, you may select only three levels [0,1,6] for actual use.
-     * Defaults to all available levels in the data.
-     */
-    pcLodTargets?: number[];
-    mobileLodTargets?: number[];
-
-    /**
-     * Distance thresholds to switch between LOD levels.
-     * Different camera distances determine which LOD level to render.
-     * For three LOD levels, define two split points [100,50],
-     * meaning: beyond 100 units uses lowest detail, within 50 units uses highest detail.
-     */
-    pcLodDistances?: number[];
-    mobileLodDistances?: number[];
-
-    mobileLodCacheCount?: number;
-    pcLodCacheCount?: number;
-
-    /**
-     * Environment(skybox) flag. Defaults to false.
-     */
-    enableEnvironment?: boolean;
-
-    /**
-     * View mode. 1:First-Person View, 3:Third-Person View.
-     */
-    viewMode?: number;
 }

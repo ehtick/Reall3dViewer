@@ -26,10 +26,10 @@ import {
     FlyingPlay,
     OnSetFlyDuration,
     ShowJoystick,
-    JoystickDispose,
     GetOptions,
     MovePlayerByAngle,
     RunLoopByFrame,
+    OnViewerDispose,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
 import { MetaData } from '../modeldata/ModelData';
@@ -266,13 +266,18 @@ export function setupFlying(events: Events) {
         initJoystick();
     });
 
-    on(JoystickDispose, (show = true) => {
-        manager?.destroy();
-        let dom = document.getElementById('reall3dviewer-joystick-container');
-        dom && dom.parentNode.removeChild(dom);
-        dom = document.getElementById('reall3dviewer-joystick-styles');
-        dom && dom.parentNode.removeChild(dom);
-    });
+    on(
+        OnViewerDispose,
+        () => {
+            // Joystick Dispose
+            manager?.destroy();
+            let dom = document.getElementById('reall3dviewer-joystick-container');
+            dom && dom.parentNode.removeChild(dom);
+            dom = document.getElementById('reall3dviewer-joystick-styles');
+            dom && dom.parentNode.removeChild(dom);
+        },
+        true,
+    );
 
     function initJoystick() {
         const opts: Reall3dViewerOptions = fire(GetOptions);
