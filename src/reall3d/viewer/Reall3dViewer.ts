@@ -13,7 +13,6 @@ import {
     SplatUpdateShDegree,
     ClearMarkPoint,
     CommonUtilsDispose,
-    CSS3DRendererDispose,
     EventListenerDispose,
     GetMarkFromWeakRef,
     ViewerDispose,
@@ -66,7 +65,7 @@ import {
     OnSetFlyDuration,
     StopBgAudio,
     ShowJoystick,
-    JoystickDispose,
+    OnViewerDispose,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -86,7 +85,7 @@ import { MarkData } from '../meshs/mark/data/MarkData';
 import { getUrl, setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
 import { isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
-import { MetaData } from '../modeldata/ModelData';
+import { MetaData } from '../modeldata/MetaData';
 import { globalEv } from '../events/GlobalEV';
 import { setupPlayer } from '../scene/SetupPlayer';
 
@@ -166,7 +165,6 @@ export class Reall3dViewer {
         setupRaycaster(events);
         setupFocusMarker(events);
         setupFlying(events);
-        setupPlayer(events);
 
         that.splatMesh = new SplatMesh(copyGsViewerOptions(opts));
         on(GetSplatMesh, () => that.splatMesh);
@@ -412,6 +410,7 @@ export class Reall3dViewer {
     public async addScene(sceneUrl: string) {
         const that = this;
         if (that.disposed) return;
+        const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => this.events.on(key, fn, multiFn);
         const fire = (key: number, ...args: any): any => that.events.fire(key, ...args);
 
         let meta: MetaData = {};
@@ -437,6 +436,9 @@ export class Reall3dViewer {
         opts.enableEnvironment && !meta.qualityLevel && (opts.qualityLevel = QualityLevels.L9);
         opts.viewMode = meta.viewMode;
         that.reset({ ...opts });
+
+        on(GetMeta, () => meta);
+        setupPlayer(that.events);
 
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;
 
@@ -531,6 +533,8 @@ export class Reall3dViewer {
         meta.sortType = meta.sortType || opts.sortType || SortTypes.Default1;
 
         on(GetMeta, () => meta);
+        setupPlayer(that.events);
+
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;
 
         // 按元数据调整更新相机、标注等信息
@@ -634,11 +638,9 @@ export class Reall3dViewer {
         const renderer: WebGLRenderer = fire(GetRenderer);
         const canvas = renderer.domElement as HTMLCanvasElement;
 
-        fire(JoystickDispose);
+        fire(OnViewerDispose);
         fire(CommonUtilsDispose);
         fire(ViewerUtilsDispose);
-        fire(CSS3DRendererDispose);
-        fire(EventListenerDispose);
         (fire(GetControls) as CameraControls).dispose();
 
         fire(TraverseDisposeAndClear, fire(GetScene));

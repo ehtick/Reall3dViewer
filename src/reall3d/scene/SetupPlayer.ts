@@ -24,14 +24,22 @@ import {
     MovePlayerByAngle,
     MovePlayerToTarget,
     GetOptions,
+    GetMeta,
 } from '../events/EventConstants';
-import { GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
+import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
+import { MetaData } from '../modeldata/MetaData';
 
 export function setupPlayer(events: Events) {
     let disposed: boolean = false;
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
+
+    const meta: MetaData = fire(GetMeta);
+    if (!meta.player) {
+        meta.viewMode === 3 && console.warn('missing player data in meta');
+        // return;
+    }
 
     const opts: Reall3dViewerOptions = fire(GetOptions);
     const scene: Scene = fire(GetScene);
@@ -52,11 +60,18 @@ export function setupPlayer(events: Events) {
     const targetReachThreshold = 0.1; // 到达目标的距离阈值（避免精度问题）
     const walkTimeThreshold = 5; // 步行耗时阈值（秒）
 
+    // 初始值
+    const playerUrl = meta.player?.url || 'https://reall3d.com/demo-models/player/soldier.glb';
+    const playerScale = meta.player?.scale || 1;
+    const playerRotation = meta.player?.rotation || [180, 0, 0];
+    const playerPosition = meta.player?.position || [0, 0, 0];
+    const playerHeight = meta.player?.height || 1.7;
+
     // 角色控制配置
     const characterControls: CharacterControls = {
         key: [0, 0, 0], // [前后(相机视角), 左右(相机视角), 是否奔跑]
         ease: new Vector3(),
-        position: new Vector3(122.47224066721247, 1.5, -37.783964755157584),
+        position: new Vector3().fromArray(playerPosition),
         up: new Vector3(0, 1, 0),
         rotate: new Quaternion(),
         current: 'Idle',
@@ -203,11 +218,19 @@ export function setupPlayer(events: Events) {
         loading = true;
 
         const loader = new GLTFLoader();
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://reall3d.com/reall3dviewer/libs/draco/'); // https://unpkg.com/three@0.171.0/examples/jsm/libs/draco/gltf/
+        loader.setDRACOLoader(dracoLoader);
+
         loader.load(
-            'Soldier.glb',
+            playerUrl,
             gltf => {
                 const model = gltf.scene;
-                model.rotation.x = Math.PI;
+                model.scale.set(playerScale, playerScale, playerScale);
+                model.rotation.set(0, 0, 0); // 重置原始旋转
+                model.rotateX(MathUtils.degToRad(playerRotation[0]));
+                model.rotateY(MathUtils.degToRad(playerRotation[1]));
+                model.rotateZ(MathUtils.degToRad(playerRotation[2]));
 
                 player = new Group();
                 player.add(model);
@@ -232,11 +255,24 @@ export function setupPlayer(events: Events) {
                 mixer = new AnimationMixer(model);
                 const animations = gltf.animations as AnimationClip[];
 
+                let idle: AnimationClip = null;
+                let walk: AnimationClip = null;
+                let run: AnimationClip = null;
+                let jump: AnimationClip = null;
+                animations.forEach(item => {
+                    const name = item.name.toLowerCase();
+                    if (name.indexOf('idle') >= 0) idle = item;
+                    if (name.indexOf('walk') >= 0) walk = item;
+                    if (name.indexOf('run') >= 0) run = item;
+                    if (name.indexOf('jump') >= 0) jump = item;
+                });
+
                 actions = {
-                    Idle: mixer.clipAction(animations[0]),
-                    Walk: mixer.clipAction(animations[3]),
-                    Run: mixer.clipAction(animations[1]),
+                    Idle: mixer.clipAction(idle),
+                    Walk: mixer.clipAction(walk),
+                    Run: mixer.clipAction(run),
                 };
+                jump && (actions.Jump = mixer.clipAction(jump));
 
                 Object.entries(actions).forEach(([key, action]) => {
                     action.enabled = true;
@@ -245,12 +281,11 @@ export function setupPlayer(events: Events) {
                 });
                 actions.Idle.play();
 
-                player.position.copy(characterControls.position);
+                player.position.fromArray(playerPosition);
 
                 scene.add(player);
 
                 ready = true;
-                console.debug('模型加载完成，动画初始化成功');
             },
             () => {},
             error => {
@@ -325,6 +360,12 @@ export function setupPlayer(events: Events) {
             if (moveVector.length() > 0) moveVector.normalize();
         }
 
+        // 平滑插值
+        const easeFactor = 2 * delta; // 缓动系数（值越大，过渡越快）
+        ease.lerp(moveVector, easeFactor); // ease向moveVector靠近
+        ease.clampLength(0, 1); // 限制最大长度，避免超界
+        moveVector = ease.clone(); // 使用缓动后的ease
+
         // 动画切换逻辑
         const play: 'Idle' | 'Walk' | 'Run' = hasMoveInput ? (key[2] ? 'Run' : 'Walk') : 'Idle';
 
@@ -366,7 +407,7 @@ export function setupPlayer(events: Events) {
             // 更新位置
             position.add(moveVector);
             player.position.copy(position);
-            orbitControls.target.copy(position).add(new Vector3(0, -1.7, 0));
+            orbitControls.target.copy(position).add(new Vector3(0, -playerHeight, 0));
             orbitControls.object.position.add(moveVector);
         }
 
@@ -396,4 +437,5 @@ interface PlayerActions {
     Idle: AnimationAction;
     Walk: AnimationAction;
     Run: AnimationAction;
+    Jump?: AnimationAction;
 }

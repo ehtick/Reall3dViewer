@@ -52,7 +52,7 @@ import { setupGaussianText } from '../../modeldata/text/SetupGaussianText';
 import { setupApi } from '../../api/SetupApi';
 import { initSplatMeshOptions } from '../../utils/ViewerUtils';
 import { isInFrustum, setupCommonUtils } from '../../utils/CommonUtils';
-import { MetaData } from '../../modeldata/ModelData';
+import { MetaData } from '../../modeldata/MetaData';
 import { setupSorter } from '../../sorter/SetupSorter';
 import { BoundBox } from '../boundbox/BoundBox';
 import { QualityLevels, SortTypes } from '../../utils/consts/GlobalConstants';
