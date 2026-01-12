@@ -4,7 +4,7 @@
 import { Events } from '../events/Events';
 import { HttpPostMetaData, HttpQueryGaussianText } from '../events/EventConstants';
 import { ViewerVersion } from '../utils/consts/GlobalConstants';
-import { MetaData } from '../modeldata/ModelData';
+import { MetaData } from '../modeldata/MetaData';
 export function setupApi(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
 

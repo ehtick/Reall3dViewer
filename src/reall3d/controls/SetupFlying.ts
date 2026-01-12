@@ -32,7 +32,7 @@ import {
     OnViewerDispose,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
-import { MetaData } from '../modeldata/ModelData';
+import { MetaData } from '../modeldata/MetaData';
 import { ScenesJsonData } from '../mapviewer/Reall3dMapViewer';
 import { addDynamicStyles } from '../utils/CommonUtils';
 import nipplejs from 'nipplejs';

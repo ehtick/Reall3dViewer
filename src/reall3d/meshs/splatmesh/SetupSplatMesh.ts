@@ -151,7 +151,7 @@ import {
 } from '../../utils/consts/Index';
 import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
-import { MetaData } from '../../modeldata/ModelData';
+import { MetaData } from '../../modeldata/MetaData';
 import { SplatMesh } from './SplatMesh';
 import { shaderChunk } from '../../utils/CommonUtils';
 import CmnFns from './shaders/chunks/CmnFns.glsl';

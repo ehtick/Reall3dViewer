@@ -51,7 +51,7 @@ import { MarkDataSinglePoint } from './data/MarkDataSinglePoint';
 import { MarkDataMultiPlans } from './data/MarkDataMultiPlans';
 import { MarkDataMultiLines } from './data/MarkDataMultiLines';
 import { MarkDataDistanceLine } from './data/MarkDataDistanceLine';
-import { MetaData } from '../../modeldata/ModelData';
+import { MetaData } from '../../modeldata/MetaData';
 import { CameraControls } from '../../controls/CameraControls';
 
 export function setupMark(events: Events) {

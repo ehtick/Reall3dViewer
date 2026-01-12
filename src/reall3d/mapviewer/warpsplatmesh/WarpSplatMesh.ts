@@ -8,7 +8,7 @@ import { CSS3DSprite } from 'three/examples/jsm/Addons.js';
 import { Easing, Tween } from '@tweenjs/tween.js';
 import { SplatMesh } from '../../meshs/splatmesh/SplatMesh';
 import { SplatMeshOptions } from '../../meshs/splatmesh/SplatMeshOptions';
-import { MetaData } from '../../modeldata/ModelData';
+import { MetaData } from '../../modeldata/MetaData';
 import { Reall3dMapViewer } from '../Reall3dMapViewer';
 import { Reall3dMapViewerOptions } from '../Reall3dMapViewerOptions';
 

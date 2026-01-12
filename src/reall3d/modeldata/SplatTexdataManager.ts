@@ -46,7 +46,7 @@ import {
     UpdateFetchStatus,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
-import { CutData, MetaData, ModelStatus, SplatModel } from './ModelData';
+import { CutData, ModelStatus, SplatModel } from './ModelData';
 import { ModelOptions } from './ModelOptions';
 import { loadPly } from './loaders/PlyLoader';
 import { loadSplat } from './loaders/SplatLoader';
@@ -66,6 +66,7 @@ import { setupLodDownloadManager, todoDownload } from './LodDownloadManager';
 import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
 import { hashString } from 'three/src/nodes/core/NodeUtils.js';
 import { loadLodSplatFile } from './loaders/LodSplatFileLoader';
+import { MetaData } from './MetaData';
 
 /**
  * 纹理数据管理

@@ -6,7 +6,7 @@ import { Events } from '../events/Events';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { getUrl } from '../utils/CommonUtils';
 import { isMobile } from '../utils/consts/GlobalConstants';
-import { MetaData } from './ModelData';
+import { MetaData } from './MetaData';
 import { ModelOptions } from './ModelOptions';
 import { DataStatus, SplatFile, SplatLodJsonMagic, SplatTiles, traveSplatTree } from './SplatTiles';
 
