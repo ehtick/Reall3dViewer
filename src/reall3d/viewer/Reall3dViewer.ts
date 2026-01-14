@@ -167,7 +167,6 @@ export class Reall3dViewer {
 
         const splatMesh = new SplatMesh(copyGsViewerOptions(opts));
         that.splatMesh = splatMesh;
-        splatMesh.layers.set(1);
         on(GetSplatMesh, () => splatMesh);
         scene.add(splatMesh);
         setupControlPlane(events);
@@ -201,17 +200,11 @@ export class Reall3dViewer {
                     if (!that.needUpdate || now - renterTime < (isMobile ? 25 : opts.qualityLevel > 5 ? 1 : 18)) return;
                     that.needUpdate = false;
                     renterTime = now;
-                    camera.layers.set(0);
                     renderer.render(scene, camera);
-                    renderer.autoClear = false;
-                    camera.layers.set(1);
-                    renderer.render(splatMesh, camera);
-
                     fire(IsDebugMode) && fire(CountFpsReal);
                 } catch (e) {
                     console.warn(e.message);
                 }
-                renderer.autoClear = true;
             },
             true,
         );
