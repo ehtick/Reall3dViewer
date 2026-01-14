@@ -152,8 +152,8 @@ export function setupPlayer(events: Events) {
     });
 
     /**
-     * 让角色向指定目标点移动（新增水平距离最大值限制）
-     * @param targetWorldPos 世界坐标系目标点
+     * 让角色向指定目标点移动
+     * @param targetWorldPos 目标点
      * @param maxHorizontalDistance 最大距离阈值
      */
     on(MovePlayerToTarget, (targetWorldPos?: Vector3, maxHorizontalDistance: number = 100) => {

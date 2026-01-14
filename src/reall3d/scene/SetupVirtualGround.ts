@@ -61,12 +61,9 @@ export function setupVirtualGround(events: Events) {
 
     function initVirtualGround() {
         const scene: Scene = fire(GetScene);
-        const splatMesh: SplatMesh = fire(GetSplatMesh);
-        const lenX = Math.max(50, Math.min(100, splatMesh.boundBox.maxs[0] - splatMesh.boundBox.mins[0]));
-        const lenZ = Math.max(50, Math.min(100, splatMesh.boundBox.maxs[2] - splatMesh.boundBox.mins[2]));
 
         // 添加虚拟地面网格
-        const gridGeometry = new PlaneGeometry(lenX, lenZ);
+        const gridGeometry = new PlaneGeometry(200, 200);
         const gridMaterial = new MeshStandardMaterial({ color: 0x00ff00, side: DoubleSide });
         virtualGround = new Mesh(gridGeometry, gridMaterial);
         virtualGround.rotation.x = -Math.PI / 2; // 旋转网格使其平铺在 xz 平面上
@@ -92,7 +89,7 @@ export function setupVirtualGround(events: Events) {
 
         // 创建目标点提示圈的几何体和材质
         const indicatorTargetGeometry = new RingGeometry(0, 6, 16);
-        const indicatorTargetMaterial = new MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.5, side: DoubleSide });
+        const indicatorTargetMaterial = new MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.3, side: DoubleSide });
         indicatorTarget = new Mesh(indicatorTargetGeometry, indicatorTargetMaterial);
         indicatorTarget.rotation.x = -Math.PI / 2; // 初始时与地面平行
         indicatorTarget.visible = false; // 默认不显示
