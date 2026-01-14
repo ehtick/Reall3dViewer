@@ -25,23 +25,30 @@ import {
     MovePlayerToTarget,
     GetOptions,
     GetMeta,
+    UpdateVirtualGroundPosition,
+    UpdateIndicatorTargetStatus,
 } from '../events/EventConstants';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { MetaData } from '../modeldata/MetaData';
+import { setupVirtualGround } from './SetupVirtualGround';
 
 export function setupPlayer(events: Events) {
     let disposed: boolean = false;
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
 
+    const opts: Reall3dViewerOptions = fire(GetOptions);
     const meta: MetaData = fire(GetMeta);
     if (!meta.player) {
         meta.viewMode === 3 && console.warn('missing player data in meta');
         // return;
     }
 
-    const opts: Reall3dViewerOptions = fire(GetOptions);
+    if (opts.viewMode === 3 || meta.viewMode === 3) {
+        setupVirtualGround(events);
+    }
+
     const scene: Scene = fire(GetScene);
     const orbitControls: OrbitControls = fire(GetControls);
     const camera: PerspectiveCamera = fire(GetCamera);
@@ -151,6 +158,8 @@ export function setupPlayer(events: Events) {
 
         if (Math.abs(targetWorldPos.y - characterControls.position.y) > 100) return; // 超过高度时忽略
 
+        fire(UpdateIndicatorTargetStatus, targetWorldPos);
+
         // 中断原有控制
         stopMoveToTarget();
         characterControls.key = [0, 0, 0];
@@ -248,6 +257,9 @@ export function setupPlayer(events: Events) {
                             if (mesh.material.map) {
                                 mesh.material.metalnessMap = mesh.material.map;
                             }
+                            mesh.material.transparent = false;
+                            mesh.material.depthWrite = true;
+                            mesh.material.depthTest = true;
                         }
                     }
                 });
@@ -282,6 +294,7 @@ export function setupPlayer(events: Events) {
                 actions.Idle.play();
 
                 player.position.fromArray(playerPosition);
+                fire(UpdateVirtualGroundPosition);
 
                 scene.add(player);
 
@@ -409,6 +422,9 @@ export function setupPlayer(events: Events) {
             player.position.copy(position);
             orbitControls.target.copy(position).add(new Vector3(0, -playerHeight, 0));
             orbitControls.object.position.add(moveVector);
+            fire(UpdateVirtualGroundPosition);
+        } else {
+            fire(UpdateIndicatorTargetStatus, null, true);
         }
 
         // 更新动画和控制器

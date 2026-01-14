@@ -480,8 +480,10 @@ export const MovePlayerToTarget = i++;
 
 /** 渲染器销毁 */
 export const OnViewerDispose = i++;
-/** 添加虚拟地面 */
-export const AddVirtualGround = i++;
+/** 更新虚拟地面位置 */
+export const UpdateVirtualGroundPosition = i++;
+/** 更新提示目标状态 */
+export const UpdateIndicatorTargetStatus = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */
