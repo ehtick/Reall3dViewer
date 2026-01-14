@@ -807,7 +807,7 @@ export function setupSplatTextureManager(events: Events) {
         if (!flyOnceDone) {
             flyOnceDone = true;
             const opts: SplatMeshOptions = fire(GetOptions);
-            !fire(IsPlayerMode) && opts.viewerEvents?.fire(Flying, true);
+            opts.viewMode !== 3 && opts.viewerEvents?.fire(Flying, true);
         }
     }
 
