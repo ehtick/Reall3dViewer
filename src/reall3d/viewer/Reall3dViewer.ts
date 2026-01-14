@@ -166,19 +166,21 @@ export class Reall3dViewer {
         setupFocusMarker(events);
         setupFlying(events);
 
-        that.splatMesh = new SplatMesh(copyGsViewerOptions(opts));
-        on(GetSplatMesh, () => that.splatMesh);
-        scene.add(that.splatMesh);
+        const splatMesh = new SplatMesh(copyGsViewerOptions(opts));
+        that.splatMesh = splatMesh;
+        splatMesh.layers.set(1);
+        on(GetSplatMesh, () => splatMesh);
+        scene.add(splatMesh);
         setupControlPlane(events);
 
         on(UpdateQualityLevel, (qualityLevel: number) => {
             opts.qualityLevel = qualityLevel;
-            that.splatMesh.options({ qualityLevel, renderer: undefined, scene: undefined });
+            splatMesh.options({ qualityLevel, renderer: undefined, scene: undefined });
         });
 
         on(UpdateSortType, (sortType: number) => {
             opts.sortType = sortType;
-            that.splatMesh.options({ sortType, renderer: undefined, scene: undefined });
+            splatMesh.options({ sortType, renderer: undefined, scene: undefined });
         });
 
         scene.add(new AmbientLight('#ffffff', 2));
@@ -200,11 +202,17 @@ export class Reall3dViewer {
                     if (!that.needUpdate || now - renterTime < (isMobile ? 25 : opts.qualityLevel > 5 ? 1 : 18)) return;
                     that.needUpdate = false;
                     renterTime = now;
+                    camera.layers.set(0);
                     renderer.render(scene, camera);
+                    renderer.autoClear = false;
+                    camera.layers.set(1);
+                    renderer.render(splatMesh, camera);
+
                     fire(IsDebugMode) && fire(CountFpsReal);
                 } catch (e) {
                     console.warn(e.message);
                 }
+                renderer.autoClear = true;
             },
             true,
         );
