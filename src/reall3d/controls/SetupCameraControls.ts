@@ -17,8 +17,9 @@ import {
     ControlPlaneUpdate,
     FocusMarkerAutoDisappear,
     ControlsSetFlyCameraMode,
+    IsPointInFront,
 } from '../events/EventConstants';
-import { PerspectiveCamera, Vector3 } from 'three';
+import { Camera, Matrix4, PerspectiveCamera, Plane, Vector3 } from 'three';
 import { Events } from '../events/Events';
 import { GetCamera } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
@@ -73,6 +74,16 @@ export function setupCameraControls(events: Events) {
     on(GetCameraPosition, (copy: boolean = false) => (copy ? controls.object.position.clone() : controls.object.position));
     on(GetCameraLookAt, (copy: boolean = false) => (copy ? controls.target.clone() : controls.target));
     on(GetCameraLookUp, (copy: boolean = false) => (copy ? fire(GetCamera).up.clone() : fire(GetCamera).up));
+
+    on(IsPointInFront, (point: Vector3) => {
+        const matrix: Matrix4 = (controls.object as Camera).projectionMatrix.clone().multiply((controls.object as Camera).matrixWorldInverse);
+        const m = matrix.elements;
+        const nearPlane = new Plane();
+        nearPlane.set(new Vector3(m[3] + m[2], m[7] + m[6], m[11] + m[10]), m[15] + m[14]).normalize();
+        let distance = nearPlane.distanceToPoint(point);
+        console.info('distance', distance);
+        return distance > 0;
+    });
 
     let flyCameraMode = false;
     on(ControlsSetFlyCameraMode, () => {

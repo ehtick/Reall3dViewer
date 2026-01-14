@@ -56,6 +56,7 @@ import {
     MovePlayerToTarget,
     GetPlayer,
     OnViewerDispose,
+    IsPlayerMode,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -153,7 +154,7 @@ export function setupEventListener(events: Events) {
             return;
         }
 
-        if (opts.viewMode === 3) {
+        if (fire(IsPlayerMode)) {
             const forward = keySet.has('KeyW') || keySet.has('ArrowUp');
             const backward = keySet.has('KeyS') || keySet.has('ArrowDown');
             const left = keySet.has('KeyA') || keySet.has('ArrowLeft');
@@ -246,7 +247,7 @@ export function setupEventListener(events: Events) {
 
         const rs: Vector3[] = await fire(RaycasterRayIntersectPoints, x, y);
         if (rs.length) {
-            if (opts.viewMode === 3) {
+            if (fire(IsPlayerMode)) {
                 fire(MovePlayerToTarget, rs[0]);
             } else {
                 fire(CameraSetLookAt, rs[0], true, false); // 最后参数false时平移效果，true时旋转效果
@@ -286,7 +287,7 @@ export function setupEventListener(events: Events) {
 
         lastActionTome = Date.now();
         const opts: Reall3dViewerOptions = fire(GetOptions);
-        if (opts.viewMode === 3) {
+        if (fire(IsPlayerMode)) {
             keySet.add(e.code);
             return;
         }
@@ -302,8 +303,7 @@ export function setupEventListener(events: Events) {
 
         if (disposed) return;
         lastActionTome = Date.now();
-        const opts: Reall3dViewerOptions = fire(GetOptions);
-        if (opts.viewMode === 3) {
+        if (fire(IsPlayerMode)) {
             keySet.delete(e.code);
             return;
         }
@@ -553,7 +553,11 @@ export function setupEventListener(events: Events) {
             }
         }
 
-        mouseState.down === 2 && !mouseState.move && fire(SelectPointAndLookAt, e.clientX, e.clientY); // 右击不移动，调整旋转中心
+        if (fire(IsPlayerMode)) {
+            mouseState.down === 1 && !mouseState.move && fire(SelectPointAndLookAt, e.clientX, e.clientY);
+        } else {
+            mouseState.down === 2 && !mouseState.move && fire(SelectPointAndLookAt, e.clientX, e.clientY); // 右击不移动，调整旋转中心
+        }
 
         mouseState.down = 0;
         mouseState.move = false;

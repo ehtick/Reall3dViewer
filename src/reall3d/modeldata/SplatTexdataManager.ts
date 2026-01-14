@@ -44,6 +44,7 @@ import {
     SplatUpdateUseLod,
     SplatTexdataManagerAddSplatLod,
     UpdateFetchStatus,
+    IsPlayerMode,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, ModelStatus, SplatModel } from './ModelData';
@@ -806,7 +807,7 @@ export function setupSplatTextureManager(events: Events) {
         if (!flyOnceDone) {
             flyOnceDone = true;
             const opts: SplatMeshOptions = fire(GetOptions);
-            opts.viewMode !== 3 && opts.viewerEvents?.fire(Flying, true);
+            !fire(IsPlayerMode) && opts.viewerEvents?.fire(Flying, true);
         }
     }
 

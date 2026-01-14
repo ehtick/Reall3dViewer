@@ -477,6 +477,10 @@ export const MovePlayer = i++;
 export const MovePlayerByAngle = i++;
 /** 移动玩家(到目标点) */
 export const MovePlayerToTarget = i++;
+/** 是否玩家模式 */
+export const IsPlayerMode = i++;
+/** 是否在前方 */
+export const IsPointInFront = i++;
 
 /** 渲染器销毁 */
 export const OnViewerDispose = i++;

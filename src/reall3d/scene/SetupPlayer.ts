@@ -27,6 +27,8 @@ import {
     GetMeta,
     UpdateVirtualGroundPosition,
     UpdateIndicatorTargetStatus,
+    IsPlayerMode,
+    IsPointInFront,
 } from '../events/EventConstants';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
@@ -40,12 +42,14 @@ export function setupPlayer(events: Events) {
 
     const opts: Reall3dViewerOptions = fire(GetOptions);
     const meta: MetaData = fire(GetMeta);
+    on(IsPlayerMode, () => opts.viewMode === 3 || meta.viewMode === 3);
+
     if (!meta.player) {
-        meta.viewMode === 3 && console.warn('missing player data in meta');
+        fire(IsPlayerMode) && console.warn('missing player data in meta');
         // return;
     }
 
-    if (opts.viewMode === 3 || meta.viewMode === 3) {
+    if (fire(IsPlayerMode)) {
         setupVirtualGround(events);
     }
 
@@ -93,7 +97,7 @@ export function setupPlayer(events: Events) {
     on(GetPlayer, () => player);
 
     on(MovePlayer, (forward?: boolean, backward?: boolean, left?: boolean, right?: boolean, run?: boolean) => {
-        if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+        if (!fire(IsPlayerMode)) return; // 仅支持第三人称漫游模式
 
         // 向目标移动时，优先中断目标移动
         stopMoveToTarget();
@@ -114,7 +118,7 @@ export function setupPlayer(events: Events) {
     });
 
     on(MovePlayerByAngle, (angle = 0, intensity = 1) => {
-        if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+        if (!fire(IsPlayerMode)) return; // 仅支持第三人称漫游模式
 
         // 向目标移动时，优先中断目标移动
         stopMoveToTarget();
@@ -153,8 +157,9 @@ export function setupPlayer(events: Events) {
      * @param maxHorizontalDistance 最大距离阈值
      */
     on(MovePlayerToTarget, (targetWorldPos?: Vector3, maxHorizontalDistance: number = 100) => {
-        if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+        if (!fire(IsPlayerMode)) return; // 仅支持第三人称漫游模式
         if (!targetWorldPos) return;
+        if (!fire(IsPointInFront, targetWorldPos)) return;
 
         if (Math.abs(targetWorldPos.y - characterControls.position.y) > 100) return; // 超过高度时忽略
 
@@ -207,7 +212,7 @@ export function setupPlayer(events: Events) {
     on(
         OnViewerUpdate,
         () => {
-            if (opts.viewMode !== 3) return; // 仅支持第三人称漫游模式
+            if (!fire(IsPlayerMode)) return; // 仅支持第三人称漫游模式
             orbitControls.enablePan && (orbitControls.enablePan = false);
 
             loadCharacterModelOnce();

@@ -23,7 +23,6 @@ import {
     GetPlayer,
     GetScene,
     GetSplatMesh,
-    OnViewerBeforeUpdate,
     OnViewerDispose,
     UpdateIndicatorTargetStatus,
     UpdateVirtualGroundPosition,
@@ -82,6 +81,13 @@ export function setupVirtualGround(events: Events) {
         indicator.rotation.x = -Math.PI / 2; // 初始时与地面平行
         indicator.visible = false; // 默认不显示
         indicator.renderOrder = 99999;
+        indicator.onBeforeRender = () => {
+            if (indicator.visible) {
+                const { height } = fire(GetCanvasSize);
+                const newScale = ((fire(GetCameraPosition) as Vector3).distanceTo(indicator.position) * 3.2) / height;
+                indicator.scale.set(newScale, newScale, newScale);
+            }
+        };
         scene.add(indicator);
 
         // 创建目标点提示圈的几何体和材质
@@ -120,12 +126,10 @@ export function setupVirtualGround(events: Events) {
             if (intersects.length > 0) {
                 const point = intersects[0].point; // 获取交点位置
                 indicator.position.copy(point);
-
-                const { height } = fire(GetCanvasSize);
-                const newScale = ((fire(GetCameraPosition) as Vector3).distanceTo(point) * 3.2) / height;
-                indicator.scale.set(newScale, newScale, newScale);
-
                 indicator.visible = true;
+                const { height } = fire(GetCanvasSize);
+                const newScale = ((fire(GetCameraPosition) as Vector3).distanceTo(indicator.position) * 3.2) / height;
+                indicator.scale.set(newScale, newScale, newScale);
             } else {
                 indicator.visible = false;
             }

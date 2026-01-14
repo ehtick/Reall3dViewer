@@ -30,6 +30,7 @@ import {
     MovePlayerByAngle,
     RunLoopByFrame,
     OnViewerDispose,
+    IsPlayerMode,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
 import { MetaData } from '../modeldata/MetaData';
@@ -287,7 +288,7 @@ export function setupFlying(events: Events) {
             position: { left: '50%', top: '50%' }, // 摇杆的初始位置
             color: '#cccccccc', // 摇杆的颜色
             size: 100, // 摇杆的大小
-            lockY: opts.viewMode !== 3,
+            lockY: !fire(IsPlayerMode),
         };
 
         let degree = 0;
@@ -297,7 +298,7 @@ export function setupFlying(events: Events) {
             () => {
                 !stopMove && fire(MovePlayerByAngle, degree);
             },
-            () => opts.viewMode === 3,
+            () => fire(IsPlayerMode),
             6,
         );
 
@@ -306,7 +307,7 @@ export function setupFlying(events: Events) {
         manager.on('move', function (evt, data: nipplejs.JoystickOutputData) {
             if (performance.now() - lastManagerTime < 100) return;
 
-            if (opts.viewMode === 3) {
+            if (fire(IsPlayerMode)) {
                 degree = data.angle.degree + 90;
                 stopMove = false;
                 return;
@@ -335,7 +336,7 @@ export function setupFlying(events: Events) {
         });
 
         manager.on('end', (evt, data) => {
-            if (opts.viewMode === 3) {
+            if (fire(IsPlayerMode)) {
                 stopMove = true;
                 return;
             }
