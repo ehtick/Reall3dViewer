@@ -16,7 +16,6 @@ import {
     ViewerUtilsDispose,
     OnViewerBeforeUpdate,
     ControlsUpdate,
-    OnViewerUpdate,
     ViewerDispose,
     GetCameraFov,
     GetCameraPosition,
@@ -166,7 +165,6 @@ export function initRenderer(opts: Reall3dViewerOptions): WebGLRenderer {
         renderer = new WebGLRenderer({
             antialias: false,
             stencil: false,
-            logarithmicDepthBuffer: true,
             premultipliedAlpha: false,
             precision: 'highp',
             powerPreference: 'high-performance',
@@ -177,6 +175,7 @@ export function initRenderer(opts: Reall3dViewerOptions): WebGLRenderer {
     } else {
         renderer = opts.renderer;
     }
+    renderer.autoClear = true;
 
     const canvas = renderer.domElement;
     canvas.classList.add('gsviewer-canvas');
