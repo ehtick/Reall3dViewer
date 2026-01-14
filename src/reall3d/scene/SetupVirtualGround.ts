@@ -76,7 +76,7 @@ export function setupVirtualGround(events: Events) {
 
         // 创建提示圈的几何体和材质
         const indicatorGeometry = new RingGeometry(2, 6, 16);
-        const indicatorMaterial = new MeshBasicMaterial({ color: 0xdddddd, transparent: true, opacity: 0.6, side: DoubleSide });
+        const indicatorMaterial = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, side: DoubleSide });
         indicator = new Mesh(indicatorGeometry, indicatorMaterial);
         indicator.rotation.x = -Math.PI / 2; // 初始时与地面平行
         indicator.visible = false; // 默认不显示
@@ -92,7 +92,7 @@ export function setupVirtualGround(events: Events) {
 
         // 创建目标点提示圈的几何体和材质
         const indicatorTargetGeometry = new RingGeometry(0, 6, 16);
-        const indicatorTargetMaterial = new MeshBasicMaterial({ color: 0xdddddd, transparent: true, opacity: 0.6, side: DoubleSide });
+        const indicatorTargetMaterial = new MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.5, side: DoubleSide });
         indicatorTarget = new Mesh(indicatorTargetGeometry, indicatorTargetMaterial);
         indicatorTarget.rotation.x = -Math.PI / 2; // 初始时与地面平行
         indicatorTarget.visible = false; // 默认不显示
