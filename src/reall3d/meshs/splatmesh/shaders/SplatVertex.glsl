@@ -142,6 +142,7 @@ void main() {
     vec2 majorAxis = eigenVector1 * diameter1;
     vec2 minorAxis = eigenVector2 * diameter2;
 
-    vec2 v2Center = vec2(pos2d) / pos2d.w;  // NDC坐标
-    gl_Position = vec4(v2Center + vPosition.x * majorAxis / viewport + vPosition.y * minorAxis / viewport, 1.0, 1.0);
+    vec3 ndcCenter = pos2d.xyz / pos2d.w;
+    vec2 ndcOffset = (vPosition.x * majorAxis + vPosition.y * minorAxis) / viewport;
+    gl_Position = vec4(ndcCenter.xy + ndcOffset, ndcCenter.z, 1.0);
 }
