@@ -74,7 +74,7 @@ import { copyGsViewerOptions, initCamera, initGsViewerOptions, initRenderer, set
 import { CameraControls } from '../controls/CameraControls';
 import { Reall3dViewerOptions } from './Reall3dViewerOptions';
 import { setupEventListener } from '../events/EventListener';
-import { setupRaycaster } from '../raycaster/SetupRaycaster';
+import { setupRaycaster } from '../scene/SetupRaycaster';
 import { setupCameraControls } from '../controls/SetupCameraControls';
 import { setupFocusMarker } from '../meshs/focusmaker/SetupFocusMarker';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';

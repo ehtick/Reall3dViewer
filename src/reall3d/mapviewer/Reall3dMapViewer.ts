@@ -45,7 +45,7 @@ import { initMapViewerOptions, initTileMap, setupMapUtils } from './utils/MapUti
 import { setupCommonUtils } from '../utils/CommonUtils';
 import { setupMapEventListener } from './events/MapEventListener';
 import { setupApi } from '../api/SetupApi';
-import { setupRaycaster } from '../raycaster/SetupRaycaster';
+import { setupRaycaster } from '../scene/SetupRaycaster';
 import { setupMark } from '../meshs/mark/SetupMark';
 import { CSS3DRenderer } from 'three/examples/jsm/Addons.js';
 import { WarpSplatMesh } from './warpsplatmesh/WarpSplatMesh';
