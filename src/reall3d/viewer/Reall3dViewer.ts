@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import '../style/style.less';
-import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4, Camera, Group } from 'three';
+import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4, Camera } from 'three';
 import {
     GetCurrentDisplayShDegree,
     GetModelShDegree,
@@ -13,7 +13,6 @@ import {
     SplatUpdateShDegree,
     ClearMarkPoint,
     CommonUtilsDispose,
-    EventListenerDispose,
     GetMarkFromWeakRef,
     ViewerDispose,
     Information,
