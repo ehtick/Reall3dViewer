@@ -80,9 +80,7 @@ export function setupCameraControls(events: Events) {
         const m = matrix.elements;
         const nearPlane = new Plane();
         nearPlane.set(new Vector3(m[3] + m[2], m[7] + m[6], m[11] + m[10]), m[15] + m[14]).normalize();
-        let distance = nearPlane.distanceToPoint(point);
-        console.info('distance', distance);
-        return distance > 0;
+        return nearPlane.distanceToPoint(point) > 0;
     });
 
     let flyCameraMode = false;
