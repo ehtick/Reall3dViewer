@@ -50,6 +50,9 @@ export function setupVirtualGround(events: Events) {
             indicatorTarget.visible = false;
         } else {
             indicatorTarget.position.copy(point);
+            const { height } = fire(GetCanvasSize);
+            const newScale = ((fire(GetCameraPosition) as Vector3).distanceTo(indicatorTarget.position) * 3.2) / height;
+            indicatorTarget.scale.set(newScale, newScale, newScale);
             indicatorTarget.visible = true;
             indicator.visible = false;
         }
