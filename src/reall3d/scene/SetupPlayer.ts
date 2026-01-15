@@ -161,10 +161,6 @@ export function setupPlayer(events: Events) {
         if (!targetWorldPos) return;
         if (!fire(IsPointInFront, targetWorldPos)) return;
 
-        if (Math.abs(targetWorldPos.y - characterControls.position.y) > 100) return; // 超过高度时忽略
-
-        fire(UpdateIndicatorTargetStatus, targetWorldPos);
-
         // 中断原有控制
         stopMoveToTarget();
         characterControls.key = [0, 0, 0];
@@ -207,6 +203,8 @@ export function setupPlayer(events: Events) {
         isMovingToTarget = true;
         targetPosition = limitedTarget; // 替换为限定后的目标点
         characterControls.key[2] = needRun ? 1 : 0; // 标记是否奔跑（复用key[2]字段）
+
+        fire(UpdateIndicatorTargetStatus, new Vector3(targetPosition.x, targetWorldPos.y, targetPosition.z));
     });
 
     on(

@@ -22,12 +22,10 @@ import {
     GetCanvasSize,
     GetPlayer,
     GetScene,
-    GetSplatMesh,
     OnViewerDispose,
     UpdateIndicatorTargetStatus,
     UpdateVirtualGroundPosition,
 } from '../events/EventConstants';
-import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 
 export function setupVirtualGround(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
@@ -37,11 +35,7 @@ export function setupVirtualGround(events: Events) {
     let indicatorTarget: Mesh = null;
     let virtualGround: Mesh = null;
 
-    on(UpdateVirtualGroundPosition, () => {
-        if (!virtualGround) return;
-        const player: Group = fire(GetPlayer);
-        virtualGround.position.copy(player.position);
-    });
+    on(UpdateVirtualGroundPosition, () => virtualGround?.position.copy((fire(GetPlayer) as Group).position));
 
     on(UpdateIndicatorTargetStatus, (point: Vector3, hide = false) => {
         if (!indicatorTarget) return;
@@ -62,21 +56,21 @@ export function setupVirtualGround(events: Events) {
     function initVirtualGround() {
         const scene: Scene = fire(GetScene);
 
-        // 添加虚拟地面网格
-        const gridGeometry = new PlaneGeometry(200, 200);
+        // 虚拟地面
+        const gridGeometry = new PlaneGeometry(300, 300);
         const gridMaterial = new MeshStandardMaterial({ color: 0x00ff00, side: DoubleSide });
         virtualGround = new Mesh(gridGeometry, gridMaterial);
-        virtualGround.rotation.x = -Math.PI / 2; // 旋转网格使其平铺在 xz 平面上
+        virtualGround.rotation.x = -Math.PI / 2;
         virtualGround.receiveShadow = true;
         virtualGround.visible = false;
         scene.add(virtualGround);
 
-        // 创建提示圈的几何体和材质
-        const indicatorGeometry = new RingGeometry(2, 6, 16);
+        // 鼠标移动提示圈
+        const indicatorGeometry = new RingGeometry(0, 6, 16);
         const indicatorMaterial = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, side: DoubleSide });
         indicator = new Mesh(indicatorGeometry, indicatorMaterial);
-        indicator.rotation.x = -Math.PI / 2; // 初始时与地面平行
-        indicator.visible = false; // 默认不显示
+        indicator.rotation.x = -Math.PI / 2;
+        indicator.visible = false;
         indicator.renderOrder = 99999;
         indicator.onBeforeRender = () => {
             if (indicator.visible) {
@@ -87,12 +81,12 @@ export function setupVirtualGround(events: Events) {
         };
         scene.add(indicator);
 
-        // 创建目标点提示圈的几何体和材质
+        // 目标点提示圈
         const indicatorTargetGeometry = new RingGeometry(0, 6, 16);
         const indicatorTargetMaterial = new MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.3, side: DoubleSide });
         indicatorTarget = new Mesh(indicatorTargetGeometry, indicatorTargetMaterial);
-        indicatorTarget.rotation.x = -Math.PI / 2; // 初始时与地面平行
-        indicatorTarget.visible = false; // 默认不显示
+        indicatorTarget.rotation.x = -Math.PI / 2;
+        indicatorTarget.visible = false;
         indicatorTarget.renderOrder = 99999;
         indicatorTarget.onBeforeRender = () => {
             if (indicatorTarget.visible) {
@@ -103,25 +97,21 @@ export function setupVirtualGround(events: Events) {
         };
         scene.add(indicatorTarget);
 
-        // 鼠标移动事件
+        // 鼠标移动显示提示圈
         const mouse = new Vector2();
         const raycaster: Raycaster = new Raycaster();
         function onMouseMove(event: MouseEvent) {
-            // 将鼠标位置归一化到 [-1, 1]
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-            // 更新射线
             const camera: PerspectiveCamera = fire(GetCamera);
             if (!camera) return;
-
             raycaster.setFromCamera(mouse, camera);
 
-            // 检测射线与地面网格的交点
-            const intersects = raycaster.intersectObject(virtualGround, true); // 只检测虚拟地面
+            const intersects = raycaster.intersectObject(virtualGround, true); // 检测地面交点
 
             if (intersects.length > 0) {
-                const point = intersects[0].point; // 获取交点位置
+                const point = intersects[0].point;
                 indicator.position.copy(point);
                 indicator.visible = true;
                 const { height } = fire(GetCanvasSize);
@@ -132,7 +122,6 @@ export function setupVirtualGround(events: Events) {
             }
         }
 
-        // 添加鼠标移动事件监听器
         window.addEventListener('mousemove', onMouseMove, false);
         on(OnViewerDispose, () => window.removeEventListener('mousemove', onMouseMove), true);
     }
