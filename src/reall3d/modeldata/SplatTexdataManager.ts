@@ -336,11 +336,14 @@ export function setupSplatTextureManager(events: Events) {
 
             if (splatModel.meta.particleMode) {
                 // 粒子效果，先5秒加载过程，后5秒正常化过程
-                setTimeout(() => {
-                    fire(SplatUpdatePerformanceAct, performance.now() + 5000); // 后5秒正常化过程
-                    fire(SplatUpdateParticleMode, 2); // 逐渐变化到正常
-                    setTimeout(() => fire(OnSmallSceneShowDone, true), 5000); // 显示完成后期处理
-                }, Math.max(5000 + performanceStart - performance.now(), 0)); // 先5秒加载过程
+                setTimeout(
+                    () => {
+                        fire(SplatUpdatePerformanceAct, performance.now() + 5000); // 后5秒正常化过程
+                        fire(SplatUpdateParticleMode, 2); // 逐渐变化到正常
+                        setTimeout(() => fire(OnSmallSceneShowDone, true), 5000); // 显示完成后期处理
+                    },
+                    Math.max(5000 + performanceStart - performance.now(), 0), // 先5秒加载过程
+                );
             }
         }
         fire(Information, { renderSplatCount: splatModel.renderSplatCount });
