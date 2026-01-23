@@ -31,7 +31,6 @@ import {
     RunLoopByFrame,
     OnViewerDispose,
     IsPlayerMode,
-    PhysicsSetJoystickAngle,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
 import { MetaData } from '../modeldata/MetaData';
