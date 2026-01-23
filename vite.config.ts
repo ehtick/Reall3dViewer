@@ -39,6 +39,9 @@ export default defineConfig({
         sourcemap: false,
         rollupOptions: {
             output: {
+                manualChunks: {
+                    rapier: ['@dimforge/rapier3d-compat'],
+                },
                 chunkFileNames: 'assets/chunk-[hash].js',
                 entryFileNames: 'assets/entry-[hash].js',
                 assetFileNames: 'assets/asset-[hash].[ext]',
