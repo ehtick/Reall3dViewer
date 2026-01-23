@@ -479,6 +479,10 @@ export const MovePlayerByAngle = i++;
 export const MovePlayerToTarget = i++;
 /** 是否玩家模式 */
 export const IsPlayerMode = i++;
+/** 是否第一人称玩家模式 */
+export const IsPlayerMode1 = i++;
+/** 是否第三人称玩家模式 */
+export const IsPlayerMode3 = i++;
 /** 是否在前方 */
 export const IsPointInFront = i++;
 
@@ -488,6 +492,20 @@ export const OnViewerDispose = i++;
 export const UpdateVirtualGroundPosition = i++;
 /** 更新提示目标状态 */
 export const UpdateIndicatorTargetStatus = i++;
+/** 激活物理渲染调试 */
+export const PhysicsEnableDebug = i++;
+/** 添加物理Mesh */
+export const PhysicsAddMesh = i++;
+/** 添加静态物理Mesh */
+export const PhysicsAdStaticMesh = i++;
+/** 添加动态物理Mesh */
+export const PhysicsAdDynamicMesh = i++;
+/** 删除物理Mesh */
+export const PhysicsRemoveMesh = i++;
+/** 物理虚拟角色控制器 */
+export const PhysicsInitCharacterController = i++;
+/** 物理移动虚拟角色 */
+export const PhysicsMovePlayer = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

@@ -1,3 +1,6 @@
+// ==============================================
+// Copyright (c) 2025 reall3d.com, MIT license
+// ==============================================
 import {
     AnimationAction,
     AnimationClip,
@@ -12,6 +15,8 @@ import {
     Scene,
     Vector3,
     MathUtils,
+    MeshBasicMaterial,
+    BoxGeometry,
 } from 'three';
 import { Events } from '../events/Events';
 import {
@@ -27,13 +32,20 @@ import {
     GetMeta,
     UpdateVirtualGroundPosition,
     UpdateIndicatorTargetStatus,
-    IsPlayerMode,
     IsPointInFront,
+    IsPlayerMode,
+    IsPlayerMode1,
+    IsPlayerMode3,
+    PhysicsMovePlayer,
+    PhysicsAdStaticMesh,
+    PhysicsInitCharacterController,
+    OnViewerDispose,
 } from '../events/EventConstants';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { MetaData } from '../modeldata/MetaData';
 import { setupVirtualGround } from './SetupVirtualGround';
+import { setupPhysics } from './SetupPhysics';
 
 export function setupPlayer(events: Events) {
     let disposed: boolean = false;
@@ -42,16 +54,13 @@ export function setupPlayer(events: Events) {
 
     const opts: Reall3dViewerOptions = fire(GetOptions);
     const meta: MetaData = fire(GetMeta);
-    on(IsPlayerMode, () => opts.viewMode === 3 || meta.viewMode === 3);
+    on(IsPlayerMode1, () => opts.viewMode === 1 || meta.viewMode === 1);
+    on(IsPlayerMode3, () => opts.viewMode === 3 || meta.viewMode === 3);
+    on(IsPlayerMode, () => fire(IsPlayerMode1) || fire(IsPlayerMode3));
 
-    if (!meta.player) {
-        fire(IsPlayerMode) && console.warn('missing player data in meta');
-        // return;
-    }
-
-    if (fire(IsPlayerMode)) {
-        setupVirtualGround(events);
-    }
+    !meta.player && fire(IsPlayerMode) && console.warn('missing player data in meta');
+    fire(IsPlayerMode) && setupVirtualGround(events);
+    setupPhysics(events);
 
     const scene: Scene = fire(GetScene);
     const orbitControls: OrbitControls = fire(GetControls);
@@ -70,6 +79,8 @@ export function setupPlayer(events: Events) {
     let targetPosition: Vector3 | null = null; // 目标点（地面投影）
     const targetReachThreshold = 0.1; // 到达目标的距离阈值（避免精度问题）
     const walkTimeThreshold = 5; // 步行耗时阈值（秒）
+    const lastPlayerPosition = new Vector3();
+    let lastPlayerMoveTime = 0;
 
     // 初始值
     const playerUrl = meta.player?.url || 'https://reall3d.com/demo-models/player/soldier.glb';
@@ -94,6 +105,9 @@ export function setupPlayer(events: Events) {
         moveIntensity: 0, // 摇杆移动力度（0~1，0=无移动，1=最大速度）
     };
 
+    lastPlayerPosition.copy(characterControls.position);
+    fire(IsPlayerMode) && fire(PhysicsInitCharacterController, characterControls.position.clone().setY(0));
+
     on(GetPlayer, () => player);
 
     on(MovePlayer, (forward?: boolean, backward?: boolean, left?: boolean, right?: boolean, run?: boolean) => {
@@ -117,7 +131,7 @@ export function setupPlayer(events: Events) {
         handleTimeout = setTimeout(() => (characterControls.key = [0, 0, 0]), 500);
     });
 
-    on(MovePlayerByAngle, (angle = 0, intensity = 1) => {
+    on(MovePlayerByAngle, (angleRadian = 0, intensity = 1) => {
         if (!fire(IsPlayerMode)) return; // 仅支持第三人称漫游模式
 
         // 向目标移动时，优先中断目标移动
@@ -139,9 +153,8 @@ export function setupPlayer(events: Events) {
         }
 
         characterControls.key[2] = 0;
-        const radAngle = MathUtils.degToRad(-angle);
 
-        characterControls.moveAngle = radAngle;
+        characterControls.moveAngle = angleRadian;
         characterControls.moveIntensity = clampIntensity;
 
         angleHandleTimeout = setTimeout(() => {
@@ -210,7 +223,17 @@ export function setupPlayer(events: Events) {
     on(
         OnViewerUpdate,
         () => {
-            if (!fire(IsPlayerMode)) return; // 仅支持第三人称漫游模式
+            if (disposed) return;
+            if (fire(IsPlayerMode1)) {
+                orbitControls.maxDistance = orbitControls.minDistance;
+                player?.visible && (player.visible = false);
+            } else if (fire(IsPlayerMode3)) {
+                orbitControls.maxDistance = 10;
+            } else {
+                !orbitControls.enablePan && (orbitControls.enablePan = true);
+                orbitControls.maxDistance = 1000;
+                return;
+            }
             orbitControls.enablePan && (orbitControls.enablePan = false);
 
             loadCharacterModelOnce();
@@ -223,6 +246,7 @@ export function setupPlayer(events: Events) {
     function stopMoveToTarget() {
         isMovingToTarget = false;
         targetPosition = null;
+        // fire(PhysicsSetTargetPosition, null);
     }
 
     function loadCharacterModelOnce() {
@@ -233,6 +257,7 @@ export function setupPlayer(events: Events) {
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('https://reall3d.com/reall3dviewer/libs/draco/'); // https://unpkg.com/three@0.171.0/examples/jsm/libs/draco/gltf/
         loader.setDRACOLoader(dracoLoader);
+        player = new Group();
 
         loader.load(
             playerUrl,
@@ -243,8 +268,6 @@ export function setupPlayer(events: Events) {
                 model.rotateX(MathUtils.degToRad(playerRotation[0]));
                 model.rotateY(MathUtils.degToRad(playerRotation[1]));
                 model.rotateZ(MathUtils.degToRad(playerRotation[2]));
-
-                player = new Group();
                 player.add(model);
 
                 model.traverse((object: any) => {
@@ -357,9 +380,7 @@ export function setupPlayer(events: Events) {
             const targetDirection = new Vector3();
             targetDirection.x = Math.sin(moveAngle) * cameraRight.x + Math.cos(moveAngle) * cameraForward.x;
             targetDirection.z = Math.sin(moveAngle) * cameraRight.z + Math.cos(moveAngle) * cameraForward.z;
-            targetDirection.normalize();
-
-            moveVector = targetDirection.multiplyScalar(-1 * moveIntensity);
+            moveVector = targetDirection;
         } else if (key[0] !== 0 || key[1] !== 0) {
             // 兼容原有前后左右移动
             hasMoveInput = true;
@@ -420,19 +441,39 @@ export function setupPlayer(events: Events) {
                 player.quaternion.rotateTowards(rotate, rotateSpeed);
             }
 
+            moveVector = fire(PhysicsMovePlayer, moveVector);
+
             // 更新位置
-            position.add(moveVector);
-            player.position.copy(position);
-            orbitControls.target.copy(position).add(new Vector3(0, -playerHeight, 0));
-            orbitControls.object.position.add(moveVector);
-            fire(UpdateVirtualGroundPosition);
+            const moveZero = !moveVector || moveVector.length() < 0.02;
+            if (moveVector) {
+                !moveZero && (lastPlayerMoveTime = performance.now());
+                position.add(moveVector);
+                player.position.copy(position);
+                orbitControls.target.copy(position).add(new Vector3(0, -playerHeight, 0));
+                orbitControls.object.position.add(moveVector);
+                fire(UpdateVirtualGroundPosition);
+            }
+
+            if (moveZero && performance.now() - lastPlayerMoveTime > 3000) {
+                stopMoveToTarget(); // 3秒原地踏步就停下
+                lastPlayerMoveTime = Number.MAX_SAFE_INTEGER;
+            }
         } else {
-            fire(UpdateIndicatorTargetStatus, null, true);
+            fire(UpdateIndicatorTargetStatus, null, true); // 隐藏目标点提示圈
         }
 
         // 更新动画和控制器
         mixer.update(delta);
     }
+
+    on(
+        OnViewerDispose,
+        () => {
+            if (disposed) return;
+            disposed = true;
+        },
+        true,
+    );
 }
 
 /** 角色控制配置接口 */

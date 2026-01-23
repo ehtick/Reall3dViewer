@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { CatmullRomCurve3, Vector3 } from 'three';
+import { CatmullRomCurve3, MathUtils, Vector3 } from 'three';
 import { Events } from '../events/Events';
 import {
     AddFlyPosition,
@@ -31,6 +31,7 @@ import {
     RunLoopByFrame,
     OnViewerDispose,
     IsPlayerMode,
+    PhysicsSetJoystickAngle,
 } from '../events/EventConstants';
 import { CameraControls } from './CameraControls';
 import { MetaData } from '../modeldata/MetaData';
@@ -281,7 +282,6 @@ export function setupFlying(events: Events) {
     );
 
     function initJoystick() {
-        const opts: Reall3dViewerOptions = fire(GetOptions);
         const options: nipplejs.JoystickManagerOptions = {
             zone: document.getElementById('reall3dviewer-joystick-container'), // 指定摇杆所在的 DOM 元素
             mode: 'static', // 摇杆模式，可选 'static'（静态）或 'dynamic'（动态）
@@ -291,12 +291,12 @@ export function setupFlying(events: Events) {
             lockY: !fire(IsPlayerMode),
         };
 
-        let degree = 0;
+        let angleRadian = 0;
         let stopMove = true;
         fire(
             RunLoopByFrame,
             () => {
-                !stopMove && fire(MovePlayerByAngle, degree);
+                !stopMove && fire(MovePlayerByAngle, angleRadian);
             },
             () => fire(IsPlayerMode),
             6,
@@ -308,7 +308,7 @@ export function setupFlying(events: Events) {
             if (performance.now() - lastManagerTime < 100) return;
 
             if (fire(IsPlayerMode)) {
-                degree = data.angle.degree + 90;
+                angleRadian = (Math.PI / 2 - data.angle.radian + 2 * Math.PI) % (2 * Math.PI);
                 stopMove = false;
                 return;
             }
