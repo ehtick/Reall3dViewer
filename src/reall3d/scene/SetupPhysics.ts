@@ -26,8 +26,8 @@ export function setupPhysics(events: Events) {
     const controls: OrbitControls = fire(GetControls);
     let world: RAPIER.World;
     let ready: Promise<boolean> = null;
-    let enablePhysics = false;
-    let enablePhysicsDebug = false;
+    let enablePhysics = true;
+    let enablePhysicsDebug = true;
     let characterController: RAPIER.KinematicCharacterController;
     let characterCollider: RAPIER.Collider;
     const up = new Vector3(0, 1, 0);
@@ -245,7 +245,7 @@ export function setupPhysics(events: Events) {
         });
     }
 
-    function addMesh(mesh: any, opts: any = {}) {
+    function addMesh(mesh: any, opts: PhysicsOptions = {}) {
         const shape = getShape(mesh.geometry);
         if (!shape) return;
 
@@ -439,8 +439,12 @@ export function setupPhysics(events: Events) {
 }
 
 export interface PhysicsOptions {
-    type?: 'static' | 'dynamic' | 'kinematic'; // 静态刚体、动态刚体、运动学刚体
-    mass?: number; // 质量
-    friction?: number; // 摩擦系数;
-    restitution?: number; // 反弹系数;
+    /** 静态刚体、动态刚体、运动学刚体 */
+    type?: 'static' | 'dynamic' | 'kinematic';
+    /** 质量 */
+    mass?: number;
+    /** 摩擦系数 */
+    friction?: number;
+    /** 反弹系数 */
+    restitution?: number;
 }
