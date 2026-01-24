@@ -13,14 +13,17 @@ import { Events } from './Events';
 export const globalEv: Events = (() => {
     const ev = new Events();
     let disableBgAudio = false;
+    let bgAudioStartTime = 0;
+    let bgAudioStopTime = 0;
 
     ev.on(PlaytBgAudio, async (mp3: string = '', isLoop: boolean = false, volume: number = 0.5): Promise<boolean> => {
+        bgAudioStartTime = performance.now();
         const audioBg = getBackgroundAudio();
 
         let reslove: Function = null;
         new Promise(rs => (reslove = rs));
 
-        if (audioBg.isPlaying) {
+        if (audioBg?.isPlaying) {
             if (disableBgAudio) {
                 audioBg?.stop();
                 reslove(false);
@@ -35,19 +38,21 @@ export const globalEv: Events = (() => {
         new AudioLoader().load(
             mp3Url,
             buf => {
-                if (!disableBgAudio) {
+                const play = !disableBgAudio && bgAudioStartTime > bgAudioStopTime;
+                if (play) {
                     audioBg.setBuffer(buf);
                     audioBg.setLoop(isLoop);
                     audioBg.setVolume(volume);
                     audioBg.play();
                 }
-                reslove(!disableBgAudio);
+                reslove(play);
             },
             () => reslove(false),
         );
     });
 
     ev.on(StopBgAudio, () => {
+        bgAudioStopTime = performance.now();
         const audioBg = getBackgroundAudio(false);
         if (!audioBg?.isPlaying) return;
         audioBg.stop();

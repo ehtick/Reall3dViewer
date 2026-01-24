@@ -110,7 +110,7 @@ export class SplatMesh extends Mesh {
         let isSmallSceneShowDone = false;
         on(IsSmallSceneShowDone, () => isSmallSceneShowDone);
         on(OnSmallSceneShowDone, () => (isSmallSceneShowDone = true), true);
-        on(OnSmallSceneShowDone, () => !fire(IsBigSceneMode) && setTimeout(() => !that.audioText?.opts.position && that.audioText?.play(), 5000), true);
+        on(OnSmallSceneShowDone, () => setTimeout(() => that.audioText?.opts.autoPlay && !that.audioText?.opts.position && that.audioText?.play(), 5000), true);
 
         setupCommonUtils(events);
         setupApi(events);

@@ -159,13 +159,16 @@ export function setupEventListener(events: Events) {
             const backward = keySet.has('KeyS') || keySet.has('ArrowDown');
             const left = keySet.has('KeyA') || keySet.has('ArrowLeft');
             const right = keySet.has('KeyD') || keySet.has('ArrowRight');
-            const run = keySet.has('ShiftLeft') || keySet.has('ShiftRight') || keySet.has('ControlLeft') || keySet.has('ControlRight');
+            const run = keySet.has('ShiftLeft') || keySet.has('ShiftRight');
             fire(MovePlayer, forward, backward, left, right, run);
             if (keySet.has('KeyY')) {
                 fire(FlySavePositions, false);
                 fire(MetaSaveSmallSceneCameraInfo);
                 const player: Group = fire(GetPlayer);
                 console.debug(player?.position);
+                keySet.clear();
+            } else if (keySet.has('Escape')) {
+                globalEv.fire(StopBgAudio);
                 keySet.clear();
             }
             return;

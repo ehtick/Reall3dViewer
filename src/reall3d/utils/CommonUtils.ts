@@ -28,6 +28,8 @@ import {
     GetRenderer,
     UpdateFetchStatus,
     IsLodFetching,
+    StopBgAudio,
+    OnViewerDispose,
 } from '../events/EventConstants';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
@@ -35,6 +37,7 @@ import { XzReadableStream } from 'xz-decompress';
 import { unzipSync } from 'fflate';
 import { SpxHeader } from '../modeldata/ModelData';
 import { SplatTileNode } from '../modeldata/SplatTiles';
+import { globalEv } from '../events/GlobalEV';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -44,6 +47,7 @@ export function setupCommonUtils(events: Events) {
     on(IsDebugMode, () => fire(GetOptions).debugMode);
 
     on(CommonUtilsDispose, () => (disposed = true));
+    on(OnViewerDispose, () => globalEv.fire(StopBgAudio), true);
 
     on(ComputeTextureWidthHeight, (splatCount: number) => {
         const maxTextureSize: number = (fire(GetRenderer) as WebGLRenderer).capabilities.maxTextureSize;
