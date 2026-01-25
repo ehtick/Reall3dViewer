@@ -44,7 +44,6 @@ import {
     SplatUpdateUseLod,
     SplatTexdataManagerAddSplatLod,
     UpdateFetchStatus,
-    IsPlayerMode,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, ModelStatus, SplatModel } from './ModelData';
