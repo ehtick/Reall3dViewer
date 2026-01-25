@@ -40,6 +40,7 @@ import {
     PhysicsAdStaticMesh,
     PhysicsInitCharacterController,
     OnViewerDispose,
+    PhysicsAddStaticCollisionGlb,
 } from '../events/EventConstants';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
@@ -61,6 +62,7 @@ export function setupPlayer(events: Events) {
     !meta.player && fire(IsPlayerMode) && console.warn('missing player data in meta');
     fire(IsPlayerMode) && setupVirtualGround(events);
     setupPhysics(events);
+    fire(IsPlayerMode) && fire(PhysicsAddStaticCollisionGlb, meta.collisionUrl);
 
     const scene: Scene = fire(GetScene);
     const orbitControls: OrbitControls = fire(GetControls);
@@ -181,12 +183,12 @@ export function setupPlayer(events: Events) {
         characterControls.moveIntensity = 0;
 
         // 1. 计算目标点的地面投影（Y轴与角色保持一致，水平移动）
-        const targetProjected = new Vector3(targetWorldPos.x, characterControls.position.y, targetWorldPos.z);
+        const targetProjected = new Vector3(targetWorldPos.x, 0, targetWorldPos.z);
 
         // 2. 计算角色到目标投影点的方向和距离
         const directionToTarget = new Vector3(
             targetProjected.x - characterControls.position.x,
-            0, // 仅计算水平方向
+            targetProjected.y - characterControls.position.y,
             targetProjected.z - characterControls.position.z,
         );
         let distance = directionToTarget.length();
@@ -198,7 +200,7 @@ export function setupPlayer(events: Events) {
             directionToTarget.normalize(); // 归一化方向向量
             limitedTarget = new Vector3(
                 characterControls.position.x + directionToTarget.x * maxHorizontalDistance,
-                characterControls.position.y,
+                playerPosition[1],
                 characterControls.position.z + directionToTarget.z * maxHorizontalDistance,
             );
             // 更新距离为最大值
@@ -441,10 +443,10 @@ export function setupPlayer(events: Events) {
                 player.quaternion.rotateTowards(rotate, rotateSpeed);
             }
 
-            moveVector = fire(PhysicsMovePlayer, moveVector);
+            moveVector = fire(PhysicsMovePlayer, moveVector, delta);
 
             // 更新位置
-            const moveZero = !moveVector || moveVector.length() < 0.02;
+            const moveZero = !moveVector || moveVector.length() < 0.05;
             if (moveVector) {
                 !moveZero && (lastPlayerMoveTime = performance.now());
                 position.add(moveVector);

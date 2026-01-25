@@ -437,6 +437,7 @@ export class Reall3dViewer {
         opts.viewMode = meta.viewMode;
         that.reset({ ...opts });
 
+        meta.collisionUrl && (meta.collisionUrl = getUrl(meta.collisionUrl, getUrl(sceneUrl, location.href)));
         on(GetMeta, () => meta);
         setupPlayer(that.events);
 

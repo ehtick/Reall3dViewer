@@ -496,6 +496,8 @@ export const UpdateIndicatorTargetStatus = i++;
 export const PhysicsEnableDebug = i++;
 /** 添加物理Mesh */
 export const PhysicsAddMesh = i++;
+/** 添加物理glb静态刚体 */
+export const PhysicsAddStaticCollisionGlb = i++;
 /** 添加静态物理Mesh */
 export const PhysicsAdStaticMesh = i++;
 /** 添加动态物理Mesh */

@@ -1,8 +1,8 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { BufferAttribute, Clock, LineBasicMaterial, LineSegments, Matrix4, Quaternion, Scene, Vector3 } from 'three';
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { BoxGeometry, BufferAttribute, Clock, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, Quaternion, Scene, Vector3 } from 'three';
+import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { Events } from '../events/Events';
 import {
@@ -16,6 +16,7 @@ import {
     PhysicsMovePlayer,
     OnViewerDispose,
     GetControls,
+    PhysicsAddStaticCollisionGlb,
 } from '../events/EventConstants';
 
 export function setupPhysics(events: Events) {
@@ -27,7 +28,7 @@ export function setupPhysics(events: Events) {
     let world: RAPIER.World;
     let ready: Promise<boolean> = null;
     let enablePhysics = true;
-    let enablePhysicsDebug = true;
+    let enablePhysicsDebug = false;
     let characterController: RAPIER.KinematicCharacterController;
     let characterCollider: RAPIER.Collider;
     const up = new Vector3(0, 1, 0);
@@ -44,6 +45,25 @@ export function setupPhysics(events: Events) {
     let keySet: Set<string> = new Set();
 
     on(PhysicsEnableDebug, (enable = true) => (enablePhysicsDebug = enable));
+
+    on(PhysicsAddStaticCollisionGlb, async (glbUrl: string) => {
+        if (!glbUrl) return;
+        await initPhysics();
+
+        const loader = new GLTFLoader();
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://reall3d.com/reall3dviewer/libs/draco/');
+        loader.setDRACOLoader(dracoLoader);
+
+        loader.load(
+            glbUrl,
+            gltf => {
+                gltf.scene.traverse((object: any) => object.isMesh && addMesh(object, { type: 'static', mass: 0, friction: 0 }));
+            },
+            () => {},
+            error => {},
+        );
+    });
 
     on(PhysicsAddMesh, async (mesh: any, opt: PhysicsOptions = {}) => {
         await initPhysics();
@@ -72,33 +92,68 @@ export function setupPhysics(events: Events) {
         if (doing) return;
         doing = true;
         await initPhysics();
-        const controller = world.createCharacterController(0.01);
-        controller.setApplyImpulsesToDynamicBodies(true);
-        controller.setCharacterMass(3);
-        const colliderDesc = RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(position.x, position.y, position.z);
-        characterCollider = world.createCollider(colliderDesc);
+        const controller = world.createCharacterController(0.05);
+        controller.setApplyImpulsesToDynamicBodies(true); // 与动态刚体交互
+        controller.setCharacterMass(1);
+
+        controller.setMaxSlopeClimbAngle(Math.PI / 4); // 上坡 45°
+        controller.setMinSlopeSlideAngle(Math.PI / 4); // 下坡 45°
+        controller.enableAutostep(0.4, 0.2, false); // 自动跨步(maxHeight, minWidth, includeDynamicBodies)
+        controller.enableSnapToGround(0.7); // 贴地
+        controller.setSlideEnabled(true); // 滑动
+
+        // const boxColor = 0xbbbbbb;
+        // const boxGeometry = new BoxGeometry(1000, 0.1, 1000);
+        // const boxMesh = new Mesh(boxGeometry, new MeshBasicMaterial({ color: boxColor }));
+        // boxMesh.position.set(0, 1, 0);
+        // addMesh(boxMesh, { type: 'static', mass: 0 });
+        // fire(GetScene).add(boxMesh);
+
+        let groundBodyDesc = RAPIER.RigidBodyDesc.fixed();
+        let groundBody = world.createRigidBody(groundBodyDesc);
+        let groundColliderDesc = RAPIER.ColliderDesc.cuboid(1000, 0.1, 1000).setTranslation(0, 1, 0);
+        world.createCollider(groundColliderDesc, groundBody);
+
+        const bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased()
+            .setTranslation(position.x, position.y, position.z)
+            .setCcdEnabled(true)
+            .setCanSleep(false);
+        const characterBody = world.createRigidBody(bodyDesc);
+        const colliderDesc = RAPIER.ColliderDesc.capsule(0.6, 0.3).setMass(1).setTranslation(0, 0.1, 0).setFriction(0.0).setRestitution(0.0);
+        characterCollider = world.createCollider(colliderDesc, characterBody);
         characterController = controller;
     });
 
-    on(PhysicsMovePlayer, (moveVector: Vector3): Vector3 | null => {
+    let velocityY = 0.01;
+    on(PhysicsMovePlayer, (moveVector: Vector3, delta = 1 / 60): Vector3 | null => {
         if (!characterController) {
             fire(PhysicsInitCharacterController);
             return null;
         }
         rapierHelper?.update();
+        const position = characterCollider.translation();
+        let moveY = moveVector.y + velocityY;
+        if (position.y > 0.1) {
+            moveY = -0.1; // 别掉了
+        }
+        const movement = new RAPIER.Vector3(moveVector.x, moveY, moveVector.z);
+        characterController.computeColliderMovement(characterCollider, movement);
 
-        characterController.computeColliderMovement(characterCollider, moveVector);
-
-        step();
+        step(delta);
 
         const translation = characterController.computedMovement();
-        const position = characterCollider.translation();
+        if (Math.abs(translation.y - moveY) > 0.03) {
+            velocityY = 0.01; // 上坡
+        } else if (Math.abs(translation.y - moveY) < 0.01) {
+            velocityY = 0.35; // 下滑
+        }
 
         position.x += translation.x;
         position.y += translation.y;
         position.z += translation.z;
 
         characterCollider.setTranslation(position);
+
         return new Vector3(translation.x, translation.y, translation.z);
     });
 
@@ -369,9 +424,9 @@ export function setupPhysics(events: Events) {
         return body;
     }
 
-    function step() {
+    function step(timestep: number) {
         if (!enablePhysics || !world) return;
-        world.timestep = Math.min(clock.getDelta(), 1 / 60);
+        world.timestep = timestep || Math.min(clock.getDelta(), 1 / 60);
         world.step();
 
         for (let i = 0, l = meshes.length; i < l; i++) {

@@ -119,6 +119,10 @@ export interface MetaData {
      * Player
      */
     player?: Player;
+    /**
+     * collision (glb)
+     */
+    collisionUrl?: string;
 }
 
 /**
