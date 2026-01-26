@@ -133,7 +133,7 @@ export function setupPhysics(events: Events) {
         rapierHelper?.update();
         const position = characterCollider.translation();
         let moveY = moveVector.y + velocityY;
-        if (position.y > 0.1) {
+        if (position.y > 0.2) {
             moveY = -0.1; // 别掉了
         }
         const movement = new RAPIER.Vector3(moveVector.x, moveY, moveVector.z);
