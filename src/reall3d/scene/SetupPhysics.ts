@@ -230,63 +230,6 @@ export function setupPhysics(events: Events) {
         true,
     );
 
-    // 根据按键计算弧度方向
-    function computeTargetMoveDirection(): Vector3 {
-        const forward = keySet.has('KeyW') || keySet.has('ArrowUp');
-        const backward = keySet.has('KeyS') || keySet.has('ArrowDown');
-        const left = keySet.has('KeyA') || keySet.has('ArrowLeft');
-        const right = keySet.has('KeyD') || keySet.has('ArrowRight');
-        if (!forward && !backward && !left && !right) return null;
-
-        let angle = 0;
-        if (forward) {
-            angle = right ? Math.PI / 4 : left ? -Math.PI / 4 : 0;
-        } else if (backward) {
-            angle = right ? (3 * Math.PI) / 4 : left ? (-3 * Math.PI) / 4 : Math.PI;
-        } else if (right) {
-            angle = Math.PI / 2;
-        } else if (left) {
-            angle = -Math.PI / 2;
-        }
-        return computeMoveDirection(angle);
-    }
-
-    // 根据按键计算弧度方向
-    function computeKeyboardMoveDirection(): Vector3 | null {
-        const forward = keySet.has('KeyW') || keySet.has('ArrowUp');
-        const backward = keySet.has('KeyS') || keySet.has('ArrowDown');
-        const left = keySet.has('KeyA') || keySet.has('ArrowLeft');
-        const right = keySet.has('KeyD') || keySet.has('ArrowRight');
-        if (!forward && !backward && !left && !right) return null;
-
-        let angle = 0;
-        if (forward) {
-            angle = right ? Math.PI / 4 : left ? -Math.PI / 4 : 0;
-        } else if (backward) {
-            angle = right ? (3 * Math.PI) / 4 : left ? (-3 * Math.PI) / 4 : Math.PI;
-        } else if (right) {
-            angle = Math.PI / 2;
-        } else if (left) {
-            angle = -Math.PI / 2;
-        }
-        return computeMoveDirection(angle);
-    }
-
-    function computeMoveDirection(moveAngle: number): Vector3 {
-        const cameraForward = new Vector3();
-        controls.object.getWorldDirection(cameraForward);
-        cameraForward.y = 0;
-        cameraForward.normalize();
-
-        const cameraRight = new Vector3();
-        cameraRight.crossVectors(up, cameraForward).normalize();
-
-        const targetDirection = new Vector3();
-        targetDirection.x = Math.sin(moveAngle) * cameraRight.x + Math.cos(moveAngle) * cameraForward.x;
-        targetDirection.z = Math.sin(moveAngle) * cameraRight.z + Math.cos(moveAngle) * cameraForward.z;
-        return targetDirection;
-    }
-
     function initPhysics(): Promise<boolean> {
         if (ready) return ready;
         return (ready = new Promise(async resolve => {
