@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { BufferAttribute, Clock, LineBasicMaterial, LineSegments, Matrix4, Quaternion, Scene, Vector3 } from 'three';
+import { BufferAttribute, Clock, Group, LineBasicMaterial, LineSegments, Matrix4, Quaternion, Scene, Vector3 } from 'three';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { Events } from '../events/Events';
@@ -18,6 +18,7 @@ import {
     GetControls,
     PhysicsAddStaticCollisionGlb,
     PhysicsAdjustCameraByCastShape,
+    PhysicsGetEnvCollision,
 } from '../events/EventConstants';
 
 export function setupPhysics(events: Events) {
@@ -47,6 +48,9 @@ export function setupPhysics(events: Events) {
 
     on(PhysicsEnableDebug, (enable = true) => (enablePhysicsDebug = enable));
 
+    let collisionGlb: Group;
+    on(PhysicsGetEnvCollision, () => collisionGlb);
+
     on(PhysicsAddStaticCollisionGlb, async (glbUrl: string) => {
         if (!glbUrl) return;
         await initPhysics();
@@ -59,10 +63,16 @@ export function setupPhysics(events: Events) {
         loader.load(
             glbUrl,
             gltf => {
-                gltf.scene.traverse((object: any) => object.isMesh && addMesh(object, { type: 'static', mass: 0, friction: 0 }));
+                const model = gltf.scene;
+                model.traverse((object: any) => {
+                    object.isMesh && addMesh(object, { type: 'static', mass: 0, friction: 0 });
+                });
+                model.visible = false;
+                (fire(GetScene) as Scene).add(model);
+                collisionGlb = model;
             },
             () => {},
-            error => {},
+            err => console.error(err),
         );
     });
 
@@ -113,7 +123,8 @@ export function setupPhysics(events: Events) {
             .setCcdEnabled(true)
             .setCanSleep(false);
         const characterBody = world.createRigidBody(bodyDesc);
-        const colliderDesc = RAPIER.ColliderDesc.capsule(0.6, 0.3).setMass(1).setTranslation(0, 0.1, 0).setFriction(0.0).setRestitution(0.0);
+        const colliderDesc = RAPIER.ColliderDesc.capsule(0.6, 0.3).setMass(1).setTranslation(0, 0.1, 0).setFriction(0.5).setRestitution(0);
+        colliderDesc.setContactSkin(0.02); // 2 cm 皮肤
         characterCollider = world.createCollider(colliderDesc, characterBody);
         characterController = controller;
     });
@@ -214,6 +225,7 @@ export function setupPhysics(events: Events) {
             disposed = true;
             window.removeEventListener('keydown', keydownEventListener);
             window.removeEventListener('keyup', keyupEventListener);
+            world?.free();
         },
         true,
     );

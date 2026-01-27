@@ -444,9 +444,9 @@ export function setupPlayer(events: Events) {
             moveVector = fire(PhysicsMovePlayer, moveVector, delta);
 
             // 更新位置
-            const moveZero = !moveVector || moveVector.length() < 0.05;
+            const asMoveZero = !moveVector || moveVector.length() < 0.3;
             if (moveVector) {
-                !moveZero && (lastPlayerMoveTime = performance.now());
+                !asMoveZero && (lastPlayerMoveTime = performance.now());
                 position.add(moveVector);
                 player.position.copy(position);
                 orbitControls.target.copy(position).add(new Vector3(0, -playerHeight, 0));
@@ -455,7 +455,7 @@ export function setupPlayer(events: Events) {
                 fire(UpdateVirtualGroundPosition);
             }
 
-            if (moveZero && performance.now() - lastPlayerMoveTime > 3000) {
+            if (asMoveZero && performance.now() - lastPlayerMoveTime > 3000) {
                 stopMoveToTarget(); // 3秒原地踏步就停下
                 lastPlayerMoveTime = Number.MAX_SAFE_INTEGER;
             }

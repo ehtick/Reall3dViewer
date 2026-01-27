@@ -7,6 +7,7 @@ import {
     Mesh,
     MeshBasicMaterial,
     MeshStandardMaterial,
+    Object3D,
     PerspectiveCamera,
     PlaneGeometry,
     Raycaster,
@@ -23,6 +24,8 @@ import {
     GetPlayer,
     GetScene,
     OnViewerDispose,
+    PhysicsGetEnvCollision,
+    PhysicsGetGroundCollision,
     UpdateIndicatorTargetStatus,
     UpdateVirtualGroundPosition,
 } from '../events/EventConstants';
@@ -49,6 +52,14 @@ export function setupVirtualGround(events: Events) {
             indicatorTarget.visible = true;
             indicator.visible = false;
         }
+    });
+
+    on(PhysicsGetGroundCollision, () => {
+        const obj3ds: Object3D[] = [];
+        virtualGround && obj3ds.push(virtualGround);
+        const collision = fire(PhysicsGetEnvCollision);
+        collision && obj3ds.push(collision);
+        return obj3ds;
     });
 
     initVirtualGround();
@@ -108,10 +119,20 @@ export function setupVirtualGround(events: Events) {
             if (!camera) return;
             raycaster.setFromCamera(mouse, camera);
 
-            const intersects = raycaster.intersectObject(virtualGround, true); // 检测地面交点
+            const obj3ds: Object3D[] = fire(PhysicsGetGroundCollision);
+            const intersects = raycaster.intersectObjects(obj3ds, true); // 检测地面或静态碰撞体交点
 
             if (intersects.length > 0) {
-                const point = intersects[0].point;
+                const intersectObjs = [];
+                for (let i = 0; i < intersects.length; i++) {
+                    intersectObjs.push({ point: intersects[i].point, distance: camera.position.distanceTo(intersects[i].point) });
+                }
+                intersectObjs.sort((a, b) => a.distance - b.distance);
+
+                let point = intersectObjs[0].point;
+                if (intersects.length > 1 && camera.position.distanceTo(intersects[0].point) > camera.position.distanceTo(intersects[1].point)) {
+                    point.copy(intersects[1].point);
+                }
                 indicator.position.copy(point);
                 indicator.visible = true;
                 const { height } = fire(GetCanvasSize);

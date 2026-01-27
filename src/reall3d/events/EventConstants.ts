@@ -510,6 +510,10 @@ export const PhysicsInitCharacterController = i++;
 export const PhysicsMovePlayer = i++;
 /** 物理扫球调整相机 */
 export const PhysicsAdjustCameraByCastShape = i++;
+/** 取物理环境刚体 */
+export const PhysicsGetEnvCollision = i++;
+/** 取目标点相交检测用对象数组（虚拟地面及静态刚体） */
+export const PhysicsGetGroundCollision = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */
