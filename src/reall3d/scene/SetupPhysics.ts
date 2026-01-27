@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { BoxGeometry, BufferAttribute, Clock, LineBasicMaterial, LineSegments, Matrix4, Mesh, MeshBasicMaterial, Quaternion, Scene, Vector3 } from 'three';
+import { BufferAttribute, Clock, LineBasicMaterial, LineSegments, Matrix4, Quaternion, Scene, Vector3 } from 'three';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import { Events } from '../events/Events';
@@ -17,6 +17,7 @@ import {
     OnViewerDispose,
     GetControls,
     PhysicsAddStaticCollisionGlb,
+    PhysicsAdjustCameraByCastShape,
 } from '../events/EventConstants';
 
 export function setupPhysics(events: Events) {
@@ -52,7 +53,7 @@ export function setupPhysics(events: Events) {
 
         const loader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('https://reall3d.com/reall3dviewer/libs/draco/');
+        dracoLoader.setDecoderPath('https://reall3d.com/reall3dviewer/libs/draco/'); // https://unpkg.com/three@0.171.0/examples/jsm/libs/draco/gltf/
         loader.setDRACOLoader(dracoLoader);
 
         loader.load(
@@ -99,15 +100,8 @@ export function setupPhysics(events: Events) {
         controller.setMaxSlopeClimbAngle(Math.PI / 4); // 上坡 45°
         controller.setMinSlopeSlideAngle(Math.PI / 4); // 下坡 45°
         controller.enableAutostep(0.4, 0.2, false); // 自动跨步(maxHeight, minWidth, includeDynamicBodies)
-        controller.enableSnapToGround(0.7); // 贴地
+        controller.enableSnapToGround(0.5); // 贴地
         controller.setSlideEnabled(true); // 滑动
-
-        // const boxColor = 0xbbbbbb;
-        // const boxGeometry = new BoxGeometry(1000, 0.1, 1000);
-        // const boxMesh = new Mesh(boxGeometry, new MeshBasicMaterial({ color: boxColor }));
-        // boxMesh.position.set(0, 1, 0);
-        // addMesh(boxMesh, { type: 'static', mass: 0 });
-        // fire(GetScene).add(boxMesh);
 
         let groundBodyDesc = RAPIER.RigidBodyDesc.fixed();
         let groundBody = world.createRigidBody(groundBodyDesc);
@@ -133,9 +127,8 @@ export function setupPhysics(events: Events) {
         rapierHelper?.update();
         const position = characterCollider.translation();
         let moveY = moveVector.y + velocityY;
-        if (position.y > 0.2) {
-            moveY = -0.1; // 别掉了
-        }
+        if (position.y > 0.2) moveY = -0.1; // 别掉了
+
         const movement = new RAPIER.Vector3(moveVector.x, moveY, moveVector.z);
         characterController.computeColliderMovement(characterCollider, movement);
 
@@ -155,6 +148,61 @@ export function setupPhysics(events: Events) {
         characterCollider.setTranslation(position);
 
         return new Vector3(translation.x, translation.y, translation.z);
+    });
+
+    const castShapeStartPos = new Vector3();
+    const castShapeEndPos = new Vector3();
+    const castShapeTgtPos = new Vector3();
+    const castShapeTmpPos = new Vector3();
+    const direction = new Vector3();
+    let savedDistance = 0; // 距离
+    let isObstructed = false; // 是否遮挡
+    on(PhysicsAdjustCameraByCastShape, () => {
+        const ballRadius = 0.2;
+        const controls: OrbitControls = fire(GetControls);
+        castShapeStartPos.copy(controls.target);
+        castShapeEndPos.copy(controls.object.position);
+
+        // 初始距离自动计算
+        if (!savedDistance) savedDistance = Math.max(ballRadius + 0.1, castShapeEndPos.distanceTo(castShapeStartPos));
+
+        // 计算方向：从角色头部指向理想相机位置，用 savedDistance 计算理想位置
+        direction.subVectors(castShapeEndPos, castShapeStartPos).normalize();
+        castShapeTmpPos.copy(castShapeStartPos).add(direction.clone().multiplyScalar(savedDistance));
+        const vel = castShapeTmpPos.clone().sub(castShapeStartPos); // 现在：start = 角色头部, end = 理想位置
+
+        const start = new RAPIER.Vector3(castShapeStartPos.x, castShapeStartPos.y, castShapeStartPos.z);
+        const rot = { w: 1, x: 0, y: 0, z: 0 };
+        const shapeVel = { x: vel.x, y: vel.y, z: vel.z };
+        const shape = new RAPIER.Ball(ballRadius);
+
+        const hit = world.castShape(start, rot, shapeVel, shape, 0.0, 1.0, true, undefined, undefined, characterCollider);
+
+        if (hit) {
+            // 有遮挡，缩短到遮挡物前
+            isObstructed = true;
+            const totalLen = vel.length();
+            const hitDist = hit.time_of_impact * totalLen; // hit.time_of_impact 是 [0,1] 比例
+            const safeDist = Math.max(ballRadius + 0.1, hitDist - ballRadius - 0.05);
+            castShapeTgtPos.copy(castShapeStartPos).add(direction.multiplyScalar(safeDist));
+        } else {
+            // 无遮挡，恢复到原距离
+            isObstructed = false;
+            castShapeTgtPos.copy(castShapeStartPos).add(direction.multiplyScalar(savedDistance));
+        }
+        controls.object.position.lerp(castShapeTgtPos, 0.1);
+    });
+
+    const lastDir = new Vector3();
+    const tmpDir = new Vector3();
+    controls.addEventListener('end', () => {
+        tmpDir.subVectors(controls.object.position, controls.target).normalize();
+        if (Math.abs(lastDir.dot(tmpDir)) > 0.999) {
+            const newDist = controls.object.position.distanceTo(controls.target); // 平行，允许调整距离
+            if (!isObstructed && Math.abs(newDist - savedDistance) > 0.1) savedDistance = newDist;
+        } else {
+            lastDir.copy(tmpDir);
+        }
     });
 
     window.addEventListener('keydown', keydownEventListener);

@@ -269,6 +269,7 @@ export class Reall3dViewer {
             opts.disableTransitionEffectOnLoad = false;
             opts.maxDistance = 10000;
             opts.disableRightClickFocus = false;
+            opts.viewMode = undefined;
             that.reset(opts);
             if (isSceneJson) {
                 await that.addScene(url);

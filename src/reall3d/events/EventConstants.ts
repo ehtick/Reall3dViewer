@@ -508,6 +508,8 @@ export const PhysicsRemoveMesh = i++;
 export const PhysicsInitCharacterController = i++;
 /** 物理移动虚拟角色 */
 export const PhysicsMovePlayer = i++;
+/** 物理扫球调整相机 */
+export const PhysicsAdjustCameraByCastShape = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

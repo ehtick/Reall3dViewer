@@ -15,8 +15,6 @@ import {
     Scene,
     Vector3,
     MathUtils,
-    MeshBasicMaterial,
-    BoxGeometry,
 } from 'three';
 import { Events } from '../events/Events';
 import {
@@ -37,10 +35,10 @@ import {
     IsPlayerMode1,
     IsPlayerMode3,
     PhysicsMovePlayer,
-    PhysicsAdStaticMesh,
     PhysicsInitCharacterController,
     OnViewerDispose,
     PhysicsAddStaticCollisionGlb,
+    PhysicsAdjustCameraByCastShape,
 } from '../events/EventConstants';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
@@ -83,6 +81,7 @@ export function setupPlayer(events: Events) {
     const walkTimeThreshold = 5; // 步行耗时阈值（秒）
     const lastPlayerPosition = new Vector3();
     let lastPlayerMoveTime = 0;
+    const lastCameraPosition = new Vector3();
 
     // 初始值
     const playerUrl = meta.player?.url || 'https://reall3d.com/demo-models/player/soldier.glb';
@@ -248,7 +247,6 @@ export function setupPlayer(events: Events) {
     function stopMoveToTarget() {
         isMovingToTarget = false;
         targetPosition = null;
-        // fire(PhysicsSetTargetPosition, null);
     }
 
     function loadCharacterModelOnce() {
@@ -453,6 +451,7 @@ export function setupPlayer(events: Events) {
                 player.position.copy(position);
                 orbitControls.target.copy(position).add(new Vector3(0, -playerHeight, 0));
                 orbitControls.object.position.add(moveVector);
+                fire(PhysicsAdjustCameraByCastShape);
                 fire(UpdateVirtualGroundPosition);
             }
 
@@ -462,6 +461,10 @@ export function setupPlayer(events: Events) {
             }
         } else {
             fire(UpdateIndicatorTargetStatus, null, true); // 隐藏目标点提示圈
+            if (lastCameraPosition.distanceTo(orbitControls.object.position) > 0.1) {
+                lastCameraPosition.copy(orbitControls.object.position);
+                fire(PhysicsAdjustCameraByCastShape);
+            }
         }
 
         // 更新动画和控制器
