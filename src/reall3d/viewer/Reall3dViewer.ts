@@ -248,7 +248,7 @@ export class Reall3dViewer {
                 format = 'ply';
             } else if (file.name.endsWith('.spz')) {
                 format = 'spz';
-            } else if (file.name.endsWith('.sog')) {
+            } else if (file.name.endsWith('.sog') || file.name.endsWith('.zip')) {
                 format = 'sog';
             } else if (file.name.endsWith('.obj')) {
                 format = 'obj';
@@ -520,7 +520,12 @@ export class Reall3dViewer {
                 modelOpts.format = 'ply';
             } else if (modelOpts.url.endsWith('.spz')) {
                 modelOpts.format = 'spz';
-            } else if (modelOpts.url.endsWith('.sog') || modelOpts.url.endsWith('/meta.json') || modelOpts.url == 'meta.json') {
+            } else if (
+                modelOpts.url.endsWith('.zip') ||
+                modelOpts.url.endsWith('.sog') ||
+                modelOpts.url.endsWith('/meta.json') ||
+                modelOpts.url == 'meta.json'
+            ) {
                 modelOpts.format = 'sog';
             } else if (modelOpts.url.endsWith('.obj')) {
                 modelOpts.format = 'obj';

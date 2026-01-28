@@ -145,7 +145,7 @@ export class SplatModel {
                 that.opts.format = 'ply';
             } else if (opts.url?.endsWith('.spz')) {
                 that.opts.format = 'spz';
-            } else if (opts.url?.endsWith('.sog') || opts.url?.endsWith('meta.json')) {
+            } else if (opts.url?.endsWith('.zip') || opts.url?.endsWith('.sog') || opts.url?.endsWith('meta.json')) {
                 that.opts.format = 'sog';
             } else {
                 console.error('unknown format!');
