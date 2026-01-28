@@ -78,7 +78,7 @@ export function setupPlayer(events: Events) {
     let isMovingToTarget = false; // 是否正在向目标点移动
     let targetPosition: Vector3 | null = null; // 目标点（地面投影）
     const targetReachThreshold = 0.1; // 到达目标的距离阈值（避免精度问题）
-    const walkTimeThreshold = 5; // 步行耗时阈值（秒）
+    const walkTimeThreshold = 3; // 步行耗时阈值（秒）
     const lastPlayerPosition = new Vector3();
     let lastPlayerMoveTime = 0;
     const lastCameraPosition = new Vector3();
@@ -89,6 +89,7 @@ export function setupPlayer(events: Events) {
     const playerRotation = meta.player?.rotation || [180, 0, 0];
     const playerPosition = meta.player?.position || [0, 0, 0];
     const playerHeight = meta.player?.height || 1.7;
+    const playerSpeed = meta.player?.speed || 3;
 
     // 角色控制配置
     const characterControls: CharacterControls = {
@@ -99,8 +100,8 @@ export function setupPlayer(events: Events) {
         rotate: new Quaternion(),
         current: 'Idle',
         fadeDuration: 0.5,
-        runVelocity: 10, // 奔跑速度
-        walkVelocity: 2, // 行走速度
+        runVelocity: playerSpeed * 3, // 奔跑速度
+        walkVelocity: playerSpeed, // 行走速度
         rotateSpeed: 0.1,
         moveAngle: null, // 摇杆偏离角度（弧度，相对于相机视角）
         moveIntensity: 0, // 摇杆移动力度（0~1，0=无移动，1=最大速度）
@@ -277,7 +278,7 @@ export function setupPlayer(events: Events) {
                         mesh.receiveShadow = true;
 
                         if (mesh.material instanceof MeshStandardMaterial) {
-                            mesh.material.metalness = 1.0;
+                            mesh.material.metalness = 0.5;
                             mesh.material.roughness = 0.2;
                             mesh.material.color.set(1, 1, 1);
                             if (mesh.material.map) {
@@ -297,13 +298,21 @@ export function setupPlayer(events: Events) {
                 let walk: AnimationClip = null;
                 let run: AnimationClip = null;
                 let jump: AnimationClip = null;
-                animations.forEach(item => {
-                    const name = item.name.toLowerCase();
-                    if (name.indexOf('idle') >= 0) idle = item;
-                    if (name.indexOf('walk') >= 0) walk = item;
-                    if (name.indexOf('run') >= 0) run = item;
-                    if (name.indexOf('jump') >= 0) jump = item;
-                });
+                const singleAnimate = animations.length === 1;
+
+                if (singleAnimate) {
+                    idle = animations[0];
+                    walk = animations[0];
+                    run = animations[0];
+                } else {
+                    animations.forEach(item => {
+                        const name = item.name.toLowerCase();
+                        if (name.indexOf('idle') >= 0) idle = item;
+                        if (name.indexOf('walk') >= 0) walk = item;
+                        if (name.indexOf('run') >= 0) run = item;
+                        if (name.indexOf('jump') >= 0) jump = item;
+                    });
+                }
 
                 actions = {
                     Idle: mixer.clipAction(idle),
@@ -313,9 +322,11 @@ export function setupPlayer(events: Events) {
                 jump && (actions.Jump = mixer.clipAction(jump));
 
                 Object.entries(actions).forEach(([key, action]) => {
-                    action.enabled = true;
-                    action.setEffectiveTimeScale(1);
-                    action.setEffectiveWeight(key === 'Idle' ? 1 : 0);
+                    if (action) {
+                        action.enabled = true;
+                        action.setEffectiveTimeScale(1);
+                        action.setEffectiveWeight(key === 'Idle' || singleAnimate ? 1 : 0);
+                    }
                 });
                 actions.Idle.play();
 
@@ -329,7 +340,6 @@ export function setupPlayer(events: Events) {
             () => {},
             error => {
                 console.error('model load failed!', error);
-                loading = false;
             },
         );
     }

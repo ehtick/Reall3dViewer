@@ -130,6 +130,7 @@ export interface MetaData {
  */
 export interface Player {
     url?: string;
+    speed?: number;
     height?: number;
     scale?: number;
     rotation?: number[];
