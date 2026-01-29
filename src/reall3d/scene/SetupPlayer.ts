@@ -47,6 +47,7 @@ import { MetaData } from '../modeldata/MetaData';
 import { setupVirtualGround } from './SetupVirtualGround';
 import { setupPhysics } from './SetupPhysics';
 import { globalEv } from '../events/GlobalEV';
+import { loadFile } from '../modeldata/loaders/FileLoader';
 
 export function setupPlayer(events: Events) {
     let disposed: boolean = false;
@@ -95,7 +96,13 @@ export function setupPlayer(events: Events) {
     const idleName = (meta.player?.idle || 'idle').toLowerCase();
     const walkName = (meta.player?.walk || 'walk').toLowerCase();
     const runName = (meta.player?.run || 'run').toLowerCase();
-    const trigerRunMp3 = meta.player?.trigerRunMp3;
+
+    let trigerRunMp3Url = null;
+    if (meta.player?.trigerRunMp3) {
+        loadFile(meta.player.trigerRunMp3).then((data: any) => {
+            trigerRunMp3Url = URL.createObjectURL(new Blob([data], { type: 'application/octet-stream' }));
+        });
+    }
 
     // 角色控制配置
     const characterControls: CharacterControls = {
@@ -219,8 +226,7 @@ export function setupPlayer(events: Events) {
         // 4. 判断是否需要奔跑：步行耗时>阈值时长则奔跑
         const walkTime = distance / characterControls.walkVelocity;
         const needRun = walkTime > walkTimeThreshold;
-
-        needRun && trigerRunMp3 && globalEv.fire(PlaytBgAudio, trigerRunMp3);
+        needRun && trigerRunMp3Url && globalEv.fire(PlaytBgAudio, trigerRunMp3Url);
 
         // 5. 设置目标移动状态（使用限定后的目标点）
         isMovingToTarget = true;
