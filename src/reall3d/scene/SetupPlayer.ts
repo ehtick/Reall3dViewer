@@ -226,7 +226,7 @@ export function setupPlayer(events: Events) {
         // 4. 判断是否需要奔跑：步行耗时>阈值时长则奔跑
         const walkTime = distance / characterControls.walkVelocity;
         const needRun = walkTime > walkTimeThreshold;
-        needRun && trigerRunMp3Url && globalEv.fire(PlaytBgAudio, trigerRunMp3Url);
+        needRun && trigerRunMp3Url && globalEv.fire(PlaytBgAudio, trigerRunMp3Url, false, 0.3);
 
         // 5. 设置目标移动状态（使用限定后的目标点）
         isMovingToTarget = true;
