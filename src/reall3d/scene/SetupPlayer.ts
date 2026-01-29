@@ -90,6 +90,9 @@ export function setupPlayer(events: Events) {
     const playerPosition = meta.player?.position || [0, 0, 0];
     const playerHeight = meta.player?.height || 1.7;
     const playerSpeed = meta.player?.speed || 3;
+    const idleName = (meta.player?.idle || 'idle').toLowerCase();
+    const walkName = (meta.player?.walk || 'walk').toLowerCase();
+    const runName = (meta.player?.run || 'run').toLowerCase();
 
     // 角色控制配置
     const characterControls: CharacterControls = {
@@ -307,9 +310,9 @@ export function setupPlayer(events: Events) {
                 } else {
                     animations.forEach(item => {
                         const name = item.name.toLowerCase();
-                        if (name.indexOf('idle') >= 0) idle = item;
-                        if (name.indexOf('walk') >= 0) walk = item;
-                        if (name.indexOf('run') >= 0) run = item;
+                        if (name === idleName) idle = item;
+                        if (name === walkName) walk = item;
+                        if (name === runName) run = item;
                         if (name.indexOf('jump') >= 0) jump = item;
                     });
                 }

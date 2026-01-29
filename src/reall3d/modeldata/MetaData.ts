@@ -129,10 +129,22 @@ export interface MetaData {
  * Player
  */
 export interface Player {
+    /** Character model URL */
     url?: string;
+    /** Character movement speed */
     speed?: number;
+    /** Character height */
     height?: number;
+    /** Character scale factor */
     scale?: number;
+    /** Rotation (degrees) */
     rotation?: number[];
+    /** Initial position of the character */
     position?: number[];
+    /** Animation name for idle state */
+    idle?: string;
+    /** Animation name for walk state */
+    walk?: string;
+    /** Animation name for run state */
+    run?: string;
 }
