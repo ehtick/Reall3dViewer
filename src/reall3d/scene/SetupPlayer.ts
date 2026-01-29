@@ -39,12 +39,14 @@ import {
     OnViewerDispose,
     PhysicsAddStaticCollisionGlb,
     PhysicsAdjustCameraByCastShape,
+    PlaytBgAudio,
 } from '../events/EventConstants';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { MetaData } from '../modeldata/MetaData';
 import { setupVirtualGround } from './SetupVirtualGround';
 import { setupPhysics } from './SetupPhysics';
+import { globalEv } from '../events/GlobalEV';
 
 export function setupPlayer(events: Events) {
     let disposed: boolean = false;
@@ -93,6 +95,7 @@ export function setupPlayer(events: Events) {
     const idleName = (meta.player?.idle || 'idle').toLowerCase();
     const walkName = (meta.player?.walk || 'walk').toLowerCase();
     const runName = (meta.player?.run || 'run').toLowerCase();
+    const trigerRunMp3 = meta.player?.trigerRunMp3;
 
     // 角色控制配置
     const characterControls: CharacterControls = {
@@ -217,6 +220,8 @@ export function setupPlayer(events: Events) {
         const walkTime = distance / characterControls.walkVelocity;
         const needRun = walkTime > walkTimeThreshold;
 
+        needRun && trigerRunMp3 && globalEv.fire(PlaytBgAudio, trigerRunMp3);
+
         // 5. 设置目标移动状态（使用限定后的目标点）
         isMovingToTarget = true;
         targetPosition = limitedTarget; // 替换为限定后的目标点
@@ -233,10 +238,10 @@ export function setupPlayer(events: Events) {
                 orbitControls.maxDistance = orbitControls.minDistance;
                 player?.visible && (player.visible = false);
             } else if (fire(IsPlayerMode3)) {
-                orbitControls.maxDistance = 10;
+                orbitControls.maxDistance = 20;
             } else {
                 !orbitControls.enablePan && (orbitControls.enablePan = true);
-                orbitControls.maxDistance = 1000;
+                orbitControls.maxDistance = 5000;
                 return;
             }
             orbitControls.enablePan && (orbitControls.enablePan = false);

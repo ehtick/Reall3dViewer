@@ -147,4 +147,6 @@ export interface Player {
     walk?: string;
     /** Animation name for run state */
     run?: string;
+
+    trigerRunMp3?: string;
 }

@@ -439,6 +439,7 @@ export class Reall3dViewer {
         that.reset({ ...opts });
 
         meta.player?.url && (meta.player.url = getUrl(meta.player.url, getUrl(sceneUrl, location.href)));
+        meta.player?.trigerRunMp3 && (meta.player.trigerRunMp3 = getUrl(meta.player.trigerRunMp3, getUrl(sceneUrl, location.href)));
         meta.collisionUrl && (meta.collisionUrl = getUrl(meta.collisionUrl, getUrl(sceneUrl, location.href)));
         on(GetMeta, () => meta);
         setupPlayer(that.events);
