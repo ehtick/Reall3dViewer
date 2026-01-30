@@ -30,6 +30,7 @@ if (url) {
     // viewer.addModel(`https://reall3d.com/demo-models/yz.spx`);
 
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
+    // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-fpv.scene.json`);
     viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-tpv.scene.json`);
 
     initDevMode();

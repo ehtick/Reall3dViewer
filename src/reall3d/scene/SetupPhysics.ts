@@ -33,7 +33,6 @@ export function setupPhysics(events: Events) {
     let enablePhysicsDebug = false;
     let characterController: RAPIER.KinematicCharacterController;
     let characterCollider: RAPIER.Collider;
-    const up = new Vector3(0, 1, 0);
     let rapierHelper: RapierHelper;
 
     const meshes = [];
