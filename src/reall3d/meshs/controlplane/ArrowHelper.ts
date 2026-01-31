@@ -6,7 +6,7 @@ import { CylinderGeometry, DoubleSide, Mesh, MeshBasicMaterial, Object3D, Vector
 export class ArrowHelper extends Object3D {
     private line: Mesh;
     private cone: Mesh;
-    public declare type: string;
+    declare public type: string;
     private _axis: Vector3 = new Vector3();
 
     constructor(
@@ -29,7 +29,7 @@ export class ArrowHelper extends Object3D {
 
         this.position.copy(origin);
 
-        const lineMaterial = new MeshBasicMaterial({ color: color, toneMapped: false });
+        const lineMaterial = new MeshBasicMaterial({ color: color, toneMapped: false, opacity: 0.9, transparent: true });
         lineMaterial.side = DoubleSide;
         this.line = new Mesh(lineGeometry, lineMaterial);
         this.line.matrixAutoUpdate = false;
@@ -37,7 +37,7 @@ export class ArrowHelper extends Object3D {
         this.line.ignoreIntersect = true;
         this.add(this.line);
 
-        const coneMaterial = new MeshBasicMaterial({ color: color, toneMapped: false });
+        const coneMaterial = new MeshBasicMaterial({ color: color, toneMapped: false, opacity: 0.9, transparent: true });
         coneMaterial.side = DoubleSide;
         this.cone = new Mesh(coneGeometry, coneMaterial);
         this.cone.matrixAutoUpdate = false;
