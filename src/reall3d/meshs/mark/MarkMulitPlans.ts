@@ -235,7 +235,7 @@ export class MarkMultiPlans extends Line2 {
         // 删除多余的标签
         while (that.css3dTags.length > that.data.points.length / 3 - 1) {
             const tag: CSS3DSprite = that.css3dTags.pop();
-            that.group.remove(tag);
+            tag.removeFromParent();
             tag.element.parentElement?.removeChild(tag.element);
         }
 
@@ -403,8 +403,8 @@ export class MarkMultiPlans extends Line2 {
                 opacity: data.planOpacity,
                 side: DoubleSide,
             });
-            // material.depthWrite = false;
-            // material.depthTest = true;
+            material.depthWrite = false;
+            material.depthTest = true;
             that.meshPlans = new Mesh(geometry, material);
             that.meshPlans.renderOrder = 1;
             that.meshPlans['isMark'] = true;
@@ -428,6 +428,7 @@ export class MarkMultiPlans extends Line2 {
                 indexArray[i * 3 + 2] = i + 2;
             }
             that.meshPlans.geometry.setIndex(new BufferAttribute(indexArray, 1));
+            that.meshPlans.geometry.computeBoundingSphere();
         }
     }
 
@@ -447,7 +448,7 @@ export class MarkMultiPlans extends Line2 {
         that.disposed = true;
 
         that.events.fire(TraverseDisposeAndClear, that);
-        that.events.fire(GetScene).remove(that);
+        that.removeFromParent();
         that.events.fire(DeleteMarkWeakRef, that);
 
         that.geometry.dispose();

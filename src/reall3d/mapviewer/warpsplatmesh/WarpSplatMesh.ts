@@ -181,7 +181,7 @@ export class WarpSplatMesh extends Mesh {
         if (that.disposed) return;
         that.disposed = true;
 
-        that.opts.scene.remove(that.css3dTag);
+        that.css3dTag.removeFromParent();
         that.splatMesh?.dispose();
 
         that.meta = null;

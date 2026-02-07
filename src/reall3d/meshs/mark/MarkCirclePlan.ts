@@ -333,7 +333,7 @@ export class MarkCirclePlan extends Group {
         that.disposed = true;
 
         that.events.fire(TraverseDisposeAndClear, that);
-        that.events.fire(GetScene).remove(that);
+        that.removeFromParent();
         that.events.fire(DeleteMarkWeakRef, that);
 
         const list = document.querySelectorAll(`.${that.data.name}`);

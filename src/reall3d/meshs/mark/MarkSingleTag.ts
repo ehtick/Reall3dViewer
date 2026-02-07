@@ -173,7 +173,7 @@ export class MarkSingleTag extends Group {
         that.disposed = true;
 
         that.events.fire(TraverseDisposeAndClear, that);
-        that.events.fire(GetScene).remove(that);
+        that.removeFromParent();
         that.events.fire(DeleteMarkWeakRef, that);
 
         const wrap: HTMLDivElement = document.querySelector(`.mark-wrap-${that.data.name}`);

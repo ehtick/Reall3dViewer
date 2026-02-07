@@ -224,8 +224,8 @@ export class SplatMesh extends Mesh {
 
         fire(TraverseDisposeAndClear, that);
         fire(TraverseDisposeAndClear, that.boundBox);
-        fire(GetScene).remove(that);
-        fire(GetScene).remove(that.boundBox);
+        that.removeFromParent();
+        that.boundBox.removeFromParent();
         that.audioText?.dispose();
 
         fire(CommonUtilsDispose);

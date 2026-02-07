@@ -207,7 +207,7 @@ export class MarkMultiLines extends Line2 {
             // 删除多余的标签
             while (that.css3dTags.length > that.data.points.length / 3 - 1) {
                 const tag: CSS3DSprite = that.css3dTags.pop();
-                that.group.remove(tag);
+                tag.removeFromParent();
                 tag.element.parentElement?.removeChild(tag.element);
             }
             that.css3dTags[that.css3dTags.length - 1].visible = true;
@@ -345,7 +345,7 @@ export class MarkMultiLines extends Line2 {
         that.disposed = true;
 
         that.events.fire(TraverseDisposeAndClear, that);
-        that.events.fire(GetScene).remove(that);
+        that.removeFromParent();
         that.events.fire(DeleteMarkWeakRef, that);
 
         that.geometry.dispose();
