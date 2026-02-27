@@ -5,7 +5,6 @@ import { Vector3, MathUtils } from 'three';
 import { Events } from '../../events/Events';
 import {
     GetCanvas,
-    EventListenerDispose,
     KeyActionCheckAndExecute,
     RaycasterRayIntersectPoints,
     SelectPointAndLookAt,

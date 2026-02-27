@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { GetGaussianText, GetOptions, GetSplatMesh, HttpQueryGaussianText } from '../../events/EventConstants';
+import { GetGaussianText, HttpQueryGaussianText } from '../../events/EventConstants';
 import { Events } from '../../events/Events';
 import { HalfChars, SplatDataSize32 } from '../../utils/consts/GlobalConstants';
 import { parseWordToTexdata } from '../wasm/WasmParser';

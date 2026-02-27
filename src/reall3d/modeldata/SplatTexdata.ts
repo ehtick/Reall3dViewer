@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 /**
- * 纹理
+ * Splat Texture Data
  */
 interface SplatTexdata {
     /** 索引（0 | 1） */

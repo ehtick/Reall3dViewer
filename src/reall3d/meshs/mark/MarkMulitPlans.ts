@@ -10,7 +10,6 @@ import {
     ComputePlansCenter,
     DeleteMarkWeakRef,
     GetOptions,
-    GetScene,
     MarkFinish,
     ReComputePlansArea,
     StopAutoRotate,

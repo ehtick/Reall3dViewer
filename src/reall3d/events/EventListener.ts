@@ -5,7 +5,6 @@ import { Matrix4, PerspectiveCamera, Vector3, Scene, Quaternion, Group } from 't
 import { Events } from './Events';
 import {
     GetCanvas,
-    EventListenerDispose,
     StopAutoRotate,
     GetOptions,
     StartAutoRotate,
@@ -40,7 +39,6 @@ import {
     MarkFinish,
     CancelCurrentMark,
     Flying,
-    FlyDisable,
     AddFlyPosition,
     ClearFlyPosition,
     PrintInfo,
@@ -52,7 +50,6 @@ import {
     StopBgAudio,
     FlyingPause,
     MovePlayer,
-    MovePlayerByAngle,
     MovePlayerToTarget,
     GetPlayer,
     OnViewerDispose,

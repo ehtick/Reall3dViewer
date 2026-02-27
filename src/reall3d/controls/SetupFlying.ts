@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { CatmullRomCurve3, MathUtils, Vector3 } from 'three';
+import { CatmullRomCurve3, Vector3 } from 'three';
 import { Events } from '../events/Events';
 import {
     AddFlyPosition,
@@ -26,7 +26,6 @@ import {
     FlyingPlay,
     OnSetFlyDuration,
     ShowJoystick,
-    GetOptions,
     MovePlayerByAngle,
     RunLoopByFrame,
     OnViewerDispose,
@@ -37,7 +36,6 @@ import { MetaData } from '../modeldata/MetaData';
 import { ScenesJsonData } from '../mapviewer/Reall3dMapViewer';
 import { addDynamicStyles } from '../utils/CommonUtils';
 import nipplejs from 'nipplejs';
-import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 
 export function setupFlying(events: Events) {
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);

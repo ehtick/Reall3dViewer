@@ -8,7 +8,6 @@ import {
     AddMarkToWeakRef,
     DeleteMarkWeakRef,
     GetOptions,
-    GetScene,
     MarkFinish,
     StopAutoRotate,
     TraverseDisposeAndClear,
