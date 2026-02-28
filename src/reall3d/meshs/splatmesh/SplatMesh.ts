@@ -43,6 +43,7 @@ import {
     IsCameraLookAtPoint,
     IsSmallSceneShowDone,
     LodDownloadManagerAddLodMeta,
+    SplatMeshSwitchDisplayMode,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -211,6 +212,20 @@ export class SplatMesh extends Mesh {
         const that = this;
         if (that.disposed) return;
         return that.events.fire(key, ...args);
+    }
+
+    /**
+     * 设定点云或正常显示模式
+     */
+    public setPointMode(isPointMode: boolean) {
+        this.events.fire(SplatUpdatePointMode, isPointMode);
+    }
+
+    /**
+     * 光圈过渡效果切换点云或正常显示模式
+     */
+    public switchDisplayMode() {
+        this.events.fire(SplatMeshSwitchDisplayMode);
     }
 
     /**
