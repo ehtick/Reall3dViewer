@@ -31,7 +31,8 @@ if (url) {
 
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-fpv.scene.json`);
-    viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-tpv.scene.json`);
+    // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-tpv.scene.json`);
+    viewer.addScene(`https://reall3d.com/demo-models/lod-metas/hgd/hgd-lod-meta-tpv.scene.json`);
 
     initDevMode();
 }
@@ -101,7 +102,8 @@ function fnClick(className: string) {
         mapViewer?.dispose();
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
-        setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`), 50); // Let it GC
+        // setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`), 50); // Let it GC
+        setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-metas/hgd/hgd-lod-meta.scene.json`), 50); // Let it GC
         globalEv.fire(StopBgAudio);
     } else if (className == 'lff-house') {
         viewer?.dispose();

@@ -237,7 +237,11 @@ export function setupPhysics(events: Events) {
 
             const scene: Scene = fire(GetScene);
             rapierHelper = new RapierHelper();
-            scene.add(rapierHelper);
+            scene?.add(rapierHelper);
+            if (!scene) {
+                ready = null;
+            }
+            scene?.add(rapierHelper);
             resolve(true);
         }));
     }
