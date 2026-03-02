@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { Scene, Vector3 } from 'three';
-import { Events } from '../../events/Events';
+import { Events } from '../events/Events';
 import {
     ViewerNeedUpdate,
     FocusMarkerSetOpacity,
@@ -13,7 +13,7 @@ import {
     RunLoopByFrame,
     FocusMarkerUpdateScale,
     GetCanvasSize,
-} from '../../events/EventConstants';
+} from '../events/EventConstants';
 import { CSS3DSprite } from 'three/examples/jsm/Addons.js';
 
 export function setupFocusMarker(events: Events) {

@@ -69,14 +69,14 @@ import {
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
 import { Events } from '../events/Events';
-import { setupControlPlane } from '../meshs/controlplane/SetupControlPlane';
+import { setupControlPlane } from '../scene/SetupControlPlane';
 import { copyGsViewerOptions, initCamera, initGsViewerOptions, initRenderer, setupViewerUtils } from '../utils/ViewerUtils';
 import { CameraControls } from '../controls/CameraControls';
 import { Reall3dViewerOptions } from './Reall3dViewerOptions';
 import { setupEventListener } from '../events/EventListener';
 import { setupRaycaster } from '../scene/SetupRaycaster';
 import { setupCameraControls } from '../controls/SetupCameraControls';
-import { setupFocusMarker } from '../meshs/focusmaker/SetupFocusMarker';
+import { setupFocusMarker } from '../scene/SetupFocusMarker';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { setupMark } from '../meshs/mark/SetupMark';
 import { setupApi } from '../api/SetupApi';
