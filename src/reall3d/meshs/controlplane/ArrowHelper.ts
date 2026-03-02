@@ -29,24 +29,26 @@ export class ArrowHelper extends Object3D {
 
         this.position.copy(origin);
 
-        const lineMaterial = new MeshBasicMaterial({ color: color, toneMapped: false, opacity: 0.9, transparent: true });
+        const lineMaterial = new MeshBasicMaterial({ color: color, toneMapped: false, opacity: 0.9, transparent: true, depthTest: true, depthWrite: false });
         lineMaterial.side = DoubleSide;
         this.line = new Mesh(lineGeometry, lineMaterial);
         this.line.matrixAutoUpdate = false;
+        this.line.renderOrder = 9999999;
         // @ts-ignore
         this.line.ignoreIntersect = true;
         this.add(this.line);
 
-        const coneMaterial = new MeshBasicMaterial({ color: color, toneMapped: false, opacity: 0.9, transparent: true });
+        const coneMaterial = new MeshBasicMaterial({ color: color, toneMapped: false, opacity: 0.9, transparent: true, depthTest: true, depthWrite: false });
         coneMaterial.side = DoubleSide;
         this.cone = new Mesh(coneGeometry, coneMaterial);
         this.cone.matrixAutoUpdate = false;
+        this.cone.renderOrder = 9999999;
         // @ts-ignore
         this.cone.ignoreIntersect = true;
         this.add(this.cone);
 
         this.setDirection(dir);
-        this.renderOrder = 99999;
+        this.renderOrder = 9999999;
     }
 
     setDirection(dir) {
