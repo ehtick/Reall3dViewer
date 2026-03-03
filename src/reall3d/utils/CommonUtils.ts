@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Audio, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Plane, Renderer, ShaderChunk, Vector3, Vector4, WebGLRenderer } from 'three';
+import { Audio, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Plane, ShaderChunk, Vector3, WebGLRenderer } from 'three';
 import { Events } from '../events/Events';
 import {
     Vector3ToString,
@@ -31,7 +31,6 @@ import {
     StopBgAudio,
     OnViewerDispose,
 } from '../events/EventConstants';
-import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
 import { unzipSync } from 'fflate';
@@ -298,19 +297,6 @@ export function setupCommonUtils(events: Events) {
 }
 
 export const shaderChunk = ShaderChunk;
-
-export function initSplatMeshOptions(options: SplatMeshOptions): SplatMeshOptions {
-    const opts: SplatMeshOptions = { ...options };
-
-    // 默认参数校验设定
-    opts.pointcloudMode ??= !opts.bigSceneMode; // 小场景默认点云模式，大场景默认正常模式
-    opts.lightFactor ??= 1.0;
-    opts.maxRenderCountOfMobile ??= opts.bigSceneMode ? 256 * 10000 : (256 + 32) * 10000;
-    opts.maxRenderCountOfPc ??= opts.bigSceneMode ? (256 + 64) * 10000 : (256 + 128) * 10000;
-    opts.debugMode ??= location.protocol === 'http:' || /^test\./.test(location.host); // 生产环境不开启
-
-    return opts;
-}
 
 export const decodeB64 = atob;
 
