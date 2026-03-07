@@ -2,13 +2,13 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 export class Events {
-    private map: Map<number, Function | Function[]>;
+    private map: Map<number | string, Function | Function[]>;
 
     constructor() {
         this.map = new Map();
     }
 
-    public on(key: number, fn: Function = null, multiFn: boolean = false): Function | Function[] {
+    public on(key: number | string, fn: Function = null, multiFn: boolean = false): Function | Function[] {
         // key不对时，不处理
         if (!key) {
             console.error('Invalid event key', key);
@@ -46,10 +46,9 @@ export class Events {
         return this.map.get(key);
     }
 
-    public fire(key: number, ...args: any): any {
+    public fire(key: number | string, ...args: any): any {
         const fn = this.map.get(key);
         if (!fn) {
-            // this.map.size && console.warn('Undefined event:', key, '(', ...args, ')');
             this.map.size && console.log('Undefined event:', key, '(', ...args, ')');
             return;
         }
@@ -61,11 +60,11 @@ export class Events {
         fn.forEach(f => rs.push(f(...args)));
         return rs;
     }
-    public tryFire(key: number, ...args: any): any {
+    public tryFire(key: number | string, ...args: any): any {
         return this.map.get(key) ? this.fire(key, ...args) : undefined;
     }
 
-    public off(key: number): void {
+    public off(key: number | string): void {
         this.map.delete(key);
     }
 
