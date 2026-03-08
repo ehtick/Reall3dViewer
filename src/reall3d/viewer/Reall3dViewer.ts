@@ -65,6 +65,7 @@ import {
     StopBgAudio,
     ShowJoystick,
     OnViewerDispose,
+    CaptureScreenshot,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -632,7 +633,19 @@ export class Reall3dViewer {
             fire(OnSetWaterMark, text);
             save && fire(MetaSaveWatermark, text);
         };
-        window['$api'] = { switchAutoRotate, changePointCloudMode, showMark, startMark, deleteMark, updateMark, showWaterMark, setWaterMark };
+
+        const captureScreenshot = () => fire(CaptureScreenshot);
+        window['$api'] = {
+            captureScreenshot,
+            switchAutoRotate,
+            changePointCloudMode,
+            showMark,
+            startMark,
+            deleteMark,
+            updateMark,
+            showWaterMark,
+            setWaterMark,
+        };
     }
 
     /**

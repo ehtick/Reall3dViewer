@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Audio, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Plane, ShaderChunk, Vector3, WebGLRenderer } from 'three';
+import { Audio, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Plane, ShaderChunk, Vector3, WebGLRenderer, WebGLRenderTarget } from 'three';
 import { Events } from '../events/Events';
 import {
     Vector3ToString,
@@ -30,6 +30,8 @@ import {
     IsLodFetching,
     StopBgAudio,
     OnViewerDispose,
+    GetScene,
+    CaptureScreenshot,
 } from '../events/EventConstants';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
@@ -294,6 +296,50 @@ export function setupCommonUtils(events: Events) {
         let dom: HTMLDivElement = document.querySelector(`#gsviewer .debug .${name}`);
         dom && (dom.innerText = txt);
     }
+
+    on(CaptureScreenshot, (fileName = 'screenshot.png') => {
+        const renderer: WebGLRenderer = fire(GetRenderer);
+        const width = renderer.domElement.width;
+        const height = renderer.domElement.height;
+        const renderTarget = new WebGLRenderTarget(width, height);
+
+        renderer.setRenderTarget(renderTarget);
+        renderer.render(fire(GetScene), fire(GetCamera));
+        renderer.setRenderTarget(null);
+
+        // 读取像素数据
+        const pixels = new Uint8Array(width * height * 4);
+        renderer.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixels);
+
+        // 创建Canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        const imgData = ctx!.createImageData(width, height);
+
+        // 像素倒序（WebGL原点和Canvas不同）
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const destIdx = (y * width + x) * 4;
+                const srcIdx = ((height - y - 1) * width + x) * 4; // 镜像
+                imgData.data[destIdx] = pixels[srcIdx];
+                imgData.data[destIdx + 1] = pixels[srcIdx + 1];
+                imgData.data[destIdx + 2] = pixels[srcIdx + 2];
+                imgData.data[destIdx + 3] = pixels[srcIdx + 3];
+            }
+        }
+        ctx!.putImageData(imgData, 0, 0);
+
+        const dataURL = canvas.toDataURL('image/png');
+
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
 }
 
 export const shaderChunk = ShaderChunk;
