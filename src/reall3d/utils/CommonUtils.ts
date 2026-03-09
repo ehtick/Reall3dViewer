@@ -32,6 +32,7 @@ import {
     OnViewerDispose,
     GetScene,
     CaptureScreenshot,
+    SetCursor,
 } from '../events/EventConstants';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
@@ -339,6 +340,13 @@ export function setupCommonUtils(events: Events) {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    });
+
+    let varCursor = 'default';
+    on(SetCursor, (cursor: 'pointer' | 'default' | 'grab' | 'grabbing' | 'move' | 'crosshair' | 'wait' | 'not-allowed' | 'none' = 'default') => {
+        if (varCursor === cursor) return;
+        const canvas: HTMLCanvasElement = fire(GetCanvas);
+        canvas && (canvas.style.cursor = cursor);
     });
 }
 

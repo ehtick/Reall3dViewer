@@ -514,8 +514,8 @@ export const PhysicsAdjustCameraByCastShape = i++;
 export const PhysicsGetEnvCollision = i++;
 /** 取目标点相交检测用对象数组（虚拟地面及静态刚体） */
 export const PhysicsGetGroundCollision = i++;
-/** 截图 */
-export const CaptureScreenshot = i++;
+/** 设定鼠标样式 */
+export const SetCursor = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */
@@ -530,3 +530,5 @@ export const SetBgAudioVolumeUp = i++;
 export const StopBgAudio = i++;
 /** 禁止背景音乐 */
 export const DisableBgAudio = i++;
+/** 截图 */
+export const CaptureScreenshot = i++;
