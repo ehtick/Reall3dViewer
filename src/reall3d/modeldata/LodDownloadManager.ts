@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { RunLoopByFrame, SplatTexdataManagerAddSplatLod, LodDownloadManagerAddLodMeta, GetOptions } from '../events/EventConstants';
+import { RunLoopByFrame, SplatTexdataManagerAddSplatLod, LodDownloadManagerAddLodMeta, GetOptions, SplatUpdateBoundBox } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { getUrl } from '../utils/CommonUtils';
@@ -40,6 +40,9 @@ export function setupLodDownloadManager(events: Events) {
                 const res = await fetch(lodUrl, { mode: 'cors', credentials: 'omit', cache: 'reload' });
                 if (res.status === 200) {
                     lodMeta = await res.json();
+                    const mins = lodMeta.tree.bound.min;
+                    const maxs = lodMeta.tree.bound.max;
+                    fire(SplatUpdateBoundBox, mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2]);
                 } else {
                     return console.error('lod scene file fetch failed, status:', res.status);
                 }
@@ -108,6 +111,9 @@ export function setupLodDownloadManager(events: Events) {
             if (res.status === 200) {
                 let lodJson = await res.json();
 
+                const mins = lodJson.tree.mins;
+                const maxs = lodJson.tree.maxs;
+                mins && fire(SplatUpdateBoundBox, mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2]);
                 splatTiles = lodJson;
                 splatTiles.pcLodTargets = sceneMeta.pcLodTargets;
                 splatTiles.mobileLodTargets = sceneMeta.mobileLodTargets;
