@@ -111,8 +111,8 @@ export function setupLodDownloadManager(events: Events) {
             if (res.status === 200) {
                 let lodJson = await res.json();
 
-                const mins = lodJson.tree.mins;
-                const maxs = lodJson.tree.maxs;
+                const mins = lodJson.tree.bound?.min;
+                const maxs = lodJson.tree.bound?.max;
                 mins && fire(SplatUpdateBoundBox, mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2]);
                 splatTiles = lodJson;
                 splatTiles.pcLodTargets = sceneMeta.pcLodTargets;
