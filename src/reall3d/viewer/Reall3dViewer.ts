@@ -515,22 +515,18 @@ export class Reall3dViewer {
         delete meta.isLargeScene; // addModel为固定小场景模式
         if (!modelOpts.format) {
             modelOpts.url = modelOpts.url || meta.url;
-            if (modelOpts.url.endsWith('.spx')) {
+            const urlfile = modelOpts.url.split('?')[0];
+            if (urlfile.endsWith('.spx')) {
                 modelOpts.format = 'spx';
-            } else if (modelOpts.url.endsWith('.splat')) {
+            } else if (urlfile.endsWith('.splat')) {
                 modelOpts.format = 'splat';
-            } else if (modelOpts.url.endsWith('.ply')) {
+            } else if (urlfile.endsWith('.ply')) {
                 modelOpts.format = 'ply';
-            } else if (modelOpts.url.endsWith('.spz')) {
+            } else if (urlfile.endsWith('.spz')) {
                 modelOpts.format = 'spz';
-            } else if (
-                modelOpts.url.endsWith('.zip') ||
-                modelOpts.url.endsWith('.sog') ||
-                modelOpts.url.endsWith('/meta.json') ||
-                modelOpts.url == 'meta.json'
-            ) {
+            } else if (urlfile.endsWith('.zip') || urlfile.endsWith('.sog') || urlfile.endsWith('/meta.json') || urlfile == 'meta.json') {
                 modelOpts.format = 'sog';
-            } else if (modelOpts.url.endsWith('.obj')) {
+            } else if (urlfile.endsWith('.obj')) {
                 modelOpts.format = 'obj';
             } else {
                 console.error('unknow format!', modelOpts.url);
