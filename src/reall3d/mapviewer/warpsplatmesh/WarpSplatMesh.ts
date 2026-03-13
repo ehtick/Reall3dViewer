@@ -11,8 +11,7 @@ import { SplatMeshOptions } from '../../meshs/splatmesh/SplatMeshOptions';
 import { MetaData } from '../../modeldata/MetaData';
 import { Reall3dMapViewer } from '../Reall3dMapViewer';
 import { Reall3dMapViewerOptions } from '../Reall3dMapViewerOptions';
-
-const isMobile = navigator.userAgent.includes('Mobi');
+import { isMobile } from '../../utils/consts/GlobalConstants';
 
 export class WarpSplatMesh extends Mesh {
     public readonly isWarpSplatMesh: boolean = true;

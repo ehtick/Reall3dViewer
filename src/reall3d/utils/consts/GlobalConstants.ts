@@ -3,7 +3,8 @@
 // ==============================================
 export const ViewerVersion = 'v2.5-dev'; // Reall3dViewer 版本
 
-export const isMobile = !navigator.userAgent.includes('cloudphone') && navigator.userAgent.includes('Mobi');
+export const isMobile =
+    /Mobi|Android|Phone|iPod|webOS|BlackBerry|Mini/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 export const HalfChars = 'QWERTYUIOPLKJHGFDSAZXCVBNM1234567890qwertyuioplkjhgfdsazxcvbnm`~!@#$%^&*()-_=+\\|]}[{\'";::,<.>//? \t';
 export const BlankingTimeOfSmallScene = isMobile ? 600 : 300;
 export const BlankingTimeOfLargeScene = isMobile ? 1000 : 500;

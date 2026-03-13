@@ -10,6 +10,7 @@ import { Reall3dMapViewer } from './reall3d/mapviewer/Reall3dMapViewer';
 import { globalEv } from './reall3d/events/GlobalEV';
 import { PlaytBgAudio, StopBgAudio } from './reall3d/events/EventConstants';
 import { TransitionEffects } from './reall3d/meshs/splatmesh/SplatMeshOptions';
+import { isMobile } from './reall3d/utils/consts/GlobalConstants';
 
 const params: URLSearchParams = new URLSearchParams(location.search);
 let url = params.get('url');
@@ -43,7 +44,7 @@ function initDevMode(infoOnly = false) {
     let spans: NodeListOf<HTMLSpanElement> = document.querySelectorAll('#gsviewer .operation span');
     let jsHeapSizeLimit = (performance['memory'] || { usedJSHeapSize: 0, totalJSHeapSize: 0, jsHeapSizeLimit: 0 }).jsHeapSizeLimit;
     !jsHeapSizeLimit && document.querySelectorAll('.tr-memory').forEach(dom => dom.classList.toggle('hidden'));
-    navigator.userAgent.includes('Mobi') && document.querySelectorAll('.tr-pc-only').forEach(dom => dom.classList.toggle('hidden'));
+    isMobile && document.querySelectorAll('.tr-pc-only').forEach(dom => dom.classList.toggle('hidden'));
     document.querySelectorAll('.dev-panel').forEach(dom => dom['style'].removeProperty('display'));
     !infoOnly &&
         Array.from(spans).forEach(span => {
