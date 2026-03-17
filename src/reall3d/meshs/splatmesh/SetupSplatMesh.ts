@@ -3,6 +3,7 @@
 // ==============================================
 import {
     BufferAttribute,
+    DataArrayTexture,
     DataTexture,
     DoubleSide,
     DynamicDrawUsage,
@@ -116,6 +117,7 @@ import {
     VarSplatShTexture3,
     VarSplatTexture0,
     VarSplatTexture1,
+    VarSplatTextureHeightAry,
     VarSplatTextureWidth,
     VarTopY,
     VarTransitionEffect,
@@ -153,7 +155,7 @@ import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
 import { MetaData } from '../../modeldata/MetaData';
 import { SplatMesh } from './SplatMesh';
-import { shaderChunk } from '../../utils/CommonUtils';
+import { shaderChunk, sleep } from '../../utils/CommonUtils';
 import CmnFns from './shaders/chunks/CmnFns.glsl';
 import FvEffect from './shaders/chunks/FvEffect.glsl';
 import WatermarkEffect from './shaders/chunks/WatermarkEffect.glsl';
@@ -241,9 +243,9 @@ export function setupSplatMesh(events: Events) {
     on(CreateSplatMaterial, async () => {
         if (disposed) return;
         const opts: SplatMeshOptions = fire(GetOptions);
-        const { texwidth, texheight } = fire(ComputeTextureWidthHeight, await fire(GetMaxRenderCount));
+        const { texwidth, texheight, texdepth, texheightary } = fire(ComputeTextureWidthHeight, await fire(GetMaxRenderCount));
         const material: ShaderMaterial = new ShaderMaterial({
-            uniforms: fire(CreateSplatUniforms, texwidth),
+            uniforms: fire(CreateSplatUniforms, texwidth, texheightary),
             vertexShader: genShaderSource(vertexShader),
             fragmentShader: genShaderSource(fragmentShader),
             transparent: true,
@@ -255,34 +257,38 @@ export function setupSplatMesh(events: Events) {
             defines: fire(GetSplatShaderDefines),
         });
 
+        const isBigScene: boolean = fire(IsBigSceneMode);
         const dataArray0 = new Uint32Array(texwidth * texheight * 4);
-        let dataTexture0 = new DataTexture(dataArray0, texwidth, texheight, RGBAIntegerFormat, UnsignedIntType);
+        let dataTexture0 = new DataArrayTexture(dataArray0, texwidth, texheightary, texdepth);
+        dataTexture0.format = RGBAIntegerFormat;
+        dataTexture0.type = UnsignedIntType;
         dataTexture0.internalFormat = 'RGBA32UI';
         dataTexture0.needsUpdate = true;
         material.uniforms[VarSplatTexture0].value = dataTexture0;
-        const texheight1 = fire(IsBigSceneMode) ? texheight : 1;
-        const dataArray1 = new Uint32Array(texwidth * texheight1 * 4);
-        let dataTexture1 = new DataTexture(dataArray1, texwidth, texheight1, RGBAIntegerFormat, UnsignedIntType);
+        const [texwidth1, texheight1, texheightary1, texdepth1] = isBigScene ? [texwidth, texheight, texheightary, texdepth] : [16, 1, 1, 1];
+        const dataArray1 = new Uint32Array(texwidth1 * texheight1 * 4);
+        let dataTexture1 = new DataArrayTexture(dataArray1, texwidth1, texheightary1, texdepth1);
+        dataTexture1.format = RGBAIntegerFormat;
+        dataTexture1.type = UnsignedIntType;
         dataTexture1.internalFormat = 'RGBA32UI';
         dataTexture1.needsUpdate = true;
         material.uniforms[VarSplatTexture1].value = dataTexture1;
 
         const shTexheight12 = await fire(GetShTexheight, 1, texwidth);
-        const dataArraySh12 = new Uint32Array(texwidth * shTexheight12 * 4);
-        let dataTextureSh12 = new DataTexture(dataArraySh12, texwidth, shTexheight12, RGBAIntegerFormat, UnsignedIntType);
+        const dataArraySh12 = new Uint32Array(4);
+        let dataTextureSh12 = new DataTexture(dataArraySh12, 1, 1, RGBAIntegerFormat, UnsignedIntType);
         dataTextureSh12.internalFormat = 'RGBA32UI';
         dataTextureSh12.needsUpdate = true;
         material.uniforms[VarSplatShTexture12].value = dataTextureSh12;
-        const shTexheight3 = await fire(GetShTexheight, 3, texwidth);
-        const dataArraySh3 = new Uint32Array(texwidth * shTexheight3 * 4);
-        let dataTextureSh3 = new DataTexture(dataArraySh3, texwidth, shTexheight3, RGBAIntegerFormat, UnsignedIntType);
+        const dataArraySh3 = new Uint32Array(4);
+        let dataTextureSh3 = new DataTexture(dataArraySh3, 1, 1, RGBAIntegerFormat, UnsignedIntType);
         dataTextureSh3.internalFormat = 'RGBA32UI';
         dataTextureSh3.needsUpdate = true;
         material.uniforms[VarSplatShTexture3].value = dataTextureSh3;
 
-        const dataShPalettes = new Uint8Array(PalettesWidth * 4);
+        const dataShPalettes = new Uint8Array(4);
         dataShPalettes.fill(128);
-        let dataTextureShPalettes = new DataTexture(dataShPalettes, PalettesWidth, 1, RGBAIntegerFormat, UnsignedByteType);
+        let dataTextureShPalettes = new DataTexture(dataShPalettes, 1, 1, RGBAIntegerFormat, UnsignedByteType);
         dataTextureShPalettes.internalFormat = 'RGBA8UI';
         dataTextureShPalettes.needsUpdate = true;
         material.uniforms[VarShPalettes].value = dataTextureShPalettes;
@@ -290,32 +296,30 @@ export function setupSplatMesh(events: Events) {
         material.needsUpdate = true;
 
         let isLastEmpty: boolean = false;
-        on(SplatUpdateTexture, (texture: SplatTexdata) => {
-            if (!fire(IsBigSceneMode)) {
+        on(SplatUpdateTexture, async (texture: SplatTexdata) => {
+            if (!isBigScene) {
                 if (isLastEmpty && !texture.renderSplatCount) return; // 小场景，不要重复提交空数据
                 isLastEmpty = !texture.renderSplatCount;
             }
 
             const dataArray = texture.txdata;
             texture.txdata = null;
-            const dataTexture = new DataTexture(dataArray as BufferSource, texwidth, texheight, RGBAIntegerFormat, UnsignedIntType);
-            dataTexture.onUpdate = () => {
-                texture.textureReady = true;
-                texture.textureReadyTime = Date.now();
-                notifyWorkerTextureReady(texture);
-                fire(OnTextureReadySplatCount, texture.renderSplatCount); // 用于判断小场景是否可以开始光圈过渡
-            };
-            dataTexture.internalFormat = 'RGBA32UI';
-            dataTexture.needsUpdate = true;
-            if (texture.index) {
-                material.uniforms[VarSplatTexture1].value = dataTexture;
-                dataTexture1?.dispose();
-                dataTexture1 = dataTexture;
-            } else {
-                material.uniforms[VarSplatTexture0].value = dataTexture;
-                dataTexture0?.dispose();
-                dataTexture0 = dataTexture;
+            const dataTexture = texture.index ? dataTexture1 : dataTexture0;
+            dataTexture.image.data.set(dataArray);
+
+            for (let i = 0; i < texdepth; i++) {
+                i && (await sleep(40));
+                await new Promise(resolve => {
+                    dataTexture.addLayerUpdate(i);
+                    dataTexture.onUpdate = () => resolve(1);
+                    dataTexture.needsUpdate = true;
+                });
             }
+
+            texture.textureReady = true;
+            texture.textureReadyTime = Date.now();
+            notifyWorkerTextureReady(texture);
+            fire(OnTextureReadySplatCount, texture.renderSplatCount); // 用于判断小场景是否可以开始光圈过渡
 
             material.needsUpdate = true;
             fire(NotifyViewerNeedUpdate);
@@ -708,9 +712,10 @@ export function setupSplatMesh(events: Events) {
         true,
     );
 
-    on(CreateSplatUniforms, (texwidth: number) => {
+    on(CreateSplatUniforms, (texwidth: number, texheight: number = 0) => {
         return {
             [VarSplatTextureWidth]: { type: 'int', value: texwidth },
+            [VarSplatTextureHeightAry]: { type: 'int', value: texheight },
             [VarSplatTexture0]: { type: 't', value: null },
             [VarSplatTexture1]: { type: 't', value: null },
             [VarSplatShTexture12]: { type: 't', value: null },

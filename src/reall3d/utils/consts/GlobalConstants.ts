@@ -7,7 +7,7 @@ export const isMobile =
     /Mobi|Android|Phone|iPod|webOS|BlackBerry|Mini/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 export const HalfChars = 'QWERTYUIOPLKJHGFDSAZXCVBNM1234567890qwertyuioplkjhgfdsazxcvbnm`~!@#$%^&*()-_=+\\|]}[{\'";::,<.>//? \t';
 export const BlankingTimeOfSmallScene = isMobile ? 600 : 300;
-export const BlankingTimeOfLargeScene = isMobile ? 1000 : 500;
+export const BlankingTimeOfLargeScene = isMobile ? 300 : 100;
 export const BinHeaderSize = 140;
 export const SpxHeaderSize = 128;
 export const DataSize36 = 36;

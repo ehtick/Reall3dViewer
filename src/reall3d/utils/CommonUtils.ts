@@ -59,8 +59,11 @@ export function setupCommonUtils(events: Events) {
             texwidth *= 2;
         }
         texwidth = Math.min(texwidth, maxTextureSize / 2);
-        const texheight = Math.min(Math.ceil(totalPixels / texwidth), maxTextureSize);
-        return { texwidth, texheight };
+        let texheight = Math.min(Math.ceil(totalPixels / texwidth), maxTextureSize);
+        const texdepth = 2;
+        texheight = Math.ceil(texheight / texdepth) * texdepth;
+        const texheightary = Math.ceil(texheight / texdepth);
+        return { texwidth, texheight, texdepth, texheightary };
     });
 
     // 按帧率执行
@@ -886,4 +889,8 @@ export function addDynamicStyles(css: string) {
     styleElement.id = id;
     styleElement.appendChild(document.createTextNode(css));
     document.head.appendChild(styleElement);
+}
+
+export function sleep(msTime: number = 0) {
+    return new Promise(resolve => setTimeout(resolve, msTime));
 }

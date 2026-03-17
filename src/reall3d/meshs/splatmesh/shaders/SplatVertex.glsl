@@ -7,19 +7,22 @@
 
 void main() {
     uvec4 cen, cov3d;
-    int fetchX = int(splatIndex & ((splatTextureWidth >> 1u) - 1u)) << 1;
-    int fetchY = int(splatIndex / (splatTextureWidth >> 1u));
+    int layerIdx = int(splatIndex / (splatTextureHeightAry * (splatTextureWidth >> 1u)));
+    uint indexInLayer = splatIndex % (splatTextureHeightAry * (splatTextureWidth >> 1u));
+    int fetchX = int(indexInLayer & ((splatTextureWidth >> 1u) - 1u)) << 1;
+    int fetchY = int(indexInLayer / (splatTextureWidth >> 1u));
+
     if (bigSceneMode) {
         if (usingIndex == 0) {
-            cen = texelFetch(splatTexture0, ivec2(fetchX, fetchY), 0);
-            cov3d = texelFetch(splatTexture0, ivec2(fetchX | 1, fetchY), 0);
+            cen = texelFetch(splatTexture0, ivec3(fetchX, fetchY, layerIdx), 0);
+            cov3d = texelFetch(splatTexture0, ivec3(fetchX | 1, fetchY, layerIdx), 0);
         } else {
-            cen = texelFetch(splatTexture1, ivec2(fetchX, fetchY), 0);
-            cov3d = texelFetch(splatTexture1, ivec2(fetchX | 1, fetchY), 0);
+            cen = texelFetch(splatTexture1, ivec3(fetchX, fetchY, layerIdx), 0);
+            cov3d = texelFetch(splatTexture1, ivec3(fetchX | 1, fetchY, layerIdx), 0);
         }
     } else {
-        cen = texelFetch(splatTexture0, ivec2(fetchX, fetchY), 0);
-        cov3d = texelFetch(splatTexture0, ivec2(fetchX | 1, fetchY), 0);
+        cen = texelFetch(splatTexture0, ivec3(fetchX, fetchY, layerIdx), 0);
+        cov3d = texelFetch(splatTexture0, ivec3(fetchX | 1, fetchY, layerIdx), 0);
     }
 
     bool isWatermark = fnWatermark(cen);

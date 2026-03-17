@@ -1,6 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
+export const VarSplatTextureHeightAry = 'splatTextureHeightAry';
 export const VarCurrentVisibleRadius = 'currentVisibleRadius';
 export const VarCurrentLightRadius = 'currentLightRadius';
 export const VarSplatTextureWidth = 'splatTextureWidth';
