@@ -36,6 +36,9 @@ export class CameraControls extends OrbitControls {
         opts.fov !== undefined && ((that.object as PerspectiveCamera).fov = opts.fov);
         opts.near !== undefined && ((that.object as PerspectiveCamera).near = opts.near);
         opts.far !== undefined && ((that.object as PerspectiveCamera).far = opts.far);
+        if (opts.fov !== undefined || opts.near !== undefined || opts.far !== undefined) {
+            (that.object as PerspectiveCamera).updateProjectionMatrix();
+        }
         opts.position && that.object.position.fromArray(opts.position);
         opts.lookAt && that.target.fromArray(opts.lookAt);
         opts.lookUp && that.object.up.fromArray(opts.lookUp);
