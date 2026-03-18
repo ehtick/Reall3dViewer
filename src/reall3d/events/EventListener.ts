@@ -161,8 +161,6 @@ export function setupEventListener(events: Events) {
             if (keySet.has('KeyY')) {
                 fire(FlySavePositions, false);
                 fire(MetaSaveSmallSceneCameraInfo);
-                const player: Group = fire(GetPlayer);
-                console.debug(player?.position);
                 keySet.clear();
             } else if (keySet.has('Escape')) {
                 globalEv.fire(StopBgAudio);

@@ -37,11 +37,13 @@ import {
     GetSplatMesh,
     GetControls,
     OnViewerDispose,
+    IsPlayerMode,
+    GetPlayer,
 } from './../../events/EventConstants';
 import { MarkMultiLines } from './MarkMultiLines';
 import { CSS3DRenderer } from 'three/examples/jsm/Addons.js';
 import { Events } from '../../events/Events';
-import { Object3D, Vector3 } from 'three';
+import { Group, Object3D, Vector3 } from 'three';
 import { Reall3dViewerOptions } from '../../viewer/Reall3dViewerOptions';
 import { MarkDistanceLine } from './MarkDistanceLine';
 import { MarkData } from './data/MarkData';
@@ -118,6 +120,14 @@ export function setupMark(events: Events) {
             delete meta.marks;
         }
         meta.cameraInfo = fire(GetCameraInfo);
+
+        if (fire(IsPlayerMode)) {
+            const player: Group = fire(GetPlayer);
+            if (player) {
+                meta.player = meta.player || {};
+                meta.player.position = player.position.toArray();
+            }
+        }
 
         return await fire(HttpPostMetaData, meta);
     });
