@@ -264,7 +264,7 @@ export class Reall3dViewer {
             opts.bigSceneMode = false;
             opts.pointcloudMode = true;
             opts.debugMode = true;
-            opts.autoRotate = format !== 'obj';
+            opts.autoRotate = false; // 本地拖拽大多是要看质量，默认不旋转
             opts.maxRenderCountOfPc = 10240 * 10000;
             opts.qualityLevel = 9; // 主要目的为确认模型质量，按最高级别设置
             opts.disableTransitionEffectOnLoad = false;
