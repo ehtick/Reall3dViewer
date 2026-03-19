@@ -468,7 +468,7 @@ export function setupPlayer(events: Events) {
             moveVector = fire(PhysicsMovePlayer, moveVector, delta);
 
             // 更新位置
-            const asMoveZero = !moveVector || moveVector.length() < 0.3;
+            const asMoveZero = !moveVector || moveVector.length() < 0.1;
             if (moveVector) {
                 !asMoveZero && (lastPlayerMoveTime = performance.now());
                 position.add(moveVector);
@@ -481,7 +481,7 @@ export function setupPlayer(events: Events) {
 
             if (asMoveZero && performance.now() - lastPlayerMoveTime > 3000) {
                 stopMoveToTarget(); // 3秒原地踏步就停下
-                lastPlayerMoveTime = Number.MAX_SAFE_INTEGER;
+                lastPlayerMoveTime = performance.now();
             }
         } else {
             fire(UpdateIndicatorTargetStatus, null, true); // 隐藏目标点提示圈

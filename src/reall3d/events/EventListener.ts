@@ -165,6 +165,14 @@ export function setupEventListener(events: Events) {
             } else if (keySet.has('Escape')) {
                 globalEv.fire(StopBgAudio);
                 keySet.clear();
+                // } else if (keySet.has('ArrowLeft')) {
+                //     fire(RotateLeft);
+                //     fire(ControlPlaneSwitchVisible, true);
+                //     keySet.clear();
+                // } else if (keySet.has('ArrowRight')) {
+                //     fire(RotateRight);
+                //     fire(ControlPlaneSwitchVisible, true);
+                //     keySet.clear();
             }
             return;
         }

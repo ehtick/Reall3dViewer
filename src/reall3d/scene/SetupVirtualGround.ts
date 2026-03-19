@@ -21,6 +21,7 @@ import {
     GetCamera,
     GetCameraPosition,
     GetCanvasSize,
+    GetMeta,
     GetPlayer,
     GetScene,
     OnViewerDispose,
@@ -29,6 +30,7 @@ import {
     UpdateIndicatorTargetStatus,
     UpdateVirtualGroundPosition,
 } from '../events/EventConstants';
+import { MetaData } from '../modeldata/MetaData';
 
 export function setupVirtualGround(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
@@ -37,8 +39,9 @@ export function setupVirtualGround(events: Events) {
     let indicator: Mesh = null;
     let indicatorTarget: Mesh = null;
     let virtualGround: Mesh = null;
+    const meta: MetaData = fire(GetMeta);
 
-    on(UpdateVirtualGroundPosition, () => virtualGround?.position.copy((fire(GetPlayer) as Group).position));
+    on(UpdateVirtualGroundPosition, () => meta.autuUpdateVirtualGroundPosition !== false && virtualGround?.position.copy((fire(GetPlayer) as Group).position));
 
     on(UpdateIndicatorTargetStatus, (point: Vector3, hide = false) => {
         if (!indicatorTarget) return;
@@ -68,13 +71,15 @@ export function setupVirtualGround(events: Events) {
         const scene: Scene = fire(GetScene);
 
         // 虚拟地面
-        const gridGeometry = new PlaneGeometry(300, 300);
-        const gridMaterial = new MeshStandardMaterial({ color: 0x00ff00, side: DoubleSide });
-        virtualGround = new Mesh(gridGeometry, gridMaterial);
-        virtualGround.rotation.x = -Math.PI / 2;
-        virtualGround.receiveShadow = true;
-        virtualGround.visible = false;
-        scene.add(virtualGround);
+        if (meta.addVirtualGround !== false) {
+            const gridGeometry = new PlaneGeometry(300, 300);
+            const gridMaterial = new MeshStandardMaterial({ color: 0x00ff00, side: DoubleSide });
+            virtualGround = new Mesh(gridGeometry, gridMaterial);
+            virtualGround.rotation.x = -Math.PI / 2;
+            virtualGround.receiveShadow = true;
+            virtualGround.visible = false;
+            scene.add(virtualGround);
+        }
 
         // 鼠标移动提示圈
         const indicatorGeometry = new RingGeometry(0, 6, 16);

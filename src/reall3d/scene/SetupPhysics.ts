@@ -108,7 +108,7 @@ export function setupPhysics(events: Events) {
 
         controller.setMaxSlopeClimbAngle(Math.PI / 4); // 上坡 45°
         controller.setMinSlopeSlideAngle(Math.PI / 4); // 下坡 45°
-        controller.enableAutostep(0.4, 0.2, false); // 自动跨步(maxHeight, minWidth, includeDynamicBodies)
+        controller.enableAutostep(0.1, 0.05, false); // 自动跨步(maxHeight, minWidth, includeDynamicBodies)
         controller.enableSnapToGround(0.5); // 贴地
         controller.setSlideEnabled(true); // 滑动
 
@@ -122,7 +122,7 @@ export function setupPhysics(events: Events) {
             .setCcdEnabled(true)
             .setCanSleep(false);
         const characterBody = world.createRigidBody(bodyDesc);
-        const colliderDesc = RAPIER.ColliderDesc.capsule(0.6, 0.3).setMass(1).setTranslation(0, 0.1, 0).setFriction(0.5).setRestitution(0);
+        const colliderDesc = RAPIER.ColliderDesc.capsule(0.6, 0.25).setMass(1).setTranslation(0, -0.4, 0).setFriction(0.5).setRestitution(0);
         colliderDesc.setContactSkin(0.02); // 2 cm 皮肤
         characterCollider = world.createCollider(colliderDesc, characterBody);
         characterController = controller;
@@ -142,7 +142,8 @@ export function setupPhysics(events: Events) {
         const movement = new RAPIER.Vector3(moveVector.x, moveY, moveVector.z);
         characterController.computeColliderMovement(characterCollider, movement);
 
-        step(delta);
+        const fixedDelta = Math.min(delta, 1 / 30); // 限制最大步长，防止跳帧
+        step(fixedDelta);
 
         const translation = characterController.computedMovement();
         if (Math.abs(translation.y - moveY) > 0.03) {
@@ -151,9 +152,9 @@ export function setupPhysics(events: Events) {
             velocityY = 0.35; // 下滑
         }
 
-        position.x += translation.x;
-        position.y += translation.y;
-        position.z += translation.z;
+        position.x += Math.round(translation.x * 1000) / 1000;
+        position.y += Math.round(translation.y * 1000) / 1000;
+        position.z += Math.round(translation.z * 1000) / 1000;
 
         characterCollider.setTranslation(position);
 

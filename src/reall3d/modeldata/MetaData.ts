@@ -123,6 +123,11 @@ export interface MetaData {
      * collision (glb)
      */
     collisionUrl?: string;
+
+    /** default to true */
+    addVirtualGround?: boolean;
+    /** default to true */
+    autuUpdateVirtualGroundPosition?: boolean;
 }
 
 /**
