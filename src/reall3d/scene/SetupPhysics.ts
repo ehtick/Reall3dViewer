@@ -19,8 +19,10 @@ import {
     PhysicsAddStaticCollisionGlb,
     PhysicsAdjustCameraByCastShape,
     PhysicsGetEnvCollision,
+    GetMeta,
 } from '../events/EventConstants';
 import { DecoderPath } from '../utils/consts/GlobalConstants';
+import { MetaData } from '../modeldata/MetaData';
 
 export function setupPhysics(events: Events) {
     let disposed: boolean = false;
@@ -102,6 +104,9 @@ export function setupPhysics(events: Events) {
     on(PhysicsInitCharacterController, async (position = new Vector3(0, 0, 0)) => {
         if (doing) return;
         doing = true;
+        const meta: MetaData = fire(GetMeta);
+        const [tx, ty, tz] = meta.player?.colliderTranslation || [0, -0.4, 0];
+
         await initPhysics();
         const controller = world.createCharacterController(0.05);
         controller.setApplyImpulsesToDynamicBodies(true); // 与动态刚体交互
@@ -118,12 +123,9 @@ export function setupPhysics(events: Events) {
         let groundColliderDesc = RAPIER.ColliderDesc.cuboid(1000, 0.1, 1000).setTranslation(0, 1, 0);
         world.createCollider(groundColliderDesc, groundBody);
 
-        const bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased()
-            .setTranslation(position.x, position.y, position.z)
-            .setCcdEnabled(true)
-            .setCanSleep(false);
+        const bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(position.x, 0, position.z).setCcdEnabled(true).setCanSleep(false);
         const characterBody = world.createRigidBody(bodyDesc);
-        const colliderDesc = RAPIER.ColliderDesc.capsule(0.6, 0.25).setMass(1).setTranslation(0, -0.4, 0).setFriction(0.5).setRestitution(0);
+        const colliderDesc = RAPIER.ColliderDesc.capsule(0.6, 0.25).setMass(1).setTranslation(tx, ty, tz).setFriction(0.5).setRestitution(0);
         colliderDesc.setContactSkin(0.02); // 2 cm 皮肤
         characterCollider = world.createCollider(colliderDesc, characterBody);
         characterController = controller;

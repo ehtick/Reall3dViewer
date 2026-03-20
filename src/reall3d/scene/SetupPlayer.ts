@@ -122,7 +122,7 @@ export function setupPlayer(events: Events) {
     };
 
     lastPlayerPosition.copy(characterControls.position);
-    fire(IsPlayerMode) && fire(PhysicsInitCharacterController, characterControls.position.clone().setY(0));
+    fire(IsPlayerMode) && fire(PhysicsInitCharacterController, characterControls.position.clone());
 
     on(GetPlayer, () => player);
 

@@ -153,5 +153,6 @@ export interface Player {
     /** Animation name for run state */
     run?: string;
 
+    colliderTranslation?: number[];
     trigerRunMp3?: string;
 }
