@@ -894,3 +894,16 @@ export function addDynamicStyles(css: string) {
 export function sleep(msTime: number = 0) {
     return new Promise(resolve => setTimeout(resolve, msTime));
 }
+
+export function saveUint8ArrayAsFile(uint8Array: Uint8Array, fileName: string) {
+    const blob = new Blob([uint8Array as any], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}

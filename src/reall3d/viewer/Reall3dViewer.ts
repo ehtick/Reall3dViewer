@@ -3,6 +3,7 @@
 // ==============================================
 import '../style/style.less';
 import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4, Camera } from 'three';
+import { DRACOLoader, GLTFLoader } from 'three/examples/jsm/Addons.js';
 import {
     GetCurrentDisplayShDegree,
     GetModelShDegree,
@@ -66,6 +67,8 @@ import {
     ShowJoystick,
     OnViewerDispose,
     CaptureScreenshot,
+    OnFetchStop,
+    FocusAabbCenter,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -84,10 +87,11 @@ import { setupApi } from '../api/SetupApi';
 import { MarkData } from '../meshs/mark/data/MarkData';
 import { getUrl, setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
-import { isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
+import { DecoderPath, isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/MetaData';
 import { globalEv } from '../events/GlobalEV';
 import { setupPlayer } from '../scene/SetupPlayer';
+import { loadFile } from '../modeldata/loaders/FileLoader';
 
 /**
  * Built-in Gaussian Splatting model viewer
@@ -239,7 +243,7 @@ export class Reall3dViewer {
             let file = e.dataTransfer.files[0];
             if (!file) return;
 
-            let format: 'ply' | 'splat' | 'spx' | 'spz' | 'sog' | 'obj';
+            let format: 'ply' | 'splat' | 'spx' | 'spz' | 'sog' | 'obj' | 'glb';
             let isSceneJson = false;
             if (file.name.endsWith('.spx')) {
                 format = 'spx';
@@ -255,6 +259,8 @@ export class Reall3dViewer {
                 format = 'obj';
             } else if (file.name.endsWith('.scene.json')) {
                 isSceneJson = true;
+            } else if (file.name.endsWith('.glb')) {
+                format = 'glb';
             } else {
                 return console.error('unsupported format:', file.name);
             }
@@ -276,6 +282,7 @@ export class Reall3dViewer {
                 await that.addScene(url);
             } else {
                 await that.addModel({ url, format });
+                that.events.fire(FocusAabbCenter);
             }
             URL.revokeObjectURL(url);
         });
@@ -528,6 +535,8 @@ export class Reall3dViewer {
                 modelOpts.format = 'sog';
             } else if (urlfile.endsWith('.obj')) {
                 modelOpts.format = 'obj';
+            } else if (urlfile.endsWith('.glb')) {
+                modelOpts.format = 'glb';
             } else {
                 console.error('unknow format!', modelOpts.url);
                 return;
@@ -548,7 +557,35 @@ export class Reall3dViewer {
         this.options({ qualityLevel: meta.qualityLevel, sortType: meta.sortType }); // 允许根据具体模型特点在meta中定义渲染质量级别，均衡质量性能资源
 
         // 加载模型
-        if (modelOpts.format === 'obj') {
+        if (modelOpts.format === 'glb') {
+            const fileBytes: Uint8Array = await loadFile(modelOpts.url, that.events);
+            fire(OnFetchStop, 100);
+            const ui32s = new Uint32Array(fileBytes.slice(0, 32).buffer);
+            const jsonLength = ui32s[3];
+            const sJson = new TextDecoder().decode(fileBytes.slice(20, 20 + jsonLength));
+
+            // 临时简单处理
+            if (/KHR_gaussian_splatting_compression_spz_2/.test(sJson)) {
+                const oJson = JSON.parse(sJson);
+                const buffersOffset = 20 + jsonLength + 8;
+                console.info(sJson, oJson);
+                const spzBytes = fileBytes
+                    .subarray(buffersOffset, buffersOffset + oJson.buffers[0].byteLength)
+                    .subarray(oJson.bufferViews[0].buffer, oJson.bufferViews[0].byteLength);
+                const glburl = modelOpts.url;
+                modelOpts.url = URL.createObjectURL(new Blob([spzBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
+                modelOpts.format = 'spz';
+
+                this.splatMesh.addModel(modelOpts, meta);
+                await fire(OnSetWaterMark, meta.watermark || meta.name);
+                URL.revokeObjectURL(modelOpts.url);
+                modelOpts.url = glburl;
+            } else {
+                const urlBlob = URL.createObjectURL(new Blob([fileBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
+                await this.loadGlb(urlBlob, meta);
+                URL.revokeObjectURL(urlBlob);
+            }
+        } else if (modelOpts.format === 'obj') {
             this.options({ autoRotate: false });
             await fire(OnLoadAndRenderObj, modelOpts.url);
         } else {
@@ -559,6 +596,28 @@ export class Reall3dViewer {
         // @ts-ignore
         isMobile && fire(GetControls)._dollyOut?.(0.7); // 手机适当缩小
         ((isMobile && meta.mobileEnableJoystick) || (!isMobile && meta.pcEnableJoystick)) && fire(ShowJoystick);
+    }
+
+    private async loadGlb(urlBlob: string, meta: MetaData) {
+        const fire = (key: number, ...args: any): any => this.events.fire(key, ...args);
+
+        const loader = new GLTFLoader();
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath(DecoderPath);
+        loader.setDRACOLoader(dracoLoader);
+
+        loader.load(
+            urlBlob,
+            gltf => {
+                const model = gltf.scene;
+                (fire(GetScene) as Scene).add(model);
+                fire(LoadSmallSceneMetaData, meta);
+                fire(MarkUpdateVisible, true);
+                fire(ViewerNeedUpdate);
+            },
+            () => {},
+            err => console.error(err),
+        );
     }
 
     /**

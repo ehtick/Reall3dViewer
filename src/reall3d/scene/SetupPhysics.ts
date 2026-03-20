@@ -20,6 +20,7 @@ import {
     PhysicsAdjustCameraByCastShape,
     PhysicsGetEnvCollision,
 } from '../events/EventConstants';
+import { DecoderPath } from '../utils/consts/GlobalConstants';
 
 export function setupPhysics(events: Events) {
     let disposed: boolean = false;
@@ -56,7 +57,7 @@ export function setupPhysics(events: Events) {
 
         const loader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('https://reall3d.com/reall3dviewer/libs/draco/'); // https://unpkg.com/three@0.171.0/examples/jsm/libs/draco/gltf/
+        dracoLoader.setDecoderPath(DecoderPath);
         loader.setDRACOLoader(dracoLoader);
 
         loader.load(

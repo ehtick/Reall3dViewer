@@ -48,6 +48,7 @@ import { setupVirtualGround } from './SetupVirtualGround';
 import { setupPhysics } from './SetupPhysics';
 import { globalEv } from '../events/GlobalEV';
 import { loadFile } from '../modeldata/loaders/FileLoader';
+import { DecoderPath } from '../utils/consts/GlobalConstants';
 
 export function setupPlayer(events: Events) {
     let disposed: boolean = false;
@@ -270,7 +271,7 @@ export function setupPlayer(events: Events) {
 
         const loader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('https://reall3d.com/reall3dviewer/libs/draco/'); // https://unpkg.com/three@0.171.0/examples/jsm/libs/draco/gltf/
+        dracoLoader.setDecoderPath(DecoderPath);
         loader.setDRACOLoader(dracoLoader);
         player = new Group();
 
