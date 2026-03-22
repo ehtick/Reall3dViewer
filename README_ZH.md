@@ -19,7 +19,7 @@
 <br>
 
 ## 特点
-- [x] 支持格式: `.ply`、`.splat`、`.spx`、`.spz(v2,v3)`, `.sog(v1,v2)`, `.glb(KHR_gaussian_splatting or KHR_gaussian_splatting_compression_spz_2 extension)`
+- [x] 支持格式: `.ply`、`.splat`、`.spx`、`.spz(v2,v3)`, `.sog(v1,v2)`, `.glb`(glTF extension: KHR_gaussian_splatting or KHR_gaussian_splatting_compression_spz_2)
 - [x] 支持标注测量
 - [x] 支持1~3级球谐系数
 - [x] 支持地图场景渲染
