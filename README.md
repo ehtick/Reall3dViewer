@@ -19,7 +19,7 @@
 <br>
 
 ## Features
-- [x] Support formats: `.ply`, `.splat`, `.spx`, `.spz(v2,v3)`, `.sog(v1,v2)`, `.glb`(glTF extension: KHR_gaussian_splatting or KHR_gaussian_splatting_compression_spz_2)
+- [x] Support formats: `.ply`, `.splat`, `.spx`, `.spz(v2,v3)`, `.sog(v1,v2)`, `.glb`(with KHR_gaussian_splatting extension)
 - [x] Support mark and measurement tools
 - [x] Support 1st to 3rd degree spherical harmonics
 - [x] Support map-integrated model rendering
