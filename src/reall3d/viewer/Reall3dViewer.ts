@@ -85,7 +85,7 @@ import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { setupMark } from '../meshs/mark/SetupMark';
 import { setupApi } from '../api/SetupApi';
 import { MarkData } from '../meshs/mark/data/MarkData';
-import { getUrl, glbKhrGs2Splat, setupCommonUtils } from '../utils/CommonUtils';
+import { computeCompressionRatio, getUrl, glbKhrGs2Splat, setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
 import { DecoderPath, isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/MetaData';
@@ -562,19 +562,21 @@ export class Reall3dViewer {
             const fileBytes: Uint8Array = await loadFile(modelOpts.url, that.events);
             fire(OnFetchStop, 100);
             const ui32s = new Uint32Array(fileBytes.slice(0, 32).buffer);
-            const jsonLength = ui32s[3];
-            const sJson = new TextDecoder().decode(fileBytes.slice(20, 20 + jsonLength));
+            const jsonLength4 = Math.floor((ui32s[3] + 3) / 4) * 4;
+            const sJson = new TextDecoder().decode(fileBytes.slice(20, 20 + jsonLength4));
 
-            // 临时简单处理
+            // 扩展标准尚未发布，当前先初步对应
             if (/KHR_gaussian_splatting_compression_spz_2/.test(sJson)) {
                 const oJson = JSON.parse(sJson);
-                const buffersOffset = 20 + jsonLength + 8;
+                const buffersOffset = 20 + jsonLength4 + 8;
                 const spzBytes = fileBytes
                     .subarray(buffersOffset, buffersOffset + oJson.buffers[0].byteLength)
-                    .subarray(oJson.bufferViews[0].buffer, oJson.bufferViews[0].byteLength);
+                    .subarray(oJson.bufferViews[0].byteOffset || 0, oJson.bufferViews[0].byteLength);
                 const glburl = modelOpts.url;
                 modelOpts.url = URL.createObjectURL(new Blob([spzBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
                 modelOpts.format = 'spz';
+
+                globalEv.on('Information-ver', () => `glb-spz`);
 
                 this.splatMesh.addModel(modelOpts, meta);
                 await fire(OnSetWaterMark, meta.watermark || meta.name);
@@ -585,6 +587,12 @@ export class Reall3dViewer {
                 const glburl = modelOpts.url;
                 modelOpts.url = URL.createObjectURL(new Blob([splatBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
                 modelOpts.format = 'splat';
+
+                const ratio = '　' + computeCompressionRatio(splatBytes.byteLength / 32, fileBytes.byteLength);
+                const size = '　' + (fileBytes.byteLength / 1024 / 1024).toFixed(1) + 'M';
+                globalEv.on('Information-ver', () => `glb-gs`);
+                globalEv.on('Information-ratio', () => ratio);
+                globalEv.on('Information-size', () => size);
 
                 this.splatMesh.addModel(modelOpts, meta);
                 await fire(OnSetWaterMark, meta.watermark || meta.name);

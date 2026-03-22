@@ -67,6 +67,7 @@ import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from
 import { hashString } from 'three/src/nodes/core/NodeUtils.js';
 import { loadLodSplatFile } from './loaders/LodSplatFileLoader';
 import { MetaData } from './MetaData';
+import { globalEv } from '../events/GlobalEV';
 
 /**
  * 纹理数据管理
@@ -275,8 +276,14 @@ export function setupSplatTextureManager(events: Events) {
             } else if (splatModel.opts.format == 'splat') {
                 ratio += splatModel.CompressionRatio;
             }
-            const size = '　' + (splatModel.fileSize / 1024 / 1024).toFixed(1) + 'M';
+
+            ver = globalEv.tryFire('Information-ver') || ver;
+            ratio = globalEv.tryFire('Information-ratio') || ratio;
+            const size = globalEv.tryFire('Information-size') || '　' + (splatModel.fileSize / 1024 / 1024).toFixed(1) + 'M';
             fire(Information, { scene: `small (${ver}) ${ratio}${size}` }); // 初次提示场景模型版本
+            globalEv.off('Information-ver');
+            globalEv.off('Information-ratio');
+            globalEv.off('Information-size');
         }
 
         splatModel.lastTextWatermarkVersion = splatModel.textWatermarkVersion;
