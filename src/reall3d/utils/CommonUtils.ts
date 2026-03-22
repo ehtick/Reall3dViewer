@@ -907,3 +907,55 @@ export function saveUint8ArrayAsFile(uint8Array: Uint8Array, fileName: string) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 }
+
+// 当前扩充标准为候选阶段，无压缩，实际应用可能不合适，仅简单试验支持，忽略SH
+export function glbKhrGs2Splat(glbBytes: Uint8Array): Uint8Array {
+    const jsonLength = new Uint32Array(glbBytes.slice(0, 32).buffer)[3];
+    const oJson = JSON.parse(new TextDecoder().decode(glbBytes.slice(20, 20 + jsonLength)));
+    const positionIdx: number = oJson.meshes[0].primitives[0].attributes['POSITION'];
+    const scaleIdx: number = oJson.meshes[0].primitives[0].attributes['KHR_gaussian_splatting:SCALE'];
+    const sh0Idx: number = oJson.meshes[0].primitives[0].attributes['KHR_gaussian_splatting:SH_DEGREE_0_COEF_0'];
+    const opacityIdx: number = oJson.meshes[0].primitives[0].attributes['KHR_gaussian_splatting:OPACITY'];
+    const rotationIdx: number = oJson.meshes[0].primitives[0].attributes['KHR_gaussian_splatting:ROTATION'];
+
+    const f32sGlb = new Float32Array(glbBytes.buffer);
+    const byteLength1 = 20 + jsonLength + 8;
+    const offsetPosition = (byteLength1 + oJson.bufferViews[positionIdx].byteOffset) / 4;
+    const offsetScale = (byteLength1 + oJson.bufferViews[scaleIdx].byteOffset) / 4;
+    const offsetRGB = (byteLength1 + oJson.bufferViews[sh0Idx].byteOffset) / 4;
+    const offsetA = (byteLength1 + oJson.bufferViews[opacityIdx].byteOffset) / 4;
+    const offsetRotation = (byteLength1 + oJson.bufferViews[rotationIdx].byteOffset) / 4;
+
+    const splatCount: number = oJson.accessors[0].count;
+    const ui8sResult = new Uint8Array(splatCount * 32);
+    const f32s = new Float32Array(ui8sResult.buffer);
+
+    for (let i = 0; i < splatCount; i++) {
+        f32s[8 * i + 0] = f32sGlb[offsetPosition + 3 * i + 0];
+        f32s[8 * i + 1] = f32sGlb[offsetPosition + 3 * i + 1];
+        f32s[8 * i + 2] = f32sGlb[offsetPosition + 3 * i + 2];
+        f32s[8 * i + 3] = Math.exp(f32sGlb[offsetScale + 3 * i + 0]);
+        f32s[8 * i + 4] = Math.exp(f32sGlb[offsetScale + 3 * i + 1]);
+        f32s[8 * i + 5] = Math.exp(f32sGlb[offsetScale + 3 * i + 2]);
+        ui8sResult[32 * i + 24] = encodeSplatColor(f32sGlb[offsetRGB + 3 * i + 0]);
+        ui8sResult[32 * i + 25] = encodeSplatColor(f32sGlb[offsetRGB + 3 * i + 1]);
+        ui8sResult[32 * i + 26] = encodeSplatColor(f32sGlb[offsetRGB + 3 * i + 2]);
+        ui8sResult[32 * i + 27] = encodeSplatOpacity(f32sGlb[offsetA + i]);
+        ui8sResult[32 * i + 28] = encodeSplatRotation(f32sGlb[offsetRotation + 4 * i + 3]);
+        ui8sResult[32 * i + 29] = encodeSplatRotation(f32sGlb[offsetRotation + 4 * i + 0]);
+        ui8sResult[32 * i + 30] = encodeSplatRotation(f32sGlb[offsetRotation + 4 * i + 1]);
+        ui8sResult[32 * i + 31] = encodeSplatRotation(f32sGlb[offsetRotation + 4 * i + 2]);
+    }
+    return ui8sResult;
+}
+
+const SH_C0 = 0.28209479177387814;
+function encodeSplatColor(f: number): number {
+    return Math.max(0, Math.min(255, Math.floor((0.5 + SH_C0 * f) * 255.0)));
+}
+function encodeSplatOpacity(f: number): number {
+    return Math.max(0, Math.min(255, Math.floor((1.0 / (1.0 + Math.exp(-f))) * 255.0)));
+}
+function encodeSplatRotation(f: number): number {
+    return Math.max(0, Math.min(255, Math.floor(f * 128.0 + 128.0)));
+}

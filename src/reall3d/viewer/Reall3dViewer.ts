@@ -85,7 +85,7 @@ import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { setupMark } from '../meshs/mark/SetupMark';
 import { setupApi } from '../api/SetupApi';
 import { MarkData } from '../meshs/mark/data/MarkData';
-import { getUrl, setupCommonUtils } from '../utils/CommonUtils';
+import { getUrl, glbKhrGs2Splat, setupCommonUtils } from '../utils/CommonUtils';
 import { setupFlying } from '../controls/SetupFlying';
 import { DecoderPath, isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/MetaData';
@@ -569,13 +569,22 @@ export class Reall3dViewer {
             if (/KHR_gaussian_splatting_compression_spz_2/.test(sJson)) {
                 const oJson = JSON.parse(sJson);
                 const buffersOffset = 20 + jsonLength + 8;
-                console.info(sJson, oJson);
                 const spzBytes = fileBytes
                     .subarray(buffersOffset, buffersOffset + oJson.buffers[0].byteLength)
                     .subarray(oJson.bufferViews[0].buffer, oJson.bufferViews[0].byteLength);
                 const glburl = modelOpts.url;
                 modelOpts.url = URL.createObjectURL(new Blob([spzBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
                 modelOpts.format = 'spz';
+
+                this.splatMesh.addModel(modelOpts, meta);
+                await fire(OnSetWaterMark, meta.watermark || meta.name);
+                URL.revokeObjectURL(modelOpts.url);
+                modelOpts.url = glburl;
+            } else if (/KHR_gaussian_splatting/.test(sJson)) {
+                const splatBytes = glbKhrGs2Splat(fileBytes);
+                const glburl = modelOpts.url;
+                modelOpts.url = URL.createObjectURL(new Blob([splatBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
+                modelOpts.format = 'splat';
 
                 this.splatMesh.addModel(modelOpts, meta);
                 await fire(OnSetWaterMark, meta.watermark || meta.name);
