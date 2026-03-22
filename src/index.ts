@@ -28,7 +28,9 @@ if (url) {
 } else {
     viewer = new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
     // viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.v3.spx`);
+    // viewer.addModel(`https://reall3d.com/demo-models/hornedlizard.v3.glb`); // KHR_gaussian_splatting_compression_spz_2
     // viewer.addModel(`https://reall3d.com/demo-models/yz.spx`);
+    // viewer.addModel(`https://reall3d.com/demo-models/yz.glb`); // KHR_gaussian_splatting
 
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-fpv.scene.json`);
