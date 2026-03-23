@@ -255,7 +255,7 @@ export function setupEventListener(events: Events) {
         const rs: Vector3[] = await fire(RaycasterRayIntersectPoints, x, y);
         if (rs.length) {
             if (fire(IsPlayerMode)) {
-                !opts.markMode && fire(MovePlayerToTarget, rs[0]);
+                !opts.markMode && (await fire(MovePlayerToTarget, rs[0]));
             } else {
                 fire(CameraSetLookAt, rs[0], true, false); // 最后参数false时平移效果，true时旋转效果
             }

@@ -112,18 +112,18 @@ export function setupPhysics(events: Events) {
         controller.setApplyImpulsesToDynamicBodies(true); // 与动态刚体交互
         controller.setCharacterMass(1);
 
-        // 锁定高度
-        controller.setMaxSlopeClimbAngle(0); // 上坡角度设为0 → 完全禁止爬坡
-        controller.setMinSlopeSlideAngle(Math.PI); // 极端值：任何坡度都不触发下坡滑动
-        controller.disableAutostep(); // 禁用自动跨步（彻底禁止上台阶/爬坡）
-        controller.disableSnapToGround(); // 禁用贴地（避免物理引擎自动调整Y轴）
-        controller.setSlideEnabled(true); // 滑动
-
-        // controller.setMaxSlopeClimbAngle(Math.PI / 4); // 上坡 45°
-        // controller.setMinSlopeSlideAngle(Math.PI / 4); // 下坡 45°
-        // controller.enableAutostep(0.1, 0.05, false); // 自动跨步(maxHeight, minWidth, includeDynamicBodies)
-        // controller.enableSnapToGround(0.5); // 贴地
+        // // 锁定高度
+        // controller.setMaxSlopeClimbAngle(0); // 上坡角度设为0 → 完全禁止爬坡
+        // controller.setMinSlopeSlideAngle(Math.PI); // 极端值：任何坡度都不触发下坡滑动
+        // controller.disableAutostep(); // 禁用自动跨步（彻底禁止上台阶/爬坡）
+        // controller.disableSnapToGround(); // 禁用贴地（避免物理引擎自动调整Y轴）
         // controller.setSlideEnabled(true); // 滑动
+
+        controller.setMaxSlopeClimbAngle(Math.PI / 4); // 上坡 45°
+        controller.setMinSlopeSlideAngle(Math.PI / 4); // 下坡 45°
+        controller.enableAutostep(0.1, 0.05, false); // 自动跨步(maxHeight, minWidth, includeDynamicBodies)
+        controller.enableSnapToGround(0.5); // 贴地
+        controller.setSlideEnabled(true); // 滑动
 
         let groundBodyDesc = RAPIER.RigidBodyDesc.fixed();
         let groundBody = world.createRigidBody(groundBodyDesc);

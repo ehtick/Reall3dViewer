@@ -49,6 +49,8 @@ import { setupPhysics } from './SetupPhysics';
 import { globalEv } from '../events/GlobalEV';
 import { loadFile } from '../modeldata/loaders/FileLoader';
 import { DecoderPath } from '../utils/consts/GlobalConstants';
+import { CameraControls } from '../controls/CameraControls';
+import { sleep } from '../utils/CommonUtils';
 
 export function setupPlayer(events: Events) {
     let disposed: boolean = false;
@@ -185,7 +187,7 @@ export function setupPlayer(events: Events) {
      * @param targetWorldPos 目标点
      * @param maxHorizontalDistance 最大距离阈值
      */
-    on(MovePlayerToTarget, (targetWorldPos?: Vector3, maxHorizontalDistance: number = 100) => {
+    on(MovePlayerToTarget, async (targetWorldPos?: Vector3, maxHorizontalDistance: number = 100) => {
         if (!fire(IsPlayerMode)) return; // 仅支持第三人称漫游模式
         if (!targetWorldPos) return;
         if (!fire(IsPointInFront, targetWorldPos)) return;
@@ -195,6 +197,9 @@ export function setupPlayer(events: Events) {
         characterControls.key = [0, 0, 0];
         characterControls.moveAngle = null;
         characterControls.moveIntensity = 0;
+
+        fire(UpdateIndicatorTargetStatus, new Vector3(targetWorldPos.x, targetWorldPos.y, targetWorldPos.z)); // 目标点提示球
+        fire(IsPlayerMode1) && (await startRotateToVerticalPlane(targetWorldPos)); // 第1人称时，先过渡朝向目标点
 
         // 1. 计算目标点的地面投影（Y轴与角色保持一致，水平移动）
         const targetProjected = new Vector3(targetWorldPos.x, 0, targetWorldPos.z);
@@ -234,8 +239,85 @@ export function setupPlayer(events: Events) {
         targetPosition = limitedTarget; // 替换为限定后的目标点
         characterControls.key[2] = needRun ? 1 : 0; // 标记是否奔跑（复用key[2]字段）
 
-        fire(UpdateIndicatorTargetStatus, new Vector3(targetPosition.x, targetWorldPos.y, targetPosition.z));
+        // fire(UpdateIndicatorTargetStatus, new Vector3(targetWorldPos.x, targetWorldPos.y, targetWorldPos.z)); // 目标点提示球
+        // fire(UpdateIndicatorTargetStatus, new Vector3(limitedTarget.x, targetWorldPos.y, limitedTarget.z)); // 目标点提示球
     });
+
+    let rotateProgress = 0;
+    let lastFrameTime = performance.now();
+    let startAngle = 0;
+    let endAngle = 0;
+    let rotationRadius = 0;
+    let initialY = 0;
+    async function startRotateToVerticalPlane(pointA: Vector3) {
+        const controls: OrbitControls = fire(GetControls);
+        const target = controls.target.clone();
+        const cameraPos = controls.object.position.clone();
+
+        // 保存固定参数
+        initialY = cameraPos.y;
+        rotationRadius = Math.sqrt(Math.pow(cameraPos.x - target.x, 2) + Math.pow(cameraPos.z - target.z, 2));
+
+        // 当前相机的水平角度（从注视点看，相机在哪个方向）
+        const dx = cameraPos.x - target.x;
+        const dz = cameraPos.z - target.z;
+        startAngle = Math.atan2(dx, dz); // 注意：atan2(dx, dz) 对应 (sin, cos) 重建
+
+        // 目标方向：从注视点指向A点的方向
+        const adx = pointA.x - target.x;
+        const adz = pointA.z - target.z;
+        const targetDirAngle = Math.atan2(adx, adz);
+
+        // 关键：相机可以停在 targetDirAngle 或 targetDirAngle + π（正反两个方向）
+        // 选择离当前角度更近的那个
+        const option1 = targetDirAngle;
+        const option2 = targetDirAngle + Math.PI;
+
+        // 归一化到相同范围比较
+        const normalizeAngle = (a: number) => {
+            while (a > Math.PI) a -= 2 * Math.PI;
+            while (a < -Math.PI) a += 2 * Math.PI;
+            return a;
+        };
+
+        const diff1 = Math.abs(normalizeAngle(option1 - startAngle));
+        const diff2 = Math.abs(normalizeAngle(option2 - startAngle));
+
+        endAngle = diff1 < diff2 ? option1 : option2;
+
+        // 确保 endAngle 与 startAngle 连续（不要绕远路）
+        while (endAngle - startAngle > Math.PI) endAngle -= 2 * Math.PI;
+        while (endAngle - startAngle < -Math.PI) endAngle += 2 * Math.PI;
+
+        // 重置状态
+        rotateProgress = 0;
+        lastFrameTime = performance.now();
+        await sleep(rotateStep(controls, target));
+    }
+
+    function rotateStep(controls: OrbitControls, target: Vector3) {
+        const DURATION = 500; // 过渡时间(毫秒)
+        const currentTime = performance.now();
+        const deltaTime = currentTime - lastFrameTime;
+        lastFrameTime = currentTime;
+
+        rotateProgress += deltaTime / DURATION;
+        rotateProgress = Math.min(rotateProgress, 1);
+
+        const t = 1 - Math.pow(1 - rotateProgress, 3); // 缓动
+        const currentAngle = startAngle + (endAngle - startAngle) * t; // 当前绝对角度（插值）
+
+        // 用三角函数重建位置（与 atan2(dx, dz) 对应）
+        const newX = target.x + rotationRadius * Math.sin(currentAngle);
+        const newZ = target.z + rotationRadius * Math.cos(currentAngle);
+
+        controls.object.position.set(newX, initialY, newZ);
+
+        if (rotateProgress < 1) {
+            requestAnimationFrame(() => rotateStep(controls, target));
+        }
+        return DURATION;
+    }
 
     on(
         OnViewerUpdate,
@@ -263,6 +345,9 @@ export function setupPlayer(events: Events) {
     function stopMoveToTarget() {
         isMovingToTarget = false;
         targetPosition = null;
+
+        lastPlayerMoveTime = performance.now();
+        fire(UpdateIndicatorTargetStatus, null, true); // 目标点提示球
     }
 
     function loadCharacterModelOnce() {
@@ -469,9 +554,10 @@ export function setupPlayer(events: Events) {
             moveVector = fire(PhysicsMovePlayer, moveVector, delta);
 
             // 更新位置
-            const asMoveZero = !moveVector || moveVector.length() < 0.05;
+            const moveDistance = moveVector ? moveVector.length() : 0;
+            const asMoveZero = moveDistance < 0.05;
             if (moveVector) {
-                !asMoveZero && (lastPlayerMoveTime = performance.now());
+                !asMoveZero && (lastPlayerMoveTime = performance.now()); // 有移动时更新最终移动时间
                 position.add(moveVector);
                 player.position.copy(position);
                 orbitControls.target.copy(position).add(new Vector3(0, -playerHeight, 0));
@@ -480,12 +566,10 @@ export function setupPlayer(events: Events) {
                 fire(UpdateVirtualGroundPosition);
             }
 
-            if (asMoveZero && performance.now() - lastPlayerMoveTime > 3000) {
-                stopMoveToTarget(); // 3秒原地踏步就停下
-                lastPlayerMoveTime = performance.now();
+            if (asMoveZero && performance.now() - lastPlayerMoveTime > 2000) {
+                stopMoveToTarget(); // 2秒原地踏步就停下，4秒几乎原地踏步也停下
             }
         } else {
-            fire(UpdateIndicatorTargetStatus, null, true); // 隐藏目标点提示圈
             if (lastCameraPosition.distanceTo(orbitControls.object.position) > 0.1) {
                 lastCameraPosition.copy(orbitControls.object.position);
                 fire(PhysicsAdjustCameraByCastShape);
