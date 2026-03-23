@@ -81,8 +81,8 @@ export function setupPlayer(events: Events) {
 
     let isMovingToTarget = false; // 是否正在向目标点移动
     let targetPosition: Vector3 | null = null; // 目标点（地面投影）
-    const targetReachThreshold = 0.1; // 到达目标的距离阈值（避免精度问题）
-    const walkTimeThreshold = 3; // 步行耗时阈值（秒）
+    const targetReachThreshold = 0.01; // 到达目标的距离阈值（避免精度问题）
+    const walkTimeThreshold = 10; // 步行耗时阈值（秒）
     const lastPlayerPosition = new Vector3();
     let lastPlayerMoveTime = 0;
     const lastCameraPosition = new Vector3();
@@ -113,7 +113,7 @@ export function setupPlayer(events: Events) {
         up: new Vector3(0, 1, 0),
         rotate: new Quaternion(),
         current: 'Idle',
-        fadeDuration: 0.5,
+        fadeDuration: 0.3,
         runVelocity: playerSpeed * 3, // 奔跑速度
         walkVelocity: playerSpeed, // 行走速度
         rotateSpeed: 0.1,
@@ -380,7 +380,7 @@ export function setupPlayer(events: Events) {
 
             // 2. 判断是否到达目标点
             const distance = direction.length();
-            if (distance < 1) key[2] = 0; // 跑到边上变行走
+            if (distance < 0.5) key[2] = 0; // 跑到边上变行走
 
             if (distance < targetReachThreshold) {
                 stopMoveToTarget(); // 到达目标，停止移动
@@ -469,7 +469,7 @@ export function setupPlayer(events: Events) {
             moveVector = fire(PhysicsMovePlayer, moveVector, delta);
 
             // 更新位置
-            const asMoveZero = !moveVector || moveVector.length() < 0.1;
+            const asMoveZero = !moveVector || moveVector.length() < 0.05;
             if (moveVector) {
                 !asMoveZero && (lastPlayerMoveTime = performance.now());
                 position.add(moveVector);

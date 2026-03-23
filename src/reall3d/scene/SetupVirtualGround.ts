@@ -3,6 +3,7 @@
 // ==============================================
 import {
     DoubleSide,
+    Euler,
     Group,
     Mesh,
     MeshBasicMaterial,
@@ -13,6 +14,7 @@ import {
     Raycaster,
     RingGeometry,
     Scene,
+    SphereGeometry,
     Vector2,
     Vector3,
 } from 'three';
@@ -82,10 +84,9 @@ export function setupVirtualGround(events: Events) {
         }
 
         // 鼠标移动提示圈
-        const indicatorGeometry = new RingGeometry(0, 6, 16);
+        const indicatorGeometry = new RingGeometry(2, 4, 16);
         const indicatorMaterial = new MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, side: DoubleSide });
         indicator = new Mesh(indicatorGeometry, indicatorMaterial);
-        indicator.rotation.x = -Math.PI / 2;
         indicator.visible = false;
         indicator.renderOrder = 99999;
         indicator.onBeforeRender = () => {
@@ -97,11 +98,10 @@ export function setupVirtualGround(events: Events) {
         };
         scene.add(indicator);
 
-        // 目标点提示圈
-        const indicatorTargetGeometry = new RingGeometry(0, 6, 16);
+        // 目标点提示球
+        const indicatorTargetGeometry = new SphereGeometry(4, 16, 16); // 球体几何体
         const indicatorTargetMaterial = new MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.3, side: DoubleSide });
         indicatorTarget = new Mesh(indicatorTargetGeometry, indicatorTargetMaterial);
-        indicatorTarget.rotation.x = -Math.PI / 2;
         indicatorTarget.visible = false;
         indicatorTarget.renderOrder = 99999;
         indicatorTarget.onBeforeRender = () => {
@@ -116,6 +116,8 @@ export function setupVirtualGround(events: Events) {
         // 鼠标移动显示提示圈
         const mouse = new Vector2();
         const raycaster: Raycaster = new Raycaster();
+        const normal = new Vector3();
+        const rotationEuler = new Euler();
         function onMouseMove(event: MouseEvent) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -128,17 +130,20 @@ export function setupVirtualGround(events: Events) {
             const intersects = raycaster.intersectObjects(obj3ds, true); // 检测地面或静态碰撞体交点
 
             if (intersects.length > 0) {
-                const intersectObjs = [];
-                for (let i = 0; i < intersects.length; i++) {
-                    intersectObjs.push({ point: intersects[i].point, distance: camera.position.distanceTo(intersects[i].point) });
-                }
-                intersectObjs.sort((a, b) => a.distance - b.distance);
+                // 取最近的相交面
+                const closestIntersect = intersects.reduce((closest, curr) => (curr.distance < closest.distance ? curr : closest), intersects[0]);
+                indicator.position.copy(closestIntersect.point);
 
-                let point = intersectObjs[0].point;
-                if (intersects.length > 1 && camera.position.distanceTo(intersects[0].point) > camera.position.distanceTo(intersects[1].point)) {
-                    point.copy(intersects[1].point);
+                // 调整提示圈使其与相交面平行
+                if (closestIntersect.face) {
+                    normal.copy(closestIntersect.face.normal);
+                    closestIntersect.object.worldToLocal(normal);
+                    closestIntersect.object.localToWorld(normal);
+                    indicator.lookAt(indicator.position.clone().add(normal));
+                    rotationEuler.setFromQuaternion(indicator.quaternion);
+                    indicator.quaternion.setFromEuler(rotationEuler);
                 }
-                indicator.position.copy(point);
+
                 indicator.visible = true;
                 const { height } = fire(GetCanvasSize);
                 const newScale = ((fire(GetCameraPosition) as Vector3).distanceTo(indicator.position) * 3.2) / height;
