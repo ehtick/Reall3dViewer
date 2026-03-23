@@ -238,9 +238,6 @@ export function setupPlayer(events: Events) {
         isMovingToTarget = true;
         targetPosition = limitedTarget; // 替换为限定后的目标点
         characterControls.key[2] = needRun ? 1 : 0; // 标记是否奔跑（复用key[2]字段）
-
-        // fire(UpdateIndicatorTargetStatus, new Vector3(targetWorldPos.x, targetWorldPos.y, targetWorldPos.z)); // 目标点提示球
-        // fire(UpdateIndicatorTargetStatus, new Vector3(limitedTarget.x, targetWorldPos.y, limitedTarget.z)); // 目标点提示球
     });
 
     let rotateProgress = 0;
