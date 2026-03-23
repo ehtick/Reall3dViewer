@@ -51,9 +51,10 @@ import {
     FlyingPause,
     MovePlayer,
     MovePlayerToTarget,
-    GetPlayer,
     OnViewerDispose,
     IsPlayerMode,
+    IncreaseCameraFov,
+    IsPlayerMode1,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -254,7 +255,7 @@ export function setupEventListener(events: Events) {
         const rs: Vector3[] = await fire(RaycasterRayIntersectPoints, x, y);
         if (rs.length) {
             if (fire(IsPlayerMode)) {
-                fire(MovePlayerToTarget, rs[0]);
+                !opts.markMode && fire(MovePlayerToTarget, rs[0]);
             } else {
                 fire(CameraSetLookAt, rs[0], true, false); // 最后参数false时平移效果，true时旋转效果
             }
@@ -336,12 +337,14 @@ export function setupEventListener(events: Events) {
         keySet.clear();
     };
 
-    const wheelEventListener = (e: MouseEvent) => {
+    const wheelEventListener = (e: WheelEvent) => {
         parent && setTimeout(() => window.focus());
         e.preventDefault();
         if (disposed) return;
         fire(StopAutoRotate);
         lastActionTome = Date.now();
+
+        fire(IsPlayerMode1) && fire(IncreaseCameraFov, e.deltaY > 0);
     };
 
     const canvasContextmenuEventListener = (e: MouseEvent) => {

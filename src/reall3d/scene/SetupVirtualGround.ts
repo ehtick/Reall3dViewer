@@ -24,6 +24,7 @@ import {
     GetCameraPosition,
     GetCanvasSize,
     GetMeta,
+    GetOptions,
     GetPlayer,
     GetScene,
     OnViewerDispose,
@@ -33,6 +34,7 @@ import {
     UpdateVirtualGroundPosition,
 } from '../events/EventConstants';
 import { MetaData } from '../modeldata/MetaData';
+import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 
 export function setupVirtualGround(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
@@ -119,6 +121,8 @@ export function setupVirtualGround(events: Events) {
         const normal = new Vector3();
         const rotationEuler = new Euler();
         function onMouseMove(event: MouseEvent) {
+            if ((fire(GetOptions) as Reall3dViewerOptions).markMode) return;
+
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 

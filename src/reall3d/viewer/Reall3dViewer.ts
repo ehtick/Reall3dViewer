@@ -69,6 +69,8 @@ import {
     CaptureScreenshot,
     OnFetchStop,
     FocusAabbCenter,
+    SplatUpdateFocal,
+    IncreaseCameraFov,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -184,6 +186,14 @@ export class Reall3dViewer {
         on(UpdateSortType, (sortType: number) => {
             opts.sortType = sortType;
             splatMesh.options({ sortType, renderer: undefined, scene: undefined });
+        });
+
+        on(IncreaseCameraFov, (add = true) => {
+            opts.fov += add ? 1 : -1;
+            opts.fov = Math.max(10, Math.min(opts.fov, 80));
+            const fov = opts.fov;
+            controls.updateByOptions({ fov });
+            splatMesh.fire(SplatUpdateFocal);
         });
 
         scene.add(new AmbientLight('#ffffff', 2));

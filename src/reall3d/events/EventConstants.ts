@@ -516,6 +516,8 @@ export const PhysicsGetEnvCollision = i++;
 export const PhysicsGetGroundCollision = i++;
 /** 设定鼠标样式 */
 export const SetCursor = i++;
+/** 增加相机Fov */
+export const IncreaseCameraFov = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */
