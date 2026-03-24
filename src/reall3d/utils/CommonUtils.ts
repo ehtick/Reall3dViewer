@@ -1,7 +1,22 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Audio, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Plane, ShaderChunk, Vector3, WebGLRenderer, WebGLRenderTarget } from 'three';
+import {
+    Audio,
+    Camera,
+    Frustum,
+    Matrix4,
+    Object3D,
+    PerspectiveCamera,
+    Plane,
+    Renderer,
+    Scene,
+    ShaderChunk,
+    Vector3,
+    WebGLRenderer,
+    WebGLRenderTarget,
+} from 'three';
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { Events } from '../events/Events';
 import {
     Vector3ToString,
@@ -33,6 +48,7 @@ import {
     GetScene,
     CaptureScreenshot,
     SetCursor,
+    GetControls,
 } from '../events/EventConstants';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
@@ -40,6 +56,7 @@ import { unzipSync } from 'fflate';
 import { SpxHeader } from '../modeldata/ModelData';
 import { SplatTileNode } from '../modeldata/SplatTiles';
 import { globalEv } from '../events/GlobalEV';
+import { CameraControls } from '../controls/CameraControls';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -350,6 +367,22 @@ export function setupCommonUtils(events: Events) {
         if (varCursor === cursor) return;
         const canvas: HTMLCanvasElement = fire(GetCanvas);
         canvas && (canvas.style.cursor = cursor);
+    });
+
+    let transformControls: TransformControls;
+    globalEv.on('GetTransformControls', () => {
+        if (transformControls) return transformControls;
+
+        const controls: CameraControls = fire(GetControls);
+        const renderer: Renderer = fire(GetRenderer);
+        const scene: Scene = fire(GetScene);
+        transformControls = new TransformControls(controls.object as Camera, renderer.domElement);
+        scene.add(transformControls.getHelper());
+        transformControls.addEventListener('dragging-changed', function (event) {
+            controls.enabled = !event.value;
+            document.body.style.cursor = event.value ? 'move' : 'default'; // 可选：改变鼠标样式
+        });
+        return transformControls;
     });
 }
 
