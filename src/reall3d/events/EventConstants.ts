@@ -248,6 +248,8 @@ export const SplatSwitchDisplayMode = i++;
 export const GetMarkWarpElement = i++;
 /** 取CSS3DRenderer */
 export const GetCSS3DRenderer = i++;
+/** 取CSS2DRenderer */
+export const GetCSS2DRenderer = i++;
 
 /** 添加标注弱引用缓存 */
 export const AddMarkToWeakRef = i++;

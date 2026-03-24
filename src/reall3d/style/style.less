@@ -6,7 +6,10 @@ body {
     margin: 0;
     height: 100vh;
     width: 100vw;
-    font-family: PingFang SC, Microsoft YaHei, sans-serif;
+    font-family:
+        PingFang SC,
+        Microsoft YaHei,
+        sans-serif;
     font-size: 14px;
     background: black;
     color: white;
@@ -207,5 +210,35 @@ body {
         font-size: 380px;
         color: rgba(255, 255, 255, 0.3);
         z-index: 10;
+    }
+}
+
+.mark-3dgs-tag3d-warp {
+    background-color: rgba(46, 46, 48, 0.2);
+    padding: 5px;
+    border-radius: 4px;
+    user-select: none;
+
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    display: flex;
+    pointer-events: none;
+    margin-bottom: 40px;
+
+    .tag-icon-3dgs {
+        pointer-events: auto;
+        height: 20px;
+        color: rgba(238, 238, 238, 0.5);
+
+        svg {
+            pointer-events: none;
+        }
+    }
+    .tag-icon-3dgs.enable {
+        cursor: pointer;
+    }
+    .tag-icon-3dgs.enable:hover {
+        color: rgb(238, 238, 238);
     }
 }

@@ -40,6 +40,7 @@ import {
     FlySavePositions,
     OnSetFlyDuration,
     OnViewerDispose,
+    GetCSS2DRenderer,
 } from '../events/EventConstants';
 import { initMapViewerOptions, initTileMap, setupMapUtils } from './utils/MapUtils';
 import { setupCommonUtils } from '../utils/CommonUtils';
@@ -47,7 +48,7 @@ import { setupMapEventListener } from './events/MapEventListener';
 import { setupApi } from '../api/SetupApi';
 import { setupRaycaster } from '../scene/SetupRaycaster';
 import { setupMark } from '../meshs/mark/SetupMark';
-import { CSS3DRenderer } from 'three/examples/jsm/Addons.js';
+import { CSS2DRenderer, CSS3DRenderer } from 'three/examples/jsm/Addons.js';
 import { WarpSplatMesh } from './warpsplatmesh/WarpSplatMesh';
 import { isMobile, ViewerVersion } from '../utils/consts/GlobalConstants';
 import * as tt from '@gotoeasy/three-tile';
@@ -219,6 +220,11 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         cSS3DRenderer.domElement.style.position = 'absolute';
         cSS3DRenderer.domElement.style.left = `${left}px`;
         cSS3DRenderer.domElement.style.top = `${top}px`;
+        const cSS2DRenderer: CSS2DRenderer = that.events.fire(GetCSS2DRenderer);
+        cSS2DRenderer.setSize(width, height);
+        cSS2DRenderer.domElement.style.position = 'absolute';
+        cSS2DRenderer.domElement.style.left = `${left}px`;
+        cSS2DRenderer.domElement.style.top = `${top}px`;
     }
 
     private animate() {

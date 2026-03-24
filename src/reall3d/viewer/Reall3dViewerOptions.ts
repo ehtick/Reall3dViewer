@@ -161,9 +161,9 @@ export interface Reall3dViewerOptions {
     markMode?: boolean | undefined;
 
     /**
-     * Annotation type (point/lines/plans/distance/area/circle)
+     * Annotation type
      */
-    markType?: 'point' | 'lines' | 'plans' | 'distance' | 'area' | 'circle' | undefined;
+    markType?: 'point' | 'lines' | 'plans' | 'distance' | 'area' | 'circle' | 'tag3d' | undefined;
 
     /**
      * Annotation visibility flag. Defaults to true.

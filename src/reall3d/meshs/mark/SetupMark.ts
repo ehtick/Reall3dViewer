@@ -39,9 +39,10 @@ import {
     OnViewerDispose,
     IsPlayerMode,
     GetPlayer,
+    GetCSS2DRenderer,
 } from './../../events/EventConstants';
 import { MarkMultiLines } from './MarkMultiLines';
-import { CSS3DRenderer } from 'three/examples/jsm/Addons.js';
+import { CSS2DRenderer, CSS3DRenderer } from 'three/examples/jsm/Addons.js';
 import { Events } from '../../events/Events';
 import { Group, Object3D, Vector3 } from 'three';
 import { Reall3dViewerOptions } from '../../viewer/Reall3dViewerOptions';
@@ -61,6 +62,17 @@ export function setupMark(events: Events) {
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
     const markMap: Map<string, WeakRef<any>> = new Map();
 
+    const divMarkWarp3d: HTMLDivElement = document.createElement('div');
+    divMarkWarp3d.classList.add('mark-warp3d');
+    document.body.appendChild(divMarkWarp3d);
+
+    const css2DRenderer = new CSS2DRenderer();
+    css2DRenderer.setSize(innerWidth, innerHeight);
+    css2DRenderer.domElement.style.position = 'absolute';
+    css2DRenderer.domElement.style.top = '0px';
+    css2DRenderer.domElement.style.pointerEvents = 'none';
+    divMarkWarp3d.appendChild(css2DRenderer.domElement);
+
     const divMarkWarp: HTMLDivElement = document.createElement('div');
     divMarkWarp.classList.add('mark-warp');
     document.body.appendChild(divMarkWarp);
@@ -74,7 +86,8 @@ export function setupMark(events: Events) {
 
     on(GetMarkWarpElement, () => divMarkWarp);
     on(GetCSS3DRenderer, () => css3DRenderer);
-    on(OnViewerUpdate, () => css3DRenderer.render(fire(GetScene), fire(GetCamera)), true);
+    on(GetCSS2DRenderer, () => css2DRenderer);
+    on(OnViewerUpdate, () => [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))), true);
     on(OnViewerDispose, () => document.body.removeChild(divMarkWarp), true);
 
     on(AddMarkToWeakRef, (mark: any) => {

@@ -55,6 +55,7 @@ import {
     IsPlayerMode,
     IncreaseCameraFov,
     IsPlayerMode1,
+    GetCSS2DRenderer,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -67,6 +68,8 @@ import { MarkMultiPlans } from '../meshs/mark/MarkMulitPlans';
 import { MarkCirclePlan } from '../meshs/mark/MarkCirclePlan';
 import { globalEv } from './GlobalEV';
 import { QualityLevels } from '../utils/consts/GlobalConstants';
+import { CSS2DRenderer } from 'three/examples/jsm/Addons.js';
+import { Mark3DSingleTag } from '../meshs/mark/Mark3DSingleTag';
 
 class MouseState {
     public down: number = 0;
@@ -458,7 +461,14 @@ export function setupEventListener(events: Events) {
 
         if (opts.markMode) {
             if (mouseState.down === 1 && !mouseState.move && Date.now() - mouseState.downTime < 500) {
-                if (opts.markType === 'point') {
+                if (opts.markType === 'tag3d') {
+                    const point: Vector3 = await fire(SelectMarkPoint, e.clientX, e.clientY);
+                    if (point) {
+                        const mark3DSingletag = new Mark3DSingleTag(events, await fire(SelectMarkPoint, e.clientX, e.clientY));
+                        fire(GetScene).add(mark3DSingletag);
+                        mark3DSingletag.drawFinish();
+                    }
+                } else if (opts.markType === 'point') {
                     const point: Vector3 = await fire(SelectMarkPoint, e.clientX, e.clientY);
                     if (point) {
                         const markSinglePoint = new MarkSinglePoint(events, await fire(SelectMarkPoint, e.clientX, e.clientY));
@@ -619,6 +629,11 @@ export function setupEventListener(events: Events) {
         cSS3DRenderer.domElement.style.position = 'absolute';
         cSS3DRenderer.domElement.style.left = `${left}px`;
         cSS3DRenderer.domElement.style.top = `${top}px`;
+        const cSS2DRenderer: CSS2DRenderer = fire(GetCSS2DRenderer);
+        cSS2DRenderer.setSize(width, height);
+        cSS2DRenderer.domElement.style.position = 'absolute';
+        cSS2DRenderer.domElement.style.left = `${left}px`;
+        cSS2DRenderer.domElement.style.top = `${top}px`;
         const renderer = fire(GetRenderer);
         // renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
         renderer.setPixelRatio(Math.min(devicePixelRatio, fire(GetOptions).qualityLevel > QualityLevels.Default5 ? 2 : 1));
