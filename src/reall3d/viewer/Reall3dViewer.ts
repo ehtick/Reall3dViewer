@@ -288,6 +288,7 @@ export class Reall3dViewer {
             opts.disableRightClickFocus = false;
             opts.viewMode = undefined;
             opts.shDegree = 3;
+            opts.fov = 45;
             that.reset(opts);
             if (isSceneJson) {
                 await that.addScene(url);
