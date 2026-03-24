@@ -552,7 +552,7 @@ export function setupPlayer(events: Events) {
 
             // 更新位置
             const moveDistance = moveVector ? moveVector.length() : 0;
-            const asMoveZero = moveDistance < 0.05;
+            const asMoveZero = moveDistance < 0.1;
             if (moveVector) {
                 !asMoveZero && (lastPlayerMoveTime = performance.now()); // 有移动时更新最终移动时间
                 position.add(moveVector);
@@ -563,8 +563,8 @@ export function setupPlayer(events: Events) {
                 fire(UpdateVirtualGroundPosition);
             }
 
-            if (asMoveZero && performance.now() - lastPlayerMoveTime > 2000) {
-                stopMoveToTarget(); // 2秒原地踏步就停下，4秒几乎原地踏步也停下
+            if (asMoveZero && performance.now() - lastPlayerMoveTime > 3000) {
+                stopMoveToTarget(); // 3秒原地踏步就停下
             }
         } else {
             if (lastCameraPosition.distanceTo(orbitControls.object.position) > 0.1) {

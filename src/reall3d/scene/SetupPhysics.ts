@@ -111,6 +111,7 @@ export function setupPhysics(events: Events) {
         const controller = world.createCharacterController(0.05);
         controller.setApplyImpulsesToDynamicBodies(true); // 与动态刚体交互
         controller.setCharacterMass(1);
+        controller.setUp({ x: 0, y: -1, z: 0 });
 
         // // 锁定高度
         // controller.setMaxSlopeClimbAngle(0); // 上坡角度设为0 → 完全禁止爬坡
