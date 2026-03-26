@@ -51,6 +51,8 @@ export interface MetaData {
     pcEnableJoystick?: boolean;
     /** Enable joystick, default to false */
     mobileEnableJoystick?: boolean;
+    /** disable right click focus effect; defaults to false  */
+    disableRightClickFocus?: boolean;
 
     /** Audio */
     audio?: any;

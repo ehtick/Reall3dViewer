@@ -17,7 +17,7 @@ import { MarkData } from './data/MarkData';
 import { MarkDataSinglePoint } from './data/MarkDataSinglePoint';
 
 export class MarkSinglePoint extends Group {
-    public readonly isMark: boolean = true;
+    public readonly isCustomMark: boolean = true;
     private disposed: boolean = false;
     private events: Events;
     private data: MarkDataSinglePoint;
@@ -43,6 +43,7 @@ export class MarkSinglePoint extends Group {
                 mainTagOpacity: 0.8,
                 title: '标记点' + cnt,
                 note: '',
+                intersectable: false,
             };
         } else {
             data = {
@@ -57,6 +58,7 @@ export class MarkSinglePoint extends Group {
                 mainTagOpacity: obj.mainTagOpacity || 0.8,
                 title: obj.title || '标记点',
                 note: obj.note || '',
+                intersectable: obj.intersectable || false,
             };
         }
 
@@ -163,6 +165,10 @@ export class MarkSinglePoint extends Group {
             data.point = [...data.point];
         }
         return data;
+    }
+
+    public isIntersectable(): boolean {
+        return this.data.intersectable;
     }
 
     public dispose() {

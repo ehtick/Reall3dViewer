@@ -20,7 +20,7 @@ import { MarkData } from './data/MarkData';
 import { MarkDataMultiPlans } from './data/MarkDataMultiPlans';
 
 export class MarkMultiPlans extends Line2 {
-    public readonly isMark: boolean = true;
+    public readonly isCustomMark: boolean = true;
     private disposed: boolean = false;
     private events: Events;
     private data: MarkDataMultiPlans;
@@ -62,9 +62,10 @@ export class MarkMultiPlans extends Line2 {
             planOpacity: 0.5,
             title: '标记面' + cnt,
             note: '',
+            intersectable: false,
         };
 
-        this.draw(data);
+        that.draw(data);
     }
 
     /**
@@ -280,6 +281,7 @@ export class MarkMultiPlans extends Line2 {
             planOpacity: inputData.planOpacity || 0.5,
             title: inputData.title || '标记面' + (document.querySelectorAll('.mark-wrap-plans.main-warp').length + 1),
             note: inputData.note || '',
+            intersectable: inputData.intersectable || false,
         };
 
         const oldGeometry = that.geometry;
@@ -406,7 +408,6 @@ export class MarkMultiPlans extends Line2 {
             material.depthTest = true;
             that.meshPlans = new Mesh(geometry, material);
             that.meshPlans.renderOrder = 1;
-            that.meshPlans['isMark'] = true;
             that.group.add(that.meshPlans);
         }
 
@@ -439,6 +440,10 @@ export class MarkMultiPlans extends Line2 {
             data.points = [...data.points];
         }
         return data;
+    }
+
+    public isIntersectable(): boolean {
+        return this.data.intersectable;
     }
 
     public dispose() {

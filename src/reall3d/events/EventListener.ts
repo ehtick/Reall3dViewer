@@ -56,6 +56,9 @@ import {
     IncreaseCameraFov,
     IsPlayerMode1,
     GetCSS2DRenderer,
+    IsFlyMode,
+    RaycasterRayIntersectMarks,
+    SetCursor,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -347,7 +350,7 @@ export function setupEventListener(events: Events) {
         fire(StopAutoRotate);
         lastActionTome = Date.now();
 
-        fire(IsPlayerMode1) && fire(IncreaseCameraFov, e.deltaY > 0);
+        (fire(IsPlayerMode1) || fire(IsFlyMode)) && fire(IncreaseCameraFov, e.deltaY > 0);
     };
 
     const canvasContextmenuEventListener = (e: MouseEvent) => {
@@ -433,6 +436,8 @@ export function setupEventListener(events: Events) {
             }
             // fire(ViewerNeedUpdate);
         }
+
+        fire(IsFlyMode) && !mouseState.down && fire(SetCursor, fire(RaycasterRayIntersectMarks, e.clientX, e.clientY) ? 'pointer' : 'default');
     };
 
     const canvasMouseupEventListener = async (e: MouseEvent) => {
@@ -574,6 +579,11 @@ export function setupEventListener(events: Events) {
 
         if (fire(IsPlayerMode)) {
             mouseState.down === 1 && !mouseState.move && fire(SelectPointAndLookAt, e.clientX, e.clientY);
+        } else if (fire(IsFlyMode)) {
+            if (mouseState.down === 1 && !mouseState.move) {
+                const mark = fire(RaycasterRayIntersectMarks, e.clientX, e.clientY);
+                mark && globalEv.tryFire('ShowMessage', mark.data?.title);
+            }
         } else {
             mouseState.down === 2 && !mouseState.move && fire(SelectPointAndLookAt, e.clientX, e.clientY); // 右击不移动，调整旋转中心
         }

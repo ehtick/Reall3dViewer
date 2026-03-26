@@ -17,7 +17,7 @@ import { MarkData } from './data/MarkData';
 import { MarkDataCirclePlan } from './data/MarkDataCirclePlan';
 
 export class MarkCirclePlan extends Group {
-    public readonly isMark: boolean = true;
+    public readonly isCustomMark: boolean = true;
     private disposed: boolean = false;
     private events: Events;
     private data: MarkDataCirclePlan;
@@ -54,6 +54,7 @@ export class MarkCirclePlan extends Group {
             circleTagOpacity: 0.9,
             circleTagVisible: true,
             title: '标记圆面' + cnt,
+            intersectable: false,
         };
 
         const circleGeometry = new CircleGeometry(data.radius, 32);
@@ -61,7 +62,6 @@ export class MarkCirclePlan extends Group {
         circleMaterial.opacity = data.circleOpacity;
         const circleMesh = new Mesh(circleGeometry, circleMaterial);
         circleMesh.position.copy(startPoint);
-        circleMesh['isMark'] = true;
         circleMesh.renderOrder = 1;
         const dir = new Vector3(0, 1, 0).normalize();
         circleMesh.lookAt(circleMesh.position.clone().add(dir));
@@ -253,6 +253,7 @@ export class MarkCirclePlan extends Group {
             circleTagOpacity: inputData.circleTagOpacity || 0.9,
             circleTagVisible: inputData.circleTagVisible === undefined ? true : inputData.circleTagVisible,
             title: inputData.title || '标记圆面',
+            intersectable: inputData.intersectable || false,
         };
 
         const circleGeometry = new CircleGeometry(data.radius, 128);
@@ -260,7 +261,6 @@ export class MarkCirclePlan extends Group {
         circleMaterial.opacity = data.circleOpacity;
         const circleMesh = new Mesh(circleGeometry, circleMaterial);
         circleMesh.position.fromArray(data.startPoint);
-        circleMesh['isMark'] = true;
         circleMesh.renderOrder = 1;
         const dir = new Vector3(0, 1, 0).normalize();
         circleMesh.lookAt(circleMesh.position.clone().add(dir));
@@ -324,6 +324,10 @@ export class MarkCirclePlan extends Group {
             data.startPoint = [...data.startPoint];
         }
         return data;
+    }
+
+    public isIntersectable(): boolean {
+        return this.data.intersectable;
     }
 
     public dispose() {

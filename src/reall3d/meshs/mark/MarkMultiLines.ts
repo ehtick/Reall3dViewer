@@ -17,7 +17,7 @@ import { MarkData } from './data/MarkData';
 import { MarkDataMultiLines } from './data/MarkDataMultiLines';
 
 export class MarkMultiLines extends Line2 {
-    public readonly isMark: boolean = true;
+    public readonly isCustomMark: boolean = true;
     private disposed: boolean = false;
     private events: Events;
     private data: MarkDataMultiLines;
@@ -54,6 +54,7 @@ export class MarkMultiLines extends Line2 {
             distanceTagVisible: true,
             title: '标记线' + cnt,
             note: '',
+            intersectable: false,
         };
 
         this.draw(data);
@@ -244,6 +245,7 @@ export class MarkMultiLines extends Line2 {
             distanceTagVisible: inputData.distanceTagVisible === undefined ? true : inputData.distanceTagVisible,
             title: inputData.title || '标记线' + (document.querySelectorAll('.mark-wrap-lines.main-warp').length + 1),
             note: inputData.note || '',
+            intersectable: inputData.intersectable || false,
         };
 
         const oldGeometry = that.geometry;
@@ -336,6 +338,10 @@ export class MarkMultiLines extends Line2 {
             data.points = [...data.points];
         }
         return data;
+    }
+
+    public isIntersectable(): boolean {
+        return this.data.intersectable;
     }
 
     public dispose() {

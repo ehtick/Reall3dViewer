@@ -17,7 +17,7 @@ import {
 import { MarkData } from './data/MarkData';
 
 export class MarkDistanceLine extends Line2 {
-    public readonly isMark: boolean = true;
+    public readonly isCustomMark: boolean = true;
     private disposed: boolean = false;
     private events: Events;
     private data: MarkDataDistanceLine;
@@ -55,6 +55,7 @@ export class MarkDistanceLine extends Line2 {
             distanceTagOpacity: 0.9,
             distanceTagVisible: true,
             title: '标记距离' + cnt,
+            intersectable: false,
         };
 
         const geometry = new LineGeometry();
@@ -69,10 +70,8 @@ export class MarkDistanceLine extends Line2 {
         circleMaterial.opacity = 0.6;
         const circleStart = new Mesh(circleGeometry, circleMaterial);
         circleStart.position.copy(startPoint);
-        circleStart['isMark'] = true;
         const circleEnd = new Mesh(circleGeometry, circleMaterial);
         circleEnd.position.copy(startPoint);
-        circleEnd['isMark'] = true;
 
         const mainTagWarp: HTMLDivElement = document.createElement('div');
         mainTagWarp.innerHTML = `<div style='flex-direction: column;align-items: center;display: flex;pointer-events: none;margin-bottom: 40px;'>
@@ -268,6 +267,7 @@ export class MarkDistanceLine extends Line2 {
             distanceTagOpacity: inputData.distanceTagOpacity || 0.9,
             distanceTagVisible: inputData.distanceTagVisible === undefined ? true : inputData.distanceTagVisible,
             title: inputData.title || '标记距离',
+            intersectable: inputData.intersectable || false,
         };
 
         const start: Vector3 = new Vector3().fromArray(data.startPoint);
@@ -286,10 +286,8 @@ export class MarkDistanceLine extends Line2 {
         circleMaterial.opacity = 0.6;
         const circleStart = new Mesh(circleGeometry, circleMaterial);
         circleStart.position.copy(start);
-        circleStart['isMark'] = true;
         const circleEnd = new Mesh(circleGeometry, circleMaterial);
         circleEnd.position.copy(end);
-        circleEnd['isMark'] = true;
 
         const dir = end.clone().sub(start).normalize();
         circleStart.lookAt(circleStart.position.clone().add(dir));
@@ -354,6 +352,10 @@ export class MarkDistanceLine extends Line2 {
             data.endPoint = [...data.endPoint];
         }
         return data;
+    }
+
+    public isIntersectable(): boolean {
+        return this.data.intersectable;
     }
 
     public dispose() {

@@ -485,8 +485,14 @@ export const IsPlayerMode = i++;
 export const IsPlayerMode1 = i++;
 /** 是否第三人称玩家模式 */
 export const IsPlayerMode3 = i++;
+/** 是否飞行模式 */
+export const IsFlyMode = i++;
 /** 是否在前方 */
 export const IsPointInFront = i++;
+/** 取所有标注 */
+export const GetMarkList = i++;
+/** 射线相交标注 */
+export const RaycasterRayIntersectMarks = i++;
 
 /** 渲染器销毁 */
 export const OnViewerDispose = i++;
@@ -520,6 +526,10 @@ export const PhysicsGetGroundCollision = i++;
 export const SetCursor = i++;
 /** 增加相机Fov */
 export const IncreaseCameraFov = i++;
+/** 是否完成初次渲染 */
+export const IsSplatShowDone = i++;
+/** 按元数据初始化标记 */
+export const OnInitMarks = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

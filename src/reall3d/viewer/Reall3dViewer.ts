@@ -71,6 +71,7 @@ import {
     FocusAabbCenter,
     SplatUpdateFocal,
     IncreaseCameraFov,
+    OnInitMarks,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -474,6 +475,7 @@ export class Reall3dViewer {
             fire(OnSetFlyPositions, meta.flyPositions || []);
             fire(OnSetFlyTargets, meta.flyTargets || []);
             fire(OnSetFlyDuration, meta.flyDuration);
+            fire(OnInitMarks, meta);
         } else {
             fire(LoadSmallSceneMetaData, meta);
         }

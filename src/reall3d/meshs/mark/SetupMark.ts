@@ -40,6 +40,9 @@ import {
     IsPlayerMode,
     GetPlayer,
     GetCSS2DRenderer,
+    IsSplatShowDone,
+    OnInitMarks,
+    GetMarkList,
 } from './../../events/EventConstants';
 import { MarkMultiLines } from './MarkMultiLines';
 import { CSS2DRenderer, CSS3DRenderer } from 'three/examples/jsm/Addons.js';
@@ -56,6 +59,7 @@ import { MarkDataMultiLines } from './data/MarkDataMultiLines';
 import { MarkDataDistanceLine } from './data/MarkDataDistanceLine';
 import { MetaData } from '../../modeldata/MetaData';
 import { CameraControls } from '../../controls/CameraControls';
+import { Mark3DSingleTag } from './Mark3DSingleTag';
 
 export function setupMark(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
@@ -90,6 +94,14 @@ export function setupMark(events: Events) {
     on(OnViewerUpdate, () => [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))), true);
     on(OnViewerDispose, () => document.body.removeChild(divMarkWarp), true);
 
+    on(GetMarkList, (intersectable = true) => {
+        const ary = [];
+        markMap.forEach(item => {
+            const mk = item.deref();
+            mk?.isIntersectable?.() && ary.push(mk);
+        });
+        return ary;
+    });
     on(AddMarkToWeakRef, (mark: any) => {
         const name: string = mark?.getMarkData?.()?.name || mark?.name;
         if (!name) return;
@@ -111,16 +123,20 @@ export function setupMark(events: Events) {
         return mark.getMarkData?.();
     });
 
+    let splatShowDone = false;
+    on(IsSplatShowDone, () => splatShowDone);
+
     on(MarkUpdateVisible, (visible?: boolean) => {
+        splatShowDone = true;
         if (visible !== undefined) fire(GetOptions).markVisible = visible;
-        fire(GetScene).traverse((child: Object3D) => child['isMark'] && (child.visible = fire(GetOptions).markVisible));
+        fire(GetScene).traverse((child: Object3D) => child['isCustomMark'] && (child.visible = fire(GetOptions).markVisible));
         fire(ViewerNeedUpdate);
     });
 
     on(MetaSaveSmallSceneCameraInfo, async (): Promise<boolean> => {
         const marks = [];
         fire(GetScene).traverse((child: any) => {
-            if (child.isMark) {
+            if (child.isCustomMark) {
                 const data = child.getMarkData?.();
                 data && marks.push(data);
             }
@@ -148,7 +164,7 @@ export function setupMark(events: Events) {
     on(MetaMarkSaveData, async (): Promise<boolean> => {
         const marks = [];
         fire(GetScene).traverse((child: any) => {
-            if (child.isMark) {
+            if (child.isCustomMark) {
                 const data = child.getMarkData?.();
                 data && marks.push(data);
             }
@@ -181,7 +197,7 @@ export function setupMark(events: Events) {
     on(MetaSaveWatermark, async (): Promise<boolean> => {
         const marks = [];
         fire(GetScene).traverse((child: any) => {
-            if (child.isMark) {
+            if (child.isCustomMark) {
                 const data = child.getMarkData?.();
                 data && marks.push(data);
             }
@@ -199,6 +215,18 @@ export function setupMark(events: Events) {
         }
         (fire(GetControls) as CameraControls).updateByOptions({ ...metaData, ...(metaData.cameraInfo || {}) });
 
+        fire(OnInitMarks, metaData); // 初始化标注，隐藏待激活显示
+
+        fire(OnSetFlyPositions, metaData.flyPositions || []);
+        fire(OnSetFlyTargets, metaData.flyTargets || []);
+    });
+
+    on(OnInitMarks, (metaData: MetaData) => {
+        if (metaData.meterScale) {
+            fire(GetOptions).meterScale = metaData.meterScale;
+            fire(Information, { scale: `1 : ${fire(GetOptions).meterScale} m` });
+        }
+
         const marks = metaData.marks || [];
 
         // 初始化标注，隐藏待激活显示
@@ -206,6 +234,10 @@ export function setupMark(events: Events) {
             if (data.type === 'MarkSinglePoint') {
                 // 单点
                 const mark = new MarkSinglePoint(events, data);
+                mark.visible = false;
+                fire(GetScene).add(mark);
+            } else if (data.type === 'Mark3DSingleTag') {
+                const mark = new Mark3DSingleTag(events, data);
                 mark.visible = false;
                 fire(GetScene).add(mark);
             } else if (data.type === 'MarkDistanceLine') {
@@ -234,9 +266,6 @@ export function setupMark(events: Events) {
                 fire(GetScene).add(mark);
             }
         });
-
-        fire(OnSetFlyPositions, metaData.flyPositions || []);
-        fire(OnSetFlyTargets, metaData.flyTargets || []);
     });
 
     on(MarkFinish, () => {

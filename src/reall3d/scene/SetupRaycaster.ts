@@ -6,6 +6,7 @@ import { Events } from '../events/Events';
 import {
     GetCamera,
     GetCanvasSize,
+    GetMarkList,
     GetMetaMatrix,
     GetPlayer,
     GetScene,
@@ -13,6 +14,7 @@ import {
     IsPlayerMode,
     PhysicsGetGroundCollision,
     RaycasterRayDistanceToPoint,
+    RaycasterRayIntersectMarks,
     RaycasterRayIntersectPoints,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -23,6 +25,27 @@ export function setupRaycaster(events: Events) {
 
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
+
+    on(RaycasterRayIntersectMarks, (mouseClientX: number, mouseClientY: number) => {
+        const { width, height, left, top } = fire(GetCanvasSize);
+        const mouse = new Vector2();
+        mouse.x = ((mouseClientX - left) / width) * 2 - 1;
+        mouse.y = ((top - mouseClientY) / height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, fire(GetCamera));
+        const intersects = raycaster.intersectObjects(fire(GetMarkList), true); // 常规mesh交点检测
+        if (!intersects.length) return null;
+
+        // 取最近的相交物
+        const closestIntersect = intersects.reduce((closest, curr) => (curr.distance < closest.distance ? curr : closest), intersects[0]);
+        let current = closestIntersect.object;
+        while (current) {
+            if ((current as any).isCustomMark) return current;
+            current = (current as any).parent;
+        }
+
+        return null;
+    });
 
     on(RaycasterRayIntersectPoints, async (mouseClientX: number, mouseClientY: number): Promise<Vector3[]> => {
         const { width, height, left, top } = fire(GetCanvasSize);
@@ -43,13 +66,20 @@ export function setupRaycaster(events: Events) {
         if (fire(IsPlayerMode)) {
             objectMeshs.push(...(fire(PhysicsGetGroundCollision) as any[]));
         } else {
-            scene.traverse(function (child: Object3D) {
+            scene.children.forEach(child => {
                 if (child instanceof SplatMesh) {
                     objectSplats.push(child);
                 } else {
-                    child['isMesh'] && !child['ignoreIntersect'] && !child['isMark'] && objectMeshs.push(child);
+                    !child['ignoreIntersect'] && !child['isCustomMark'] && objectMeshs.push(child);
                 }
             });
+            // scene.traverse(function (child: Object3D) {
+            //     if (child instanceof SplatMesh) {
+            //         objectSplats.push(child);
+            //     } else {
+            //         child['isMesh'] && !child['ignoreIntersect'] && !child['isMark'] && objectMeshs.push(child);
+            //     }
+            // });
         }
 
         const intersectMeshs = raycaster.intersectObjects(objectMeshs, true); // 常规mesh交点检测

@@ -40,6 +40,7 @@ import {
     PhysicsAddStaticCollisionGlb,
     PhysicsAdjustCameraByCastShape,
     PlaytBgAudio,
+    IsFlyMode,
 } from '../events/EventConstants';
 import { DRACOLoader, GLTFLoader, OrbitControls } from 'three/examples/jsm/Addons.js';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
@@ -62,6 +63,7 @@ export function setupPlayer(events: Events) {
     on(IsPlayerMode1, () => opts.viewMode === 1 || meta.viewMode === 1);
     on(IsPlayerMode3, () => opts.viewMode === 3 || meta.viewMode === 3);
     on(IsPlayerMode, () => fire(IsPlayerMode1) || fire(IsPlayerMode3));
+    on(IsFlyMode, () => opts.viewMode === 2 || meta.viewMode === 2);
 
     !meta.player && fire(IsPlayerMode) && console.warn('missing player data in meta');
     fire(IsPlayerMode) && setupVirtualGround(events);
@@ -325,6 +327,8 @@ export function setupPlayer(events: Events) {
                 player?.visible && (player.visible = false);
             } else if (fire(IsPlayerMode3)) {
                 orbitControls.maxDistance = 20;
+            } else if (fire(IsFlyMode)) {
+                return;
             } else {
                 !orbitControls.enablePan && (orbitControls.enablePan = true);
                 orbitControls.maxDistance = 5000;

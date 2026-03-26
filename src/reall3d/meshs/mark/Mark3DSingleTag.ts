@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Camera, Group, Quaternion, Renderer, Scene, Vector3 } from 'three';
+import { Group, MathUtils, Vector3 } from 'three';
 import { CSS3DObject } from 'three/examples/jsm/Addons.js';
 import { Events } from '../../events/Events';
 import {
@@ -10,19 +10,17 @@ import {
     GetCamera,
     GetControls,
     GetOptions,
-    GetRenderer,
+    IsSplatShowDone,
     MarkFinish,
     OnViewerBeforeUpdate,
-    StopAutoRotate,
     TraverseDisposeAndClear,
     ViewerNeedUpdate,
 } from '../../events/EventConstants';
 import { MarkData } from './data/MarkData';
 import { MarkData3DSingleTag } from './data/MarkData3DSingleTag';
-import { Reall3dMapViewerOptions } from '../../mapviewer/Reall3dMapViewerOptions';
 
 export class Mark3DSingleTag extends Group {
-    public readonly isMark: boolean = true;
+    public readonly isCustomMark: boolean = true;
     private disposed: boolean = false;
     private events: Events;
     private data: MarkData3DSingleTag;
@@ -48,6 +46,12 @@ export class Mark3DSingleTag extends Group {
                 mainTagOpacity: 0.8,
                 title: '标签' + cnt,
                 note: '',
+                rotateX: 180,
+                rotateY: 0,
+                rotateZ: 0,
+                scale: 0.006,
+                bid: '',
+                intersectable: false,
             };
         } else {
             data = {
@@ -62,18 +66,18 @@ export class Mark3DSingleTag extends Group {
                 mainTagOpacity: obj.mainTagOpacity || 0.8,
                 title: obj.title || '标签',
                 note: obj.note || '',
+                rotateX: obj.rotateX || 0,
+                rotateY: obj.rotateY || 0,
+                rotateZ: obj.rotateZ || 0,
+                bid: obj.bid || '',
+                scale: obj.scale || 0.006,
+                intersectable: obj.intersectable || false,
             };
         }
 
         const tagWarp: HTMLDivElement = document.createElement('div');
         tagWarp.innerHTML = `<div class="mark-3dgs-tag3d-warp" >
-                                <div class="tag-icon-3dgs icon1 enable" title="视频欣赏">
-                                  <svg height="20" width="20" class="${data.name}"><use href="#svgicon-shiping" fill="currentColor" /></svg>
-                                </div>
-                               <div class="tag-icon-3dgs icon1 enable" title="语音解说">
-                                  <svg height="20" width="20" class="${data.name}"><use href="#svgicon-jieshuo" fill="currentColor" /></svg>
-                                </div>
-                                <div class="tag-icon-3dgs icon2 enable" title="详细查看">
+                                <div class="tag-icon-3dgs icon2 enable">
                                   <svg height="20" width="20" class="${data.name}"><use href="#svgicon-chakan" fill="currentColor" /></svg>
                                 </div>
                             </div>`;
@@ -83,7 +87,7 @@ export class Mark3DSingleTag extends Group {
         tagWarp.querySelectorAll('.tag-icon-3dgs').forEach(dom => {
             dom.addEventListener('click', e => {
                 if (events.fire(GetOptions).markMode) return;
-                console.info((e.target as HTMLDivElement).title, that.getMarkData());
+                console.info(that.getMarkData());
             });
         });
         tagWarp.oncontextmenu = (e: MouseEvent) => e.preventDefault();
@@ -92,13 +96,26 @@ export class Mark3DSingleTag extends Group {
         const css3dTag = new CSS3DObject(tagWarp);
         css3dTag.position.set(data.point[0], data.point[1], data.point[2]);
         css3dTag.element.style.pointerEvents = 'none';
-        css3dTag.scale.set(0.02, 0.02, 0.02);
-        css3dTag.rotation.x = Math.PI;
+        css3dTag.scale.set(data.scale, data.scale, data.scale);
+
+        data.rotateX && (css3dTag.rotation.x = MathUtils.degToRad(data.rotateX));
+        data.rotateY && (css3dTag.rotation.y = MathUtils.degToRad(data.rotateY));
+        data.rotateZ && (css3dTag.rotation.z = MathUtils.degToRad(data.rotateZ));
 
         that.data = data;
         that.css3dTag = css3dTag;
         that.add(css3dTag);
         events.fire(AddMarkToWeakRef, that);
+
+        events.on(
+            OnViewerBeforeUpdate,
+            () => {
+                if (this.disposed) return;
+                const canSee = css3dTag.position.distanceTo(events.fire(GetCamera).position) < (that.data.maxVisibleDistance || 10);
+                this.visible = canSee && events.fire(IsSplatShowDone);
+            },
+            true,
+        );
     }
 
     /**
@@ -175,6 +192,10 @@ export class Mark3DSingleTag extends Group {
             data.point = [...data.point];
         }
         return data;
+    }
+
+    public isIntersectable(): boolean {
+        return this.data.intersectable;
     }
 
     public dispose() {

@@ -27,8 +27,6 @@ export function setupControlPlane(events: Events) {
     planeMaterial.depthWrite = false;
     planeMaterial.side = DoubleSide;
     const planeMesh = new Mesh(planeGeometry, planeMaterial);
-    // @ts-ignore
-    planeMesh.ignoreIntersect = true;
 
     const arrowDir = new Vector3(0, -1, 0);
     arrowDir.normalize();
@@ -41,6 +39,7 @@ export function setupControlPlane(events: Events) {
     const arrowHelper = new ArrowHelper(arrowDir, arrowOrigin, arrowLength, arrowRadius, arrowColor, headLength, headWidth);
 
     const controlPlane = new Object3D();
+    (controlPlane as any).ignoreIntersect = true;
     controlPlane.add(planeMesh);
     controlPlane.add(arrowHelper);
     controlPlane.renderOrder = 99999;

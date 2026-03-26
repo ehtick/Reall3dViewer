@@ -25,4 +25,17 @@ export interface MarkData3DSingleTag extends MarkData {
     title?: string;
     /** 说明 */
     note?: string;
+
+    /** X轴旋转角度 */
+    rotateX?: number;
+    /** Y轴旋转角度 */
+    rotateY?: number;
+    /** Z轴旋转角度 */
+    rotateZ?: number;
+    /** 缩放 */
+    scale?: number;
+    /** 最大可见距离 */
+    maxVisibleDistance?: number;
+
+    bid?: string;
 }
