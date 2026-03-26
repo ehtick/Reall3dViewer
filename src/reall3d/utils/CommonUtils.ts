@@ -365,6 +365,7 @@ export function setupCommonUtils(events: Events) {
     let varCursor = 'default';
     on(SetCursor, (cursor: 'pointer' | 'default' | 'grab' | 'grabbing' | 'move' | 'crosshair' | 'wait' | 'not-allowed' | 'none' = 'default') => {
         if (varCursor === cursor) return;
+        varCursor = cursor;
         const canvas: HTMLCanvasElement = fire(GetCanvas);
         canvas && (canvas.style.cursor = cursor);
     });
