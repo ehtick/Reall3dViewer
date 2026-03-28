@@ -530,6 +530,8 @@ export const IncreaseCameraFov = i++;
 export const IsSplatShowDone = i++;
 /** 按元数据初始化标记 */
 export const OnInitMarks = i++;
+/** 物理相交检测 */
+export const IntersectsPhysicsObjects = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

@@ -5,6 +5,7 @@ import {
     DoubleSide,
     Euler,
     Group,
+    Intersection,
     Mesh,
     MeshBasicMaterial,
     MeshStandardMaterial,
@@ -27,6 +28,8 @@ import {
     GetOptions,
     GetPlayer,
     GetScene,
+    IntersectsPhysicsObjects,
+    IsPlayerMode,
     OnViewerDispose,
     PhysicsGetEnvCollision,
     PhysicsGetGroundCollision,
@@ -123,29 +126,17 @@ export function setupVirtualGround(events: Events) {
         function onMouseMove(event: MouseEvent) {
             if ((fire(GetOptions) as Reall3dViewerOptions).markMode) return;
 
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-            const camera: PerspectiveCamera = fire(GetCamera);
-            if (!camera) return;
-            raycaster.setFromCamera(mouse, camera);
-
-            const obj3ds: Object3D[] = fire(PhysicsGetGroundCollision);
-            const intersects = raycaster.intersectObjects(obj3ds, true); // 检测地面或静态碰撞体交点
-
-            if (intersects.length > 0) {
-                // 取最近的相交面
-                const closestIntersect = intersects.reduce((closest, curr) => (curr.distance < closest.distance ? curr : closest), intersects[0]);
-                indicator.position.copy(closestIntersect.point);
+            const intersect: Intersection<any> = fire(IntersectsPhysicsObjects, event.clientX, event.clientY);
+            if (intersect) {
+                indicator.position.copy(intersect.point);
 
                 // 调整提示圈使其与相交面平行
-                if (closestIntersect.face) {
-                    normal.copy(closestIntersect.face.normal);
-                    closestIntersect.object.worldToLocal(normal);
-                    closestIntersect.object.localToWorld(normal);
-                    indicator.lookAt(indicator.position.clone().add(normal));
-                    rotationEuler.setFromQuaternion(indicator.quaternion);
-                    indicator.quaternion.setFromEuler(rotationEuler);
+                if (intersect.face) {
+                    normal.copy(intersect.face.normal).transformDirection(intersect.object.matrixWorld).normalize();
+                    const dummy = new Object3D();
+                    dummy.position.copy(indicator.position);
+                    dummy.lookAt(dummy.position.clone().add(normal));
+                    indicator.quaternion.copy(dummy.quaternion);
                 }
 
                 indicator.visible = true;
@@ -156,6 +147,24 @@ export function setupVirtualGround(events: Events) {
                 indicator.visible = false;
             }
         }
+
+        on(IntersectsPhysicsObjects, (clientX: number, clientY: number): Intersection<any> => {
+            mouse.x = (clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+            const camera: PerspectiveCamera = fire(GetCamera);
+            if (!camera) return;
+            raycaster.setFromCamera(mouse, camera);
+
+            const obj3ds: Object3D[] = fire(PhysicsGetGroundCollision);
+            const intersects = raycaster.intersectObjects(obj3ds, true); // 检测地面或静态碰撞体交点
+
+            if (!intersects.length) return null;
+
+            // 取最近的相交面
+            const closestIntersect = intersects.reduce((closest, curr) => (curr.distance < closest.distance ? curr : closest), intersects[0]);
+            return closestIntersect;
+        });
 
         window.addEventListener('mousemove', onMouseMove, false);
         on(OnViewerDispose, () => window.removeEventListener('mousemove', onMouseMove), true);

@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Matrix4, PerspectiveCamera, Vector3, Scene, Quaternion, Group } from 'three';
+import { Matrix4, PerspectiveCamera, Vector3, Scene, Quaternion, Group, Intersection } from 'three';
 import { Events } from './Events';
 import {
     GetCanvas,
@@ -59,6 +59,7 @@ import {
     IsFlyMode,
     RaycasterRayIntersectMarks,
     SetCursor,
+    IntersectsPhysicsObjects,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -81,6 +82,8 @@ class MouseState {
     public isDbClick: boolean = false;
     public x: number = 0;
     public y: number = 0;
+    public downX: number = 0;
+    public downY: number = 0;
     public lastClickX: number = 0;
     public lastClickY: number = 0;
     public lastClickPointTime: number = 0;
@@ -387,6 +390,8 @@ export function setupEventListener(events: Events) {
         mouseState.down = e.button === 2 ? 2 : 1;
         mouseState.move = false;
         mouseState.isDbClick = Date.now() - mouseState.downTime < 300;
+        mouseState.downX = e.clientX;
+        mouseState.downY = e.clientY;
 
         lastActionTome = Date.now();
         mouseState.downTime = Date.now();
@@ -440,6 +445,7 @@ export function setupEventListener(events: Events) {
         fire(IsFlyMode) && !mouseState.down && fire(SetCursor, fire(RaycasterRayIntersectMarks, e.clientX, e.clientY) ? 'pointer' : 'default');
     };
 
+    const diff = 5; // 偏差范围内按单击处理
     const canvasMouseupEventListener = async (e: MouseEvent) => {
         e.preventDefault();
         if (disposed) return;
@@ -578,11 +584,18 @@ export function setupEventListener(events: Events) {
         }
 
         if (fire(IsPlayerMode)) {
-            mouseState.down === 1 && !mouseState.move && fire(SelectPointAndLookAt, e.clientX, e.clientY);
+            if (mouseState.down === 1 && !opts.markMode) {
+                if (Math.abs(e.clientX - mouseState.downX) < diff && Math.abs(e.clientY - mouseState.downY) < diff) {
+                    const intersect: Intersection<any> = fire(IntersectsPhysicsObjects, e.clientX, e.clientY);
+                    await fire(MovePlayerToTarget, intersect?.point);
+                }
+            }
         } else if (fire(IsFlyMode)) {
-            if (mouseState.down === 1 && !mouseState.move) {
-                const mark = fire(RaycasterRayIntersectMarks, e.clientX, e.clientY);
-                mark && globalEv.tryFire('ShowMessage', mark.data?.title);
+            if (mouseState.down === 1 && !opts.markMode) {
+                if (Math.abs(e.clientX - mouseState.downX) < diff && Math.abs(e.clientY - mouseState.downY) < diff) {
+                    const mark = fire(RaycasterRayIntersectMarks, e.clientX, e.clientY);
+                    globalEv.tryFire('OnClickMark', mark);
+                }
             }
         } else {
             mouseState.down === 2 && !mouseState.move && fire(SelectPointAndLookAt, e.clientX, e.clientY); // 右击不移动，调整旋转中心
@@ -602,23 +615,40 @@ export function setupEventListener(events: Events) {
             mouseState.move = false;
             mouseState.x = event.touches[0].clientX;
             mouseState.y = event.touches[0].clientY;
+            mouseState.downX = event.touches[0].clientX;
+            mouseState.downY = event.touches[0].clientY;
         }
+        lastActionTome = Date.now();
     }
     function canvasTouchmoveEventListener(event: TouchEvent) {
         if (event.touches.length === 1) {
             mouseState.move = true;
         }
     }
-    function canvasTouchendEventListener(event: TouchEvent) {
-        if (mouseState.down === 1 && !mouseState.move) {
-            fire(SelectPointAndLookAt, mouseState.x, mouseState.y);
+    async function canvasTouchendEventListener(e: TouchEvent) {
+        if (mouseState.down === 1 && Date.now() - lastActionTome > 300) return;
+
+        const [clientX, clientY] = [e.changedTouches[0].clientX, e.changedTouches[0].clientY];
+
+        if (fire(IsPlayerMode)) {
+            if (mouseState.down === 1 && Math.abs(clientX - mouseState.downX) < diff && Math.abs(clientY - mouseState.downY) < diff) {
+                const intersect: Intersection<any> = fire(IntersectsPhysicsObjects, clientX, clientY);
+                await fire(MovePlayerToTarget, intersect?.point);
+            }
+        } else if (fire(IsFlyMode)) {
+            if (mouseState.down === 1 && Math.abs(clientX - mouseState.downX) < diff && Math.abs(clientY - mouseState.downY) < diff) {
+                const mark = fire(RaycasterRayIntersectMarks, clientX, clientY);
+                globalEv.tryFire('OnClickMark', mark);
+            }
+        } else {
+            mouseState.down === 1 && !mouseState.move && fire(SelectPointAndLookAt, clientX, clientY);
         }
     }
 
     window.addEventListener('keydown', keydownEventListener);
     window.addEventListener('keyup', keyupEventListener);
     window.addEventListener('blur', blurEventListener);
-    window.addEventListener('wheel', wheelEventListener, { passive: false });
+    canvas.addEventListener('wheel', wheelEventListener, { passive: false });
     canvas.addEventListener('contextmenu', canvasContextmenuEventListener);
     canvas.addEventListener('mousedown', canvasMousedownEventListener);
     canvas.addEventListener('mousemove', canvasMousemoveEventListener);
@@ -657,7 +687,7 @@ export function setupEventListener(events: Events) {
             window.removeEventListener('keydown', keydownEventListener);
             window.removeEventListener('keyup', keyupEventListener);
             window.removeEventListener('blur', blurEventListener);
-            window.removeEventListener('wheel', wheelEventListener);
+            canvas.removeEventListener('wheel', wheelEventListener);
             canvas.removeEventListener('contextmenu', canvasContextmenuEventListener);
             canvas.removeEventListener('mousedown', canvasMousedownEventListener);
             canvas.removeEventListener('mousemove', canvasMousemoveEventListener);
