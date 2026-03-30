@@ -53,7 +53,7 @@ import { loadPly } from './loaders/PlyLoader';
 import { loadSplat } from './loaders/SplatLoader';
 import { loadSpx } from './loaders/SpxLoader';
 import { loadSpz } from './loaders/SpzLoader';
-import { computeSplatNodeCameraDistance, extractFrustumPlanes, isInverted, isNeedReload } from '../utils/CommonUtils';
+import { computeCompressionRatio, computeSplatNodeCameraDistance, extractFrustumPlanes, glbKhrGs2Splat, isInverted, isNeedReload } from '../utils/CommonUtils';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import {
     BlankingTimeOfLargeScene,
@@ -69,6 +69,7 @@ import { hashString } from 'three/src/nodes/core/NodeUtils.js';
 import { loadLodSplatFile } from './loaders/LodSplatFileLoader';
 import { MetaData } from './MetaData';
 import { globalEv } from '../events/GlobalEV';
+import { loadFile } from './loaders/FileLoader';
 
 /**
  * 纹理数据管理
@@ -938,13 +939,47 @@ export function setupSplatTextureManager(events: Events) {
         return true;
     }
 
-    function add(opts: ModelOptions, meta: MetaData) {
+    async function add(opts: ModelOptions, meta: MetaData) {
         if (disposed) return;
         const splatMeshOptions: SplatMeshOptions = fire(GetOptions);
         const maxRenderCount: number = isMobile ? splatMeshOptions.maxRenderCountOfMobile : splatMeshOptions.maxRenderCountOfPc;
         const isBigSceneMode: boolean = fire(IsBigSceneMode);
 
         opts.fetchReload = isNeedReload(meta.updateDate || 0); // 7天内更新的重新下载
+
+        const orgUrl = opts.url;
+        if (opts.format === 'glb') {
+            const fileBytes: Uint8Array = await loadFile(opts.url, events);
+            fire(OnFetchStop, 100);
+            const ui32s = new Uint32Array(fileBytes.slice(0, 32).buffer);
+            const jsonLength4 = Math.floor((ui32s[3] + 3) / 4) * 4;
+            const sJson = new TextDecoder().decode(fileBytes.slice(20, 20 + jsonLength4));
+
+            // 扩展标准尚未发布，当前先初步对应
+            if (/KHR_gaussian_splatting_compression_spz_2/.test(sJson)) {
+                const oJson = JSON.parse(sJson);
+                const buffersOffset = 20 + jsonLength4 + 8;
+                const spzBytes = fileBytes
+                    .subarray(buffersOffset, buffersOffset + oJson.buffers[0].byteLength)
+                    .subarray(oJson.bufferViews[0].byteOffset || 0, oJson.bufferViews[0].byteLength);
+                opts.url = URL.createObjectURL(new Blob([spzBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
+                opts.format = 'spz';
+
+                globalEv.on('Information-ver', () => `glb-spz`);
+            } else if (/KHR_gaussian_splatting/.test(sJson)) {
+                const splatBytes = glbKhrGs2Splat(fileBytes);
+                opts.url = URL.createObjectURL(new Blob([splatBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
+                opts.format = 'splat';
+
+                const ratio = '　' + computeCompressionRatio(splatBytes.byteLength / 32, fileBytes.byteLength);
+                const size = '　' + (fileBytes.byteLength / 1024 / 1024).toFixed(1) + 'M';
+                globalEv.on('Information-ver', () => `glb-gs`);
+                globalEv.on('Information-ratio', () => ratio);
+                globalEv.on('Information-size', () => size);
+            } else {
+                console.warn('SplatMesh only loads GLB models with the KHR_gaussian_splatting extension.');
+            }
+        }
 
         splatModel = new SplatModel(opts, meta);
 
@@ -979,6 +1014,10 @@ export function setupSplatTextureManager(events: Events) {
             console.error('Unsupported format:', opts.format);
             fire(OnFetchStop, 0);
             return;
+        }
+        if (opts.format === 'glb') {
+            URL.revokeObjectURL(opts.url);
+            opts.url = orgUrl;
         }
         fire(OnFetchStart);
         fire(Information, { cuts: `` });

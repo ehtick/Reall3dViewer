@@ -193,6 +193,29 @@ export class SplatMesh extends Mesh {
     public addModel(opts: ModelOptions, meta: MetaData = {}) {
         const that = this;
         if (that.disposed) return;
+
+        if (!opts.format) {
+            if (opts.url.endsWith('.spx')) {
+                opts.format = 'spx';
+            } else if (opts.url.endsWith('.splat')) {
+                opts.format = 'splat';
+            } else if (opts.url.endsWith('.ply')) {
+                opts.format = 'ply';
+            } else if (opts.url.endsWith('.spz')) {
+                opts.format = 'spz';
+            } else if (opts.url.endsWith('.zip') || opts.url.endsWith('.sog') || opts.url.endsWith('/meta.json') || opts.url == 'meta.json') {
+                opts.format = 'sog';
+            } else if (opts.url.endsWith('.glb')) {
+                opts.format = 'glb';
+            } else if (opts.url.endsWith('.glb')) {
+                opts.format = 'glb';
+            } else if (opts.url.endsWith('.lod.json') || opts.url.endsWith('lod-meta.json')) {
+            } else {
+                console.error('unsupported format:', opts.url);
+                return;
+            }
+        }
+
         that.meta = meta;
         const atOpts: AudioTextOptions = { autoPlay: meta.audio?.autoPlay, mp3: meta.audio?.mp3, textDurations: meta.audio?.textDurations };
         if (meta.audio?.position) {
