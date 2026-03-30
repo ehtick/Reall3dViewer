@@ -216,6 +216,7 @@ export function setupSplatTextureManager(events: Events) {
             // 已下载完，通知一次进度条
             const downloadCount = Math.min(splatModel.fetchLimit, splatModel.downloadSplatCount);
             downloadCount && !splatModel.notifyFetchStopDone && (splatModel.notifyFetchStopDone = true) && fire(OnFetchStop, downloadCount);
+            setTimeout(() => !textWatermarkData && fire(SetGaussianText, splatModel?.meta?.watermark));
         } else {
             // 没下载完，更新下载进度条
             fire(OnFetching, (100 * splatModel.downloadSize) / splatModel.fileSize);
