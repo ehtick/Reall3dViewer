@@ -210,8 +210,6 @@ export const GetCameraDirection = i++;
 
 /** 焦点标记材质设定透明度 */
 export const FocusMarkerSetOpacity = i++;
-/** 焦点标记更新缩放比例 */
-export const FocusMarkerUpdateScale = i++;
 /** 焦点标记自动消失 */
 export const FocusMarkerAutoDisappear = i++;
 /** 控制平面 */
