@@ -553,6 +553,7 @@ export class Reall3dViewer {
         meta.sortType = meta.sortType || opts.sortType || SortTypes.Default1;
 
         on(GetMeta, () => meta);
+        fire(OnMetaDataLoaded);
         setupPlayer(that.events);
 
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;
