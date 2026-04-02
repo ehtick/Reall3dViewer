@@ -57,6 +57,7 @@ import { SpxHeader } from '../modeldata/ModelData';
 import { SplatTileNode } from '../modeldata/SplatTiles';
 import { globalEv } from '../events/GlobalEV';
 import { CameraControls } from '../controls/CameraControls';
+import { setupCustomUtils } from './CustomUtils';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -370,21 +371,7 @@ export function setupCommonUtils(events: Events) {
         canvas && (canvas.style.cursor = cursor);
     });
 
-    let transformControls: TransformControls;
-    globalEv.on('GetTransformControls', () => {
-        if (transformControls) return transformControls;
-
-        const controls: CameraControls = fire(GetControls);
-        const renderer: Renderer = fire(GetRenderer);
-        const scene: Scene = fire(GetScene);
-        transformControls = new TransformControls(controls.object as Camera, renderer.domElement);
-        scene.add(transformControls.getHelper());
-        transformControls.addEventListener('dragging-changed', function (event) {
-            controls.enabled = !event.value;
-            document.body.style.cursor = event.value ? 'move' : 'default'; // 可选：改变鼠标样式
-        });
-        return transformControls;
-    });
+    setupCustomUtils(events);
 }
 
 export const shaderChunk = ShaderChunk;

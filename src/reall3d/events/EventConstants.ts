@@ -224,6 +224,8 @@ export const IsControlPlaneVisible = i++;
 export const OnViewerBeforeUpdate = i++;
 /** 渲染处理 */
 export const OnViewerUpdate = i++;
+/** 检查是否确实需要渲染 */
+export const CheckViewerUpdateRow = i++;
 /** 渲染后处理 */
 export const OnViewerAfterUpdate = i++;
 /** 设定水印文字 */
@@ -435,7 +437,6 @@ export const MapSplatMeshRotateY = i++;
 export const MapSplatMeshRotateZ = i++;
 /** 按X轴平移 */
 export const MapSplatMeshMoveX = i++;
-
 /** 按Y轴平移 */
 export const MapSplatMeshMoveY = i++;
 /** 按Z轴平移 */
@@ -454,9 +455,9 @@ export const MapSortSplatMeshRenderOrder = i++;
 export const MapSceneTraverseDispose = i++;
 /** 飞向目标 */
 export const MapFlyToTarget = i++;
-
 /** 飞行继续 */
 export const FlyingContinue = i++;
+
 /** 飞行播放 */
 export const FlyingPlay = i++;
 /** 设定飞行时长 */
@@ -491,11 +492,11 @@ export const IsPointInFront = i++;
 export const GetMarkList = i++;
 /** 射线相交标注 */
 export const RaycasterRayIntersectMarks = i++;
-
 /** 渲染器销毁 */
 export const OnViewerDispose = i++;
 /** 更新虚拟地面位置 */
 export const UpdateVirtualGroundPosition = i++;
+
 /** 更新提示目标状态 */
 export const UpdateIndicatorTargetStatus = i++;
 /** 激活物理渲染调试 */

@@ -72,6 +72,7 @@ import {
     SplatUpdateFocal,
     IncreaseCameraFov,
     OnInitMarks,
+    CheckViewerUpdateRow,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -128,6 +129,7 @@ export class Reall3dViewer {
         controls.updateByOptions(opts);
         const camera = controls.object as Camera;
 
+        let renterTime = performance.now();
         const events = new Events();
         opts.viewerEvents = events;
         that.events = events;
@@ -206,24 +208,10 @@ export class Reall3dViewer {
         });
         on(OnViewerBeforeUpdate, () => fire(KeyActionCheckAndExecute), true);
         on(OnViewerBeforeUpdate, () => fire(ViewerCheckNeedUpdate), true);
+        on(CheckViewerUpdateRow, () => that.needUpdate && performance.now() - renterTime >= (isMobile ? 25 : opts.qualityLevel > 5 ? 1 : 18));
+        on(OnViewerUpdate, () => !(that.needUpdate = false) && (renterTime = performance.now()) && fire(IsDebugMode) && fire(CountFpsReal), true);
+        on(OnViewerUpdate, (defaultPipeline = true) => defaultPipeline && renderer.render(scene, camera), true);
 
-        let renterTime = performance.now();
-        on(
-            OnViewerUpdate,
-            () => {
-                try {
-                    const now = performance.now();
-                    if (!that.needUpdate || now - renterTime < (isMobile ? 25 : opts.qualityLevel > 5 ? 1 : 18)) return;
-                    that.needUpdate = false;
-                    renterTime = now;
-                    renderer.render(scene, camera);
-                    fire(IsDebugMode) && fire(CountFpsReal);
-                } catch (e) {
-                    console.warn(e.message);
-                }
-            },
-            true,
-        );
         on(ViewerDispose, () => that.dispose());
         on(PrintInfo, () => console.info(JSON.stringify(fire(GetSplatMesh).meta || {}, null, 2)));
 
@@ -309,7 +297,7 @@ export class Reall3dViewer {
         if (that.disposed) return;
         const fire = (key: number, ...args: any): any => that.events.fire(key, ...args);
         fire(OnViewerBeforeUpdate);
-        fire(OnViewerUpdate);
+        fire(CheckViewerUpdateRow) && fire(OnViewerUpdate);
         fire(OnViewerAfterUpdate);
     }
 

@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { Matrix4, PerspectiveCamera, Vector3, Scene, Quaternion, Group, Intersection } from 'three';
+import { Matrix4, PerspectiveCamera, Vector3, Scene, Quaternion, Intersection } from 'three';
 import { Events } from './Events';
 import {
     GetCanvas,

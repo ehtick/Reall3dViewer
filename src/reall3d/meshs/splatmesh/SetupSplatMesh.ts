@@ -293,8 +293,6 @@ export function setupSplatMesh(events: Events) {
         dataTextureShPalettes.needsUpdate = true;
         material.uniforms[VarShPalettes].value = dataTextureShPalettes;
 
-        material.needsUpdate = true;
-
         let isLastEmpty: boolean = false;
         on(SplatUpdateTexture, async (texture: SplatTexdata) => {
             if (!isBigScene) {
@@ -321,7 +319,6 @@ export function setupSplatMesh(events: Events) {
             notifyWorkerTextureReady(texture);
             fire(OnTextureReadySplatCount, texture.renderSplatCount); // 用于判断小场景是否可以开始光圈过渡
 
-            material.needsUpdate = true;
             fire(NotifyViewerNeedUpdate);
         });
 
@@ -337,7 +334,6 @@ export function setupSplatMesh(events: Events) {
             dataTexture.internalFormat = 'RGBA32UI';
             dataTexture.needsUpdate = true;
             material.uniforms[VarSplatShTexture12].value = dataTexture;
-            material.needsUpdate = true;
             dataTextureSh12?.dispose();
             dataTextureSh12 = dataTexture;
             fire(NotifyViewerNeedUpdate);
@@ -355,7 +351,6 @@ export function setupSplatMesh(events: Events) {
             dataTexture.internalFormat = 'RGBA32UI';
             dataTexture.needsUpdate = true;
             material.uniforms[VarSplatShTexture3].value = dataTexture;
-            material.needsUpdate = true;
             dataTextureSh3?.dispose();
             dataTextureSh3 = dataTexture;
             fire(NotifyViewerNeedUpdate);
@@ -373,7 +368,6 @@ export function setupSplatMesh(events: Events) {
             dataTexture.onUpdate = () => fire(SplatUpdateShPalettesReady);
             dataTexture.needsUpdate = true;
             material.uniforms[VarShPalettes].value = dataTexture;
-            material.needsUpdate = true;
             dataTextureShPalettes?.dispose();
             dataTextureShPalettes = dataTexture;
             fire(NotifyViewerNeedUpdate);
