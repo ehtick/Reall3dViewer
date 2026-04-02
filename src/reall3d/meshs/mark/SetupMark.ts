@@ -43,7 +43,6 @@ import {
     IsSplatShowDone,
     OnInitMarks,
     GetMarkList,
-    IsDefaultPipeline,
 } from './../../events/EventConstants';
 import { MarkMultiLines } from './MarkMultiLines';
 import { CSS2DRenderer, CSS3DRenderer } from 'three/examples/jsm/Addons.js';
@@ -92,7 +91,7 @@ export function setupMark(events: Events) {
     on(GetMarkWarpElement, () => divMarkWarp);
     on(GetCSS3DRenderer, () => css3DRenderer);
     on(GetCSS2DRenderer, () => css2DRenderer);
-    on(OnViewerUpdate, () => fire(IsDefaultPipeline) && [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))), true);
+    on(OnViewerUpdate, () => [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))), true);
     on(OnViewerDispose, () => document.body.removeChild(divMarkWarp), true);
 
     on(GetMarkList, (intersectable = true) => {
