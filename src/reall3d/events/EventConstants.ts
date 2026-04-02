@@ -549,6 +549,9 @@ export const WorkerSort = i++;
 /** 更新Worker相关参数 */
 export const WorkerUpdateParams = i++;
 
+/** 元数据加载 */
+export const OnMetaDataLoaded = i++;
+
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */
 export const GetBgAudio = i++;

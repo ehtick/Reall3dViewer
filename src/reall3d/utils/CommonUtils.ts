@@ -3,9 +3,14 @@
 // ==============================================
 import {
     Audio,
+    BufferAttribute,
+    BufferGeometry,
     Camera,
+    DoubleSide,
     Frustum,
     Matrix4,
+    Mesh,
+    MeshBasicMaterial,
     Object3D,
     PerspectiveCamera,
     Plane,
@@ -979,4 +984,41 @@ function encodeSplatOpacity(f: number): number {
 }
 function encodeSplatRotation(f: number): number {
     return Math.max(0, Math.min(255, Math.floor(f * 128.0 + 128.0)));
+}
+
+// 创建扇形三角面网格
+export function createTriangleMesh(points: number[], options = {}): Mesh {
+    const config = Object.assign(
+        {
+            color: 0xff0000,
+            side: DoubleSide,
+            depthTest: true,
+            depthWrite: true,
+            transparent: false,
+            opacity: 1.0,
+        },
+        options,
+    );
+
+    const geometry = new BufferGeometry();
+
+    geometry.setAttribute('position', new BufferAttribute(new Float32Array(points), 3));
+
+    const vertexCount = Math.floor(points.length / 3);
+    const faceCount = vertexCount - 2;
+
+    const indexArray = new Uint16Array(faceCount * 3);
+    for (let i = 0; i < faceCount; i++) {
+        indexArray[i * 3] = 0;
+        indexArray[i * 3 + 1] = i + 1;
+        indexArray[i * 3 + 2] = i + 2;
+    }
+
+    geometry.setIndex(new BufferAttribute(indexArray, 1));
+    geometry.computeBoundingSphere();
+
+    const material = new MeshBasicMaterial(config);
+    const mesh = new Mesh(geometry, material);
+
+    return mesh;
 }
