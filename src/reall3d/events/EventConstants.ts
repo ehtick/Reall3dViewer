@@ -531,6 +531,8 @@ export const IsSplatShowDone = i++;
 export const OnInitMarks = i++;
 /** 物理相交检测 */
 export const IntersectsPhysicsObjects = i++;
+/** 是否默认渲染管线 */
+export const IsDefaultPipeline = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

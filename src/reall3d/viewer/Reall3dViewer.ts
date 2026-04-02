@@ -73,6 +73,7 @@ import {
     IncreaseCameraFov,
     OnInitMarks,
     CheckViewerUpdateRow,
+    IsDefaultPipeline,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -210,7 +211,7 @@ export class Reall3dViewer {
         on(OnViewerBeforeUpdate, () => fire(ViewerCheckNeedUpdate), true);
         on(CheckViewerUpdateRow, () => that.needUpdate && performance.now() - renterTime >= (isMobile ? 25 : opts.qualityLevel > 5 ? 1 : 18));
         on(OnViewerUpdate, () => !(that.needUpdate = false) && (renterTime = performance.now()) && fire(IsDebugMode) && fire(CountFpsReal), true);
-        on(OnViewerUpdate, (defaultPipeline = true) => defaultPipeline && renderer.render(scene, camera), true);
+        on(OnViewerUpdate, () => fire(IsDefaultPipeline) && renderer.render(scene, camera), true);
 
         on(ViewerDispose, () => that.dispose());
         on(PrintInfo, () => console.info(JSON.stringify(fire(GetSplatMesh).meta || {}, null, 2)));
