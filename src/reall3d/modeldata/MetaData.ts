@@ -33,8 +33,10 @@ export interface MetaData {
     meterScale?: number;
     /** Text watermark */
     watermark?: string;
-    /** Display watermark */
+    /** Display watermark (default false) */
     showWatermark?: boolean;
+    /** Display marks (default true) */
+    showMark?: boolean;
     /** Display bounding box */
     showBoundBox?: boolean;
     /** Camera parameters */

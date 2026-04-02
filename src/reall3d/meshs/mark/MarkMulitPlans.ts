@@ -63,6 +63,7 @@ export class MarkMultiPlans extends Line2 {
             title: '标记面' + cnt,
             note: '',
             intersectable: false,
+            clickable: false,
         };
 
         that.draw(data);
@@ -282,6 +283,7 @@ export class MarkMultiPlans extends Line2 {
             title: inputData.title || '标记面' + (document.querySelectorAll('.mark-wrap-plans.main-warp').length + 1),
             note: inputData.note || '',
             intersectable: inputData.intersectable || false,
+            clickable: inputData.clickable !== false,
         };
 
         const oldGeometry = that.geometry;

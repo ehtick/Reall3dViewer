@@ -26,14 +26,14 @@ export function setupRaycaster(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
 
-    on(RaycasterRayIntersectMarks, (mouseClientX: number, mouseClientY: number) => {
+    on(RaycasterRayIntersectMarks, (mouseClientX: number, mouseClientY: number, objs?: Object3D[]) => {
         const { width, height, left, top } = fire(GetCanvasSize);
         const mouse = new Vector2();
         mouse.x = ((mouseClientX - left) / width) * 2 - 1;
         mouse.y = ((top - mouseClientY) / height) * 2 + 1;
 
         raycaster.setFromCamera(mouse, fire(GetCamera));
-        const intersects = raycaster.intersectObjects(fire(GetMarkList), true); // 常规mesh交点检测
+        const intersects = raycaster.intersectObjects(objs || fire(GetMarkList), true); // 常规mesh交点检测
         if (!intersects.length) return null;
 
         // 取最近的相交物

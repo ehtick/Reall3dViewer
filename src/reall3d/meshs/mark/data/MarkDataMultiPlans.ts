@@ -37,4 +37,6 @@ export interface MarkDataMultiPlans extends MarkData {
     title?: string;
     /** 说明 */
     note?: string;
+
+    clickable?: boolean;
 }

@@ -44,6 +44,7 @@ import {
     IsSmallSceneShowDone,
     LodDownloadManagerAddLodMeta,
     SplatMeshSwitchDisplayMode,
+    GetMeta,
 } from '../../events/EventConstants';
 import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
@@ -86,6 +87,7 @@ export class SplatMesh extends Mesh {
         const opts: SplatMeshOptions = initSplatMeshOptions(options); // 默认参数校验设定
         const camera = (opts.camera || opts.controls?.object) as PerspectiveCamera;
         on(GetOptions, () => opts);
+        on(GetMeta, () => that.meta);
         on(GetCanvas, () => opts.renderer.domElement);
         on(GetCamera, () => camera);
         on(GetCameraFov, () => camera.fov);

@@ -60,6 +60,7 @@ import {
     RaycasterRayIntersectMarks,
     SetCursor,
     IntersectsPhysicsObjects,
+    OnCanvasMouseMove,
 } from './EventConstants';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
@@ -442,7 +443,7 @@ export function setupEventListener(events: Events) {
             // fire(ViewerNeedUpdate);
         }
 
-        fire(IsFlyMode) && !mouseState.down && fire(SetCursor, fire(RaycasterRayIntersectMarks, e.clientX, e.clientY) ? 'pointer' : 'default');
+        !mouseState.down && events.tryFire(OnCanvasMouseMove, e.clientX, e.clientY);
     };
 
     const diff = 5; // 偏差范围内按单击处理
