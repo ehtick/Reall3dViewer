@@ -647,6 +647,7 @@ export class Reall3dViewer {
      * 根据需要暴露的接口
      */
     private initGsApi() {
+        const that = this;
         const fire = (key: number, ...args: any): any => this.events.fire(key, ...args);
 
         const switchAutoRotate = () => {
@@ -705,7 +706,7 @@ export class Reall3dViewer {
         };
         const showWaterMark = (visible: boolean = true) => {
             setTimeout(() => window.focus());
-            fire(SplatUpdateShowWaterMark, !!visible);
+            that.splatMesh.fire(SplatUpdateShowWaterMark, !!visible);
         };
         const setWaterMark = (text: string, save: boolean = true) => {
             fire(OnSetWaterMark, text);
