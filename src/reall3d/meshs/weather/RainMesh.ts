@@ -21,115 +21,12 @@ import {
     WebGLRenderer,
 } from 'three';
 
-export interface RainMeshOptions {
-    /** 最大雨滴数量（用于预分配） */
-    maxCount?: number;
-
-    /** 初始强度，0 ~ 1 */
-    intensity?: number;
-
-    /**
-     * 下雨区域尺寸（局部 right / up / forward 空间）
-     * x = 横向宽度
-     * y = 垂直高度（沿 up）
-     * z = 深度
-     */
-    area?: Vector3;
-
-    /** 雨滴最小长度 */
-    minLength?: number;
-
-    /** 雨滴最大长度 */
-    maxLength?: number;
-
-    /** 雨滴最小速度（单位：世界坐标/秒） */
-    minSpeed?: number;
-
-    /** 雨滴最大速度（单位：世界坐标/秒） */
-    maxSpeed?: number;
-
-    /**
-     * 风（水平局部空间）
-     * x = 沿 right 方向
-     * z = 沿 forward 方向
-     * y 会被忽略（雨不沿 up 漂）
-     */
-    wind?: Vector3;
-
-    /**
-     * 世界“向上”方向
-     * 雨的下落方向会自动取 -up
-     * 建议传入 camera.up 或你的全局 up
-     */
-    up?: Vector3;
-
-    /** 雨滴颜色 */
-    color?: ColorRepresentation;
-
-    /** 雨滴透明度 */
-    opacity?: number;
-
-    /** 是否透明 */
-    transparent?: boolean;
-
-    /** 是否写入深度（雨通常建议 false） */
-    depthWrite?: boolean;
-
-    /** 是否受雾影响 */
-    fog?: boolean;
-
-    /** 是否跟随相机 */
-    followCamera?: boolean;
-
-    /** 跟随相机时是否同步 up 轴方向上的位置 */
-    followCameraAlongUp?: boolean;
-
-    /** 单帧最大 delta，避免切后台回来动画跳变 */
-    maxDelta?: number;
-
-    /** 是否初始启用 */
-    enabled?: boolean;
-}
-
-interface IRainEffect {
-    readonly object: Object3D;
-    update(delta: number): void;
-    setArea(area: Vector3): void;
-    getArea(target?: Vector3): Vector3;
-    setWind(wind: Vector3): void;
-    getWind(target?: Vector3): Vector3;
-    setUp(up: Vector3): void;
-    getUp(target?: Vector3): Vector3;
-    setColor(color: ColorRepresentation): void;
-    setOpacity(opacity: number): void;
-    setIntensity(intensity: number): void;
-    getIntensity(): number;
-    reset(): void;
-    dispose(): void;
-}
-
-type DropData = {
-    /** 局部 right 坐标 */
-    u: number;
-    /** 局部 up 坐标 */
-    v: number;
-    /** 局部 forward 坐标 */
-    w: number;
-    length: number;
-    speed: number;
-};
-
-const _TMP_VEC3_A = new Vector3();
-const _TMP_VEC3_B = new Vector3();
-const _TMP_VEC3_C = new Vector3();
-const _TMP_VEC3_D = new Vector3();
-const _TMP_VEC3_E = new Vector3();
-
 /**
  * RainMesh
  */
 export class RainMesh extends Mesh {
     public readonly isRainMesh = true;
+    public readonly ignoreIntersect = true;
 
     private _effect: IRainEffect;
     private _clock = new Clock();
@@ -316,6 +213,110 @@ export class RainMesh extends Mesh {
         (this.material as Material).dispose();
     }
 }
+
+export interface RainMeshOptions {
+    /** 最大雨滴数量（用于预分配） */
+    maxCount?: number;
+
+    /** 初始强度，0 ~ 1 */
+    intensity?: number;
+
+    /**
+     * 下雨区域尺寸（局部 right / up / forward 空间）
+     * x = 横向宽度
+     * y = 垂直高度（沿 up）
+     * z = 深度
+     */
+    area?: Vector3;
+
+    /** 雨滴最小长度 */
+    minLength?: number;
+
+    /** 雨滴最大长度 */
+    maxLength?: number;
+
+    /** 雨滴最小速度（单位：世界坐标/秒） */
+    minSpeed?: number;
+
+    /** 雨滴最大速度（单位：世界坐标/秒） */
+    maxSpeed?: number;
+
+    /**
+     * 风（水平局部空间）
+     * x = 沿 right 方向
+     * z = 沿 forward 方向
+     * y 会被忽略（雨不沿 up 漂）
+     */
+    wind?: Vector3;
+
+    /**
+     * 世界“向上”方向
+     * 雨的下落方向会自动取 -up
+     * 建议传入 camera.up 或你的全局 up
+     */
+    up?: Vector3;
+
+    /** 雨滴颜色 */
+    color?: ColorRepresentation;
+
+    /** 雨滴透明度 */
+    opacity?: number;
+
+    /** 是否透明 */
+    transparent?: boolean;
+
+    /** 是否写入深度（雨通常建议 false） */
+    depthWrite?: boolean;
+
+    /** 是否受雾影响 */
+    fog?: boolean;
+
+    /** 是否跟随相机 */
+    followCamera?: boolean;
+
+    /** 跟随相机时是否同步 up 轴方向上的位置 */
+    followCameraAlongUp?: boolean;
+
+    /** 单帧最大 delta，避免切后台回来动画跳变 */
+    maxDelta?: number;
+
+    /** 是否初始启用 */
+    enabled?: boolean;
+}
+
+interface IRainEffect {
+    readonly object: Object3D;
+    update(delta: number): void;
+    setArea(area: Vector3): void;
+    getArea(target?: Vector3): Vector3;
+    setWind(wind: Vector3): void;
+    getWind(target?: Vector3): Vector3;
+    setUp(up: Vector3): void;
+    getUp(target?: Vector3): Vector3;
+    setColor(color: ColorRepresentation): void;
+    setOpacity(opacity: number): void;
+    setIntensity(intensity: number): void;
+    getIntensity(): number;
+    reset(): void;
+    dispose(): void;
+}
+
+type DropData = {
+    /** 局部 right 坐标 */
+    u: number;
+    /** 局部 up 坐标 */
+    v: number;
+    /** 局部 forward 坐标 */
+    w: number;
+    length: number;
+    speed: number;
+};
+
+const _TMP_VEC3_A = new Vector3();
+const _TMP_VEC3_B = new Vector3();
+const _TMP_VEC3_C = new Vector3();
+const _TMP_VEC3_D = new Vector3();
+const _TMP_VEC3_E = new Vector3();
 
 /**
  * LineSegments 版雨效实现
