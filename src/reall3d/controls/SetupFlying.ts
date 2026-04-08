@@ -287,6 +287,7 @@ export function setupFlying(events: Events) {
             size: 100, // 摇杆的大小
             lockY: !fire(IsPlayerMode),
         };
+        options.zone.addEventListener('contextmenu', (e: MouseEvent) => e.preventDefault());
 
         let angleRadian = 0;
         let stopMove = true;
