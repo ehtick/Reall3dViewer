@@ -26,6 +26,9 @@ import {
     WebGLRenderer,
 } from 'three';
 
+/**
+ * SnowMesh
+ */
 export class SnowMesh extends Mesh {
     public readonly isSnowMesh = true;
     public readonly ignoreIntersect = true;
