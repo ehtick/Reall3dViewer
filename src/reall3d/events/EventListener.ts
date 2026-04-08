@@ -316,9 +316,10 @@ export function setupEventListener(events: Events) {
     };
 
     const keyupEventListener = (e: KeyboardEvent) => {
+        if (disposed) return;
+        fire(ViewerNeedUpdate);
         if (e.target['type'] === 'text') return;
 
-        if (disposed) return;
         lastActionTome = Date.now();
         if (fire(IsPlayerMode)) {
             keySet.delete(e.code);
@@ -401,6 +402,7 @@ export function setupEventListener(events: Events) {
     const canvasMousemoveEventListener = async (e: MouseEvent) => {
         e.preventDefault();
         if (disposed) return;
+        fire(ViewerNeedUpdate);
 
         if (mouseState.down) {
             mouseState.move = true;

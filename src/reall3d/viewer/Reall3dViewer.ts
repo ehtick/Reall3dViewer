@@ -148,8 +148,12 @@ export class Reall3dViewer {
         on(IsBigSceneMode, () => opts.bigSceneMode);
         on(ViewerSetPointcloudMode, (pointMode: boolean) => (opts.pointcloudMode = pointMode));
 
+        let lastTimeNeedUpdate = 0;
         const aryUpdaters: any[] = [];
         on(ViewerNeedUpdate, () => {
+            if (performance.now() - lastTimeNeedUpdate < 1000) return;
+            lastTimeNeedUpdate = performance.now();
+
             that.needUpdate = true;
             // 稍微多点更新
             while (aryUpdaters.length) aryUpdaters.pop().stop = true; // 已有的都停掉
