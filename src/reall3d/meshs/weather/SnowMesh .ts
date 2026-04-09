@@ -96,7 +96,7 @@ export class SnowMesh extends Mesh {
 
         this.name = 'SnowMesh';
         this.frustumCulled = false;
-        this.renderOrder = -9999;
+        this.renderOrder = 100;
 
         this._clock.start();
     }
@@ -403,6 +403,7 @@ function createSnowflakeTexture(): Texture {
 
     const tex = new CanvasTexture(canvas);
     tex.needsUpdate = true;
+    tex.flipY = false;
     return tex;
 }
 
@@ -582,7 +583,7 @@ class SnowLayer {
 
         this.points = new Points(this._geometry, this._material);
         this.points.frustumCulled = false;
-        this.points.renderOrder = 10;
+        this.points.renderOrder = 100;
 
         this.initFlakes();
         this.updateGeometry(0);
@@ -747,6 +748,7 @@ class SnowLayer {
     }
 
     public setWindDirection(wind: Vector3) {
+        if (wind.lengthSq() < 1e-8) return;
         this._windDirection.copy(wind);
     }
 

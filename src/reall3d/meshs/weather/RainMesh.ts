@@ -92,7 +92,7 @@ export class RainMesh extends Mesh {
 
         this.name = 'RainMesh';
         this.frustumCulled = false;
-        this.renderOrder = -9999;
+        this.renderOrder = 100;
 
         this._clock.start();
     }
@@ -405,7 +405,7 @@ class RainLineEffect implements IRainEffect {
 
         this.object = new LineSegments(this._geometry, this._material);
         this.object.frustumCulled = false;
-        this.object.renderOrder = 10;
+        this.object.renderOrder = 100;
 
         this.initDrops();
         this.updateGeometry();
