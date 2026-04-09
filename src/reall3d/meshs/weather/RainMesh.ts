@@ -21,6 +21,12 @@ import {
     WebGLRenderer,
 } from 'three';
 
+const _TMP_VEC3_A = new Vector3();
+const _TMP_VEC3_B = new Vector3();
+const _TMP_VEC3_C = new Vector3();
+const _TMP_VEC3_D = new Vector3();
+const _TMP_VEC3_E = new Vector3();
+
 /**
  * RainMesh
  */
@@ -311,12 +317,6 @@ type DropData = {
     length: number;
     speed: number;
 };
-
-const _TMP_VEC3_A = new Vector3();
-const _TMP_VEC3_B = new Vector3();
-const _TMP_VEC3_C = new Vector3();
-const _TMP_VEC3_D = new Vector3();
-const _TMP_VEC3_E = new Vector3();
 
 /**
  * LineSegments 版雨效实现

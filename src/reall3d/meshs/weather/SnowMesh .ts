@@ -26,6 +26,14 @@ import {
     WebGLRenderer,
 } from 'three';
 
+const _TMP_A = new Vector3();
+const _TMP_B = new Vector3();
+const _TMP_C = new Vector3();
+const _TMP_D = new Vector3();
+const _TMP_E = new Vector3();
+const _TMP_F = new Vector3();
+const _TMP_G = new Vector3();
+
 /**
  * SnowMesh
  */
@@ -337,14 +345,6 @@ interface ISnowEffect {
     reset(): void;
     dispose(): void;
 }
-
-const _TMP_A = new Vector3();
-const _TMP_B = new Vector3();
-const _TMP_C = new Vector3();
-const _TMP_D = new Vector3();
-const _TMP_E = new Vector3();
-const _TMP_F = new Vector3();
-const _TMP_G = new Vector3();
 
 function buildBasisFromUp(up: Vector3, outRight: Vector3, outUp: Vector3, outForward: Vector3) {
     outUp.copy(up).normalize();
