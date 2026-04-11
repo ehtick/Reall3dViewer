@@ -13,19 +13,14 @@ export class CircularAudioMask {
     private sourceNode: AudioNode | null = null;
     private dataArray: Uint8Array | null = null;
     private readonly uniqueId = `mask-${Date.now()}`;
-    private disposed: boolean = false;
-
     private animationId: number = 0;
     private isPlaying: boolean = false;
-    private isReady: boolean = false;
-    private currentSource: AudioSource | null = null;
-
     private rotation = 0;
-
-    // 性能优化：预计算角度 sin/cos 表，避免每帧重复三角函数
     private angleCache: { cos: number; sin: number }[] = [];
-    // 预计算权重表（原有）
     private weightTable: number[][] = [];
+    private bandEnergies: number[] = [];
+    private frame = 0;
+    private disposed: boolean = false;
 
     private defaultBands: FrequencyBand[] = [
         { name: 's1', range: [20, 50], weight: 2.0 },
@@ -45,6 +40,7 @@ export class CircularAudioMask {
         this.options = {
             container: options.container || document.body,
             audioSrc: options.audioSrc || undefined,
+            volume: options.volume || 0.5,
             width: options.width || '100%',
             height: options.height || '100%',
             fullScreen: options.fullScreen ?? true,
@@ -55,17 +51,18 @@ export class CircularAudioMask {
             maskOpacity: options.maskOpacity ?? 0.5,
             glowColor: options.glowColor || '#00ffff',
             glowBlur: options.glowBlur || 15,
+            glowWidth: options.glowWidth || 3,
             showGlow: options.showGlow ?? true,
             fftSize: options.fftSize || 2048,
             smoothingTimeConstant: options.smoothingTimeConstant ?? 0.8,
-            minDecibels: options.minDecibels ?? -80,
+            minDecibels: options.minDecibels ?? -70,
             maxDecibels: options.maxDecibels ?? -20,
             frequencyBands: options.frequencyBands || this.defaultBands,
             onReady: options.onReady || (() => {}),
             onError: options.onError || console.error,
             onBeat: options.onBeat || (() => {}),
             zIndex: options.zIndex || 9999,
-            rotateSpeed: options.rotateSpeed || 0.002,
+            rotateSpeed: options.rotateSpeed || 0.0015,
         };
 
         this.rotation = 0;
@@ -107,7 +104,7 @@ export class CircularAudioMask {
         this.options.maxExpansion = maxExpansion;
     }
 
-    // 预计算每个 segment 的角度 cos/sin，彻底消除每帧三角函数开销
+    // 预计算每个 segment 的角度 cos/sin，消除每帧三角函数开销
     private buildAngleCache(): void {
         const { segments } = this.options;
         const cache: { cos: number; sin: number }[] = [];
@@ -122,7 +119,7 @@ export class CircularAudioMask {
         this.angleCache = cache;
     }
 
-    // 预计算高斯权重表（逻辑不变）
+    // 预计算高斯权重表
     private buildWeightTable(): void {
         const { segments, frequencyBands } = this.options;
         const table: number[][] = [];
@@ -143,8 +140,7 @@ export class CircularAudioMask {
         this.weightTable = table;
     }
 
-    private bandEnergies: number[] = [];
-    // 每帧计算频带能量（减少临时对象，减少属性访问）
+    // 每帧计算频带能量
     private computeBandEnergies(): number[] {
         if (!this.analyser || !this.dataArray) {
             return new Array(this.options.frequencyBands.length).fill(0);
@@ -207,6 +203,7 @@ export class CircularAudioMask {
         const audio = document.createElement('audio');
         audio.crossOrigin = 'anonymous';
         audio.style.display = 'none';
+        audio.volume = Math.max(0, Math.min(1, this.options.volume)); // ✅ 初始化时应用音量
         this.audioElement = audio;
         this.container?.appendChild(audio);
         return audio;
@@ -250,7 +247,6 @@ export class CircularAudioMask {
                 break;
         }
 
-        this.isReady = true;
         this.options.onReady();
     }
 
@@ -304,8 +300,6 @@ export class CircularAudioMask {
         }
     }
 
-    private frame = 0;
-    // 动画函数：减少属性查找，精简逻辑
     private animate = () => {
         if (this.disposed || !this.isPlaying || !this.ctx) return;
 
@@ -317,7 +311,6 @@ export class CircularAudioMask {
         this.animationId = requestAnimationFrame(this.animate);
     };
 
-    // 频带能量计算：减少重复计算，减少判断
     private getFrequencyEnergy(startHz: number, endHz: number): number {
         if (!this.analyser || !this.dataArray || !this.audioContext) return 0;
 
@@ -341,7 +334,6 @@ export class CircularAudioMask {
         return count ? sum / count / 255 : 0;
     }
 
-    // 静态绘制不变
     private drawStatic() {
         if (!this.ctx) return;
         const { width, height } = this;
@@ -371,11 +363,10 @@ export class CircularAudioMask {
 
     private rList: number[];
 
-    // 核心渲染优化：只遍历一次 segments，复用坐标，减少路径创建
     private drawMask() {
         if (this.disposed || !this.ctx) return;
 
-        const { baseRadius, maxExpansion, maskColor, maskOpacity, glowColor, glowBlur, showGlow } = this.options;
+        const { baseRadius, maxExpansion, maskColor, maskOpacity, glowColor, glowBlur, glowWidth, showGlow } = this.options;
         const { width, height } = this;
         const cx = width / 2;
         const cy = height / 2;
@@ -436,7 +427,7 @@ export class CircularAudioMask {
             ctx.shadowBlur = glowBlur;
             ctx.shadowColor = glowColor;
             ctx.strokeStyle = glowColor;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = glowWidth;
 
             ctx.beginPath();
             for (let i = 0; i < segments; i++) {
@@ -534,8 +525,6 @@ export class CircularAudioMask {
         this.canvas = null;
         this.ctx = null;
         this.dataArray = null;
-        this.currentSource = null;
-        this.isReady = false;
         this.isPlaying = false;
     }
 }
@@ -565,6 +554,8 @@ interface FrequencyBand {
 interface CircularAudioMaskOptions {
     /** 音频源：支持URL、文件、Blob、媒体流 */
     audioSrc?: string | File | Blob | MediaStream;
+    /** 音量 */
+    volume?: number;
     /** 渲染容器：支持DOM元素或CSS选择器 */
     container?: HTMLElement | string;
     /** 画布宽度，支持数值或CSS尺寸 */
@@ -587,6 +578,8 @@ interface CircularAudioMaskOptions {
     glowColor?: string;
     /** 发光效果模糊半径 */
     glowBlur?: number;
+    /** 发光边缘宽度 */
+    glowWidth?: number;
     /** 是否显示发光轮廓效果 */
     showGlow?: boolean;
     /** FFT大小，必须是2的幂，决定音频分析精度 */
