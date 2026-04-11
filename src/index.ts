@@ -100,7 +100,7 @@ function fnClick(className: string) {
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/djj.spx`), 50); // Let it GC
-        mask = new CircularAudioMask({ audioSrc: 'https://reall3d.com/demo-models/djj.mp3' }); // letterfromrosie.mp3
+        mask = new CircularAudioMask({ audioSrc: 'https://reall3d.com/demo-models/letterfromrosie.mp3' }); // letterfromrosie.mp3 djj.mp3
     } else if (className == 'lod') {
         viewer?.dispose();
         mapViewer?.dispose();
