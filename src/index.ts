@@ -8,9 +8,10 @@ import { Reall3dViewer } from './reall3d/viewer/Reall3dViewer';
 import { Reall3dViewerOptions } from './reall3d/viewer/Reall3dViewerOptions';
 import { Reall3dMapViewer } from './reall3d/mapviewer/Reall3dMapViewer';
 import { globalEv } from './reall3d/events/GlobalEV';
-import { PlaytBgAudio, StopBgAudio } from './reall3d/events/EventConstants';
+import { OnViewerDispose, PlaytBgAudio, StopBgAudio } from './reall3d/events/EventConstants';
 import { TransitionEffects } from './reall3d/meshs/splatmesh/SplatMeshOptions';
 import { isMobile } from './reall3d/utils/consts/GlobalConstants';
+import CircularAudioMask from './reall3d/media/CircularAudioMask';
 
 const params: URLSearchParams = new URLSearchParams(location.search);
 let url = params.get('url');
@@ -35,7 +36,9 @@ if (url) {
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-fpv.scene.json`);
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-tpv.scene.json`);
-    viewer.addScene(`https://reall3d.com/demo-models/lod-metas/hgd/hgd-lod-meta-tpv.scene.json`);
+    // viewer.addScene(`https://reall3d.com/demo-models/lod-metas/hgd/hgd-lod-meta-tpv.scene.json`);
+
+    viewer.addScene(`https://reall3d.com/demo-models/lod-v1/kcczt/kcczt.scene.json`);
 
     initDevMode();
 }
@@ -65,6 +68,7 @@ function initDevMode(infoOnly = false) {
     }
 }
 
+let mask: CircularAudioMask = null;
 function fnClick(className: string) {
     if (className == 'switch-debug') {
         let txt = document.querySelector('#gsviewer .debug').classList.toggle('hidden') ? '＋' : '－';
@@ -75,6 +79,7 @@ function fnClick(className: string) {
     } else if (className == 'demo1') {
         viewer?.dispose();
         mapViewer?.dispose();
+        mask?.dispose();
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/yz.spx`), 50); // Let it GC
@@ -82,6 +87,7 @@ function fnClick(className: string) {
     } else if (className == 'demo2') {
         viewer?.dispose();
         mapViewer?.dispose();
+        mask?.dispose();
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/jtstjg.spx`), 50); // Let it GC
@@ -89,28 +95,24 @@ function fnClick(className: string) {
     } else if (className == 'demo3') {
         viewer?.dispose();
         mapViewer?.dispose();
+        mask?.dispose();
+        mask = null;
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/djj.spx`), 50); // Let it GC
-        globalEv.fire(PlaytBgAudio);
-    } else if (className == 'demo4') {
-        viewer?.dispose();
-        mapViewer?.dispose();
-        viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
-        viewer.reset({ debugMode: true });
-        setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/bzg.spx`), 50); // Let it GC
-        globalEv.fire(StopBgAudio);
+        mask = new CircularAudioMask({ audioSrc: 'https://reall3d.com/demo-models/djj.mp3' }); // letterfromrosie.mp3
     } else if (className == 'lod') {
         viewer?.dispose();
         mapViewer?.dispose();
+        mask?.dispose();
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true });
         // setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`), 50); // Let it GC
         setTimeout(() => viewer.addScene(`https://reall3d.com/demo-models/lod-metas/hgd/hgd-lod-meta.scene.json`), 50); // Let it GC
-        globalEv.fire(StopBgAudio);
     } else if (className == 'lff-house') {
         viewer?.dispose();
         mapViewer?.dispose();
+        mask?.dispose();
         viewer = viewer || new Reall3dViewer({ debugMode: true, maxRenderCountOfPc, shDegree });
         viewer.reset({ debugMode: true, transitionEffect: TransitionEffects.ScreenCenterCircle });
         setTimeout(() => viewer.addModel(`https://reall3d.com/demo-models/tijerin-hobbit-2.5m.spx`), 50); // Let it GC

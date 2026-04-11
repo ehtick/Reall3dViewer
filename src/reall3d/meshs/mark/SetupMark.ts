@@ -92,7 +92,7 @@ export function setupMark(events: Events) {
     on(GetCSS3DRenderer, () => css3DRenderer);
     on(GetCSS2DRenderer, () => css2DRenderer);
     on(OnViewerUpdate, () => [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))), true);
-    on(OnViewerDispose, () => document.body.removeChild(divMarkWarp), true);
+    on(OnViewerDispose, () => divMarkWarp.parentNode && document.body.removeChild(divMarkWarp), true);
 
     on(GetMarkList, (intersectable = true) => {
         const ary = [];
