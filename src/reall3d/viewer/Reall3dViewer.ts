@@ -76,6 +76,7 @@ import {
     IsDefaultPipeline,
     OnMetaDataLoaded,
     RenderCSS2D3D,
+    RenderMinimap,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -99,6 +100,7 @@ import { MetaData } from '../modeldata/MetaData';
 import { globalEv } from '../events/GlobalEV';
 import { setupPlayer } from '../scene/SetupPlayer';
 import { loadFile } from '../modeldata/loaders/FileLoader';
+import { MinimapOptions } from '../scene/SetupMinimap';
 
 /**
  * Built-in Gaussian Splatting model viewer
@@ -206,6 +208,9 @@ export class Reall3dViewer {
             splatMesh.fire(SplatUpdateFocal);
         });
 
+        let minimapOpts: MinimapOptions;
+        on(OnMetaDataLoaded, () => (minimapOpts = (fire(GetMeta) as MetaData).minimap));
+
         scene.add(new AmbientLight('#ffffff', 2));
         renderer.setAnimationLoop(that.update.bind(that));
 
@@ -216,8 +221,19 @@ export class Reall3dViewer {
         on(OnViewerBeforeUpdate, () => fire(KeyActionCheckAndExecute), true);
         on(OnViewerBeforeUpdate, () => fire(ViewerCheckNeedUpdate), true);
         on(CheckViewerUpdateRow, () => that.needUpdate && performance.now() - renterTime >= (isMobile ? 25 : opts.qualityLevel > 5 ? 1 : 18));
-        on(OnViewerUpdate, () => !(that.needUpdate = false) && (renterTime = performance.now()) && fire(IsDebugMode) && fire(CountFpsReal), true);
-        on(OnViewerUpdate, () => fire(IsDefaultPipeline) && !fire(RenderCSS2D3D) && renderer.render(scene, camera), true);
+
+        on(
+            OnViewerUpdate,
+            () => {
+                !(that.needUpdate = false) && (renterTime = performance.now()) && fire(IsDebugMode) && fire(CountFpsReal);
+                if (!fire(IsDefaultPipeline)) return;
+
+                renderer.render(scene, camera);
+                fire(RenderCSS2D3D);
+                minimapOpts && fire(RenderMinimap, minimapOpts);
+            },
+            true,
+        );
 
         on(ViewerDispose, () => that.dispose());
         on(PrintInfo, () => console.info(JSON.stringify(fire(GetSplatMesh).meta || {}, null, 2)));
@@ -457,6 +473,7 @@ export class Reall3dViewer {
         meta.player?.url && (meta.player.url = getUrl(meta.player.url, getUrl(sceneUrl, location.href)));
         meta.player?.trigerRunMp3 && (meta.player.trigerRunMp3 = getUrl(meta.player.trigerRunMp3, getUrl(sceneUrl, location.href)));
         meta.collisionUrl && (meta.collisionUrl = getUrl(meta.collisionUrl, getUrl(sceneUrl, location.href)));
+        meta.minimap && (meta.minimap.url = getUrl(meta.minimap.url, getUrl(sceneUrl, location.href)));
         on(GetMeta, () => meta);
         setupPlayer(that.events);
 
@@ -556,6 +573,7 @@ export class Reall3dViewer {
         // 优先顺序： meta -> opts -> default
         meta.qualityLevel = meta.qualityLevel || opts.qualityLevel || QualityLevels.Default5;
         meta.sortType = meta.sortType || opts.sortType || SortTypes.Default1;
+        meta.minimap && (meta.minimap.url = getUrl(meta.minimap.url, getUrl(metaUrl, location.href)));
 
         on(GetMeta, () => meta);
         fire(OnMetaDataLoaded);

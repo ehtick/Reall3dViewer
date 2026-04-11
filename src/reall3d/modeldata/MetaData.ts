@@ -2,6 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { CameraInfo } from '../controls/SetupCameraControls';
+import { MinimapOptions } from '../scene/SetupMinimap';
 
 /**
  * Metadata
@@ -132,6 +133,9 @@ export interface MetaData {
     addVirtualGround?: boolean;
     /** default to true */
     autuUpdateVirtualGroundPosition?: boolean;
+
+    // 小地图
+    minimap?: MinimapOptions;
 }
 
 /**
