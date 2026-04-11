@@ -18,7 +18,6 @@ import {
     MetaMarkRemoveData,
     MetaMarkSaveData,
     MarkUpdateVisible,
-    OnViewerUpdate,
     HttpPostMetaData,
     ViewerNeedUpdate,
     DeleteMarkWeakRef,
@@ -43,6 +42,7 @@ import {
     IsSplatShowDone,
     OnInitMarks,
     GetMarkList,
+    RenderCSS2D3D,
 } from './../../events/EventConstants';
 import { MarkMultiLines } from './MarkMultiLines';
 import { CSS2DRenderer, CSS3DRenderer } from 'three/examples/jsm/Addons.js';
@@ -91,7 +91,7 @@ export function setupMark(events: Events) {
     on(GetMarkWarpElement, () => divMarkWarp);
     on(GetCSS3DRenderer, () => css3DRenderer);
     on(GetCSS2DRenderer, () => css2DRenderer);
-    on(OnViewerUpdate, () => [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))), true);
+    on(RenderCSS2D3D, () => [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))));
     on(OnViewerDispose, () => divMarkWarp.parentNode && document.body.removeChild(divMarkWarp), true);
 
     on(GetMarkList, (intersectable = true) => {

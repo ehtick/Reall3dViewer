@@ -553,6 +553,8 @@ export const WorkerUpdateParams = i++;
 export const OnMetaDataLoaded = i++;
 /** 渲染小地图 */
 export const RenderMinimap = i++;
+/** 渲染CSS2D3D对象 */
+export const RenderCSS2D3D = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */
