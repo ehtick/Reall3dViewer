@@ -1,10 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-
-/**
- * 圆形音频遮罩
- */
+// 圆形音频遮罩
 export class CircularAudioMask {
     private options: Required<CircularAudioMaskOptions>;
     private container: HTMLElement | null = null;
@@ -51,8 +48,8 @@ export class CircularAudioMask {
             width: options.width || '100%',
             height: options.height || '100%',
             fullScreen: options.fullScreen ?? true,
-            baseRadius: options.baseRadius || 360,
-            maxExpansion: options.maxExpansion || 60,
+            baseRadius: options.baseRadius, // || 360,
+            maxExpansion: options.maxExpansion, // || 60,
             segments: options.segments || 360,
             maskColor: options.maskColor || '#000000',
             maskOpacity: options.maskOpacity ?? 0.5,
@@ -73,12 +70,41 @@ export class CircularAudioMask {
 
         this.rotation = 0;
         this.initDOM();
+        !this.options.baseRadius && this.applyAdaptiveRadius();
         this.buildAngleCache();
         this.buildWeightTable();
 
         if (this.options.audioSrc) {
             this.play(this.options.audioSrc).catch(this.options.onError);
         }
+    }
+
+    /**
+     * 自适应半径：仅当用户未提供对应参数时，根据容器实际尺寸计算并覆盖
+     */
+    private applyAdaptiveRadius(): void {
+        if (!this.container) return;
+
+        const computeAdaptiveRadius = (
+            containerWidth: number,
+            containerHeight: number,
+        ): {
+            baseRadius: number;
+            maxExpansion: number;
+        } => {
+            const innerRadius = Math.min(containerWidth, containerHeight) / 2; // 内切圆半径（取宽高较小值的一半）
+            const maxExpansion = Math.max(10, innerRadius * 0.15); // 最大扩张幅度：内切圆半径的 15%（可调整比例）
+            let baseRadius = innerRadius - maxExpansion - 10; // 基础半径 = 内切圆半径 - 最大扩张幅度 - 额外留白（10px）
+            baseRadius = Math.max(20, baseRadius); // 确保基础半径至少为 20px
+            return { baseRadius, maxExpansion };
+        };
+
+        const rect = this.container.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+
+        const { baseRadius, maxExpansion } = computeAdaptiveRadius(rect.width, rect.height);
+        this.options.baseRadius = baseRadius;
+        this.options.maxExpansion = maxExpansion;
     }
 
     // 预计算每个 segment 的角度 cos/sin，彻底消除每帧三角函数开销
