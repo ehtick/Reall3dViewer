@@ -135,7 +135,7 @@ export async function loadPly(model: SplatModel) {
         const f32sValue = new Float32Array(value.buffer);
         const f32sData = new Float32Array(splatData.buffer);
 
-        for (let i = 0; i < cntSplat; i++) {
+        for (let i = 0, r0 = 0, r1 = 0, r2 = 0, r3 = 0, qlen = 0; i < cntSplat; i++) {
             f32sData[i * 8 + 0] = f32sValue[(i * model.rowLength + header.offsets['x']) / 4];
             f32sData[i * 8 + 1] = f32sValue[(i * model.rowLength + header.offsets['y']) / 4];
             f32sData[i * 8 + 2] = f32sValue[(i * model.rowLength + header.offsets['z']) / 4];
@@ -146,10 +146,15 @@ export async function loadPly(model: SplatModel) {
             splatData[i * 32 + 25] = clipUint8((0.5 + SH_C0 * f32sValue[(i * model.rowLength + header.offsets['f_dc_1']) / 4]) * 255);
             splatData[i * 32 + 26] = clipUint8((0.5 + SH_C0 * f32sValue[(i * model.rowLength + header.offsets['f_dc_2']) / 4]) * 255);
             splatData[i * 32 + 27] = clipUint8((1.0 / (1.0 + Math.exp(-f32sValue[(i * model.rowLength + header.offsets['opacity']) / 4]))) * 255);
-            splatData[i * 32 + 28] = clipUint8(f32sValue[(i * model.rowLength + header.offsets['rot_0']) / 4] * 128.0 + 128.0);
-            splatData[i * 32 + 29] = clipUint8(f32sValue[(i * model.rowLength + header.offsets['rot_1']) / 4] * 128.0 + 128.0);
-            splatData[i * 32 + 30] = clipUint8(f32sValue[(i * model.rowLength + header.offsets['rot_2']) / 4] * 128.0 + 128.0);
-            splatData[i * 32 + 31] = clipUint8(f32sValue[(i * model.rowLength + header.offsets['rot_3']) / 4] * 128.0 + 128.0);
+            r0 = f32sValue[(i * model.rowLength + header.offsets['rot_0']) / 4];
+            r1 = f32sValue[(i * model.rowLength + header.offsets['rot_1']) / 4];
+            r2 = f32sValue[(i * model.rowLength + header.offsets['rot_2']) / 4];
+            r3 = f32sValue[(i * model.rowLength + header.offsets['rot_3']) / 4];
+            qlen = Math.sqrt(r0 * r0 + r1 * r1 + r2 * r2 + r3 * r3);
+            splatData[i * 32 + 28] = clipUint8((r0 / qlen) * 128.0 + 128.0);
+            splatData[i * 32 + 29] = clipUint8((r1 / qlen) * 128.0 + 128.0);
+            splatData[i * 32 + 30] = clipUint8((r2 / qlen) * 128.0 + 128.0);
+            splatData[i * 32 + 31] = clipUint8((r3 / qlen) * 128.0 + 128.0);
         }
 
         if (header.shDegree == 3) {
