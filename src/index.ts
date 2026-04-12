@@ -38,7 +38,7 @@ if (url) {
     // viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod-tpv.scene.json`);
     // viewer.addScene(`https://reall3d.com/demo-models/lod-metas/hgd/hgd-lod-meta-tpv.scene.json`);
 
-    viewer.addScene(`https://reall3d.com/demo-models/lod-v1/kcczt/kcczt.scene.json`);
+    viewer.addScene(`https://reall3d.com/demo-models/lod-v1/kcczt/fpv.scene.json`);
 
     initDevMode();
 }
