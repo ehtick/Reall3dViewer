@@ -58,7 +58,6 @@ import {
     GetCSS2DRenderer,
     IsFlyMode,
     RaycasterRayIntersectMarks,
-    SetCursor,
     IntersectsPhysicsObjects,
     OnCanvasMouseMove,
 } from './EventConstants';
@@ -90,6 +89,9 @@ class MouseState {
     public lastClickPointTime: number = 0;
     public lastMovePoint: Vector3 = null;
     public lastMovePointTime: number = 0;
+    public touchStartDistance = 0; // 双指刚开始触摸时的距离
+    public touchCurrentDistance = 0; // 双指实时距离
+    public isPinching = false; // 是否正在双指缩放
 }
 
 export function setupEventListener(events: Events) {
@@ -609,6 +611,11 @@ export function setupEventListener(events: Events) {
         lastActionTome = Date.now();
     };
 
+    function getTwoFingerDistance(touch1: Touch, touch2: Touch): number {
+        const dx = touch2.clientX - touch1.clientX;
+        const dy = touch2.clientY - touch1.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
     function canvasTouchstartEventListener(event: TouchEvent) {
         event.preventDefault();
         if (disposed) return;
@@ -620,15 +627,24 @@ export function setupEventListener(events: Events) {
             mouseState.y = event.touches[0].clientY;
             mouseState.downX = event.touches[0].clientX;
             mouseState.downY = event.touches[0].clientY;
+        } else if (event.touches.length === 2) {
+            mouseState.isPinching = true;
+            mouseState.touchStartDistance = getTwoFingerDistance(event.touches[0], event.touches[1]);
         }
         lastActionTome = Date.now();
     }
     function canvasTouchmoveEventListener(event: TouchEvent) {
         if (event.touches.length === 1) {
             mouseState.move = true;
+        } else if (event.touches.length === 2) {
+            mouseState.touchCurrentDistance = getTwoFingerDistance(event.touches[0], event.touches[1]);
+            const scale = mouseState.touchCurrentDistance / mouseState.touchStartDistance;
+            mouseState.touchStartDistance = mouseState.touchCurrentDistance; // 支持连续缩放
+            (fire(IsPlayerMode1) || fire(IsFlyMode)) && fire(IncreaseCameraFov, scale < 1);
         }
     }
     async function canvasTouchendEventListener(e: TouchEvent) {
+        mouseState.isPinching = false;
         if (mouseState.down === 1 && Date.now() - lastActionTome > 300) return;
 
         const [clientX, clientY] = [e.changedTouches[0].clientX, e.changedTouches[0].clientY];
