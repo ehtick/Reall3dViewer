@@ -23,16 +23,16 @@ export class CircularAudioMask {
     private disposed: boolean = false;
 
     private defaultBands: FrequencyBand[] = [
-        { name: 's1', range: [20, 50], weight: 2.0 },
+        { name: 's1', range: [20, 50], weight: 3.0 },
         { name: 's3', range: [100, 180], weight: 4.8 },
         { name: 's4', range: [180, 300], weight: 2.5 },
         { name: 's5', range: [300, 450], weight: 2.6 },
         { name: 's6', range: [450, 700], weight: 2.0 },
         { name: 's11', range: [4000, 7000], weight: 8.4 },
-        { name: 's7', range: [700, 1000], weight: 8.8 },
+        { name: 's7', range: [700, 1000], weight: 18.8 },
         { name: 's8', range: [1000, 1600], weight: 2.6 },
         { name: 's9', range: [1600, 2500], weight: 6.4 },
-        { name: 's2', range: [50, 100], weight: 4.2 },
+        { name: 's2', range: [50, 100], weight: 5.2 },
         { name: 's10', range: [2500, 4000], weight: 8.2 },
     ];
 
