@@ -359,6 +359,15 @@ export interface MinimapOptions {
     /** 小地图底图透明度 */
     bgOpacity?: number;
 
+    /** 小地图边长(手机) */
+    mobileSize?: number;
+    /** 小地图位置(手机) */
+    mobileCorner?: string;
+    /** 小地图边距X(手机) */
+    mobileMarginX?: number;
+    /** 小地图边距Y(手机) */
+    mobileMarginY?: number;
+
     /** 圆环内径，默认6像素 */
     ringInnerRadius?: number;
     /** 圆环外径，默认10像素 */

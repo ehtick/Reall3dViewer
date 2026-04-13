@@ -209,7 +209,15 @@ export class Reall3dViewer {
         });
 
         let minimapOpts: MinimapOptions;
-        on(OnMetaDataLoaded, () => (minimapOpts = (fire(GetMeta) as MetaData).minimap));
+        on(OnMetaDataLoaded, () => {
+            minimapOpts = (fire(GetMeta) as MetaData).minimap;
+            if (isMobile) {
+                minimapOpts.size = minimapOpts.mobileSize || minimapOpts.size;
+                minimapOpts.corner = minimapOpts.mobileCorner || minimapOpts.corner || 'bottom-right';
+                minimapOpts.marginX = minimapOpts.mobileMarginX || 0;
+                minimapOpts.marginY = minimapOpts.mobileMarginY || 0;
+            }
+        });
 
         scene.add(new AmbientLight('#ffffff', 2));
         renderer.setAnimationLoop(that.update.bind(that));
