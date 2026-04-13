@@ -362,24 +362,23 @@ const throttledSort = () => {
     }
 };
 
-function getBucketCount(splatCnt: number, useLevel: number = 0) {
+function getBucketCount(splatCnt: number) {
     // 没有数据无排序，简单返回
     if (!splatCnt) return { bucketBits: 1, bucketCnt: 1 };
 
-    // 允许通过参数指定级别
-    let level = useLevel ? Math.min(useLevel, qualityLevel) : qualityLevel;
+    let level = qualityLevel;
     // 按级别确定精度，达到允许自定义调整的目的，手机降低1级并控制不低于1级
-    let bucketBits = 11 + (isMobile ? Math.max(level - 1, 1) : level);
+    let bucketBits = 11 + (isMobile ? Math.max(level - 1, QualityLevels.L1) : level);
     // 低级别时，根据数据量计算，进一步降低精度，确保至少8位不失控
-    if (level < 3) {
+    if (level < QualityLevels.L3) {
         bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 32))), 8);
-    } else if (level < 4) {
+    } else if (level < QualityLevels.L4) {
         bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 16))), 8);
-    } else if (level < 5) {
+    } else if (level < QualityLevels.Default5) {
         bucketBits = Math.max(Math.min(bucketBits, Math.round(Math.log2(splatCnt / 8))), 8);
     }
     // 高级别时，根据数据量计算控制，避免不必要的浪费
-    if (level >= 5) {
+    if (level >= QualityLevels.Default5) {
         bucketBits = Math.min(bucketBits, Math.round(Math.log2(splatCnt / 4)));
     }
 
