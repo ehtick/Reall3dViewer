@@ -555,6 +555,8 @@ export const OnMetaDataLoaded = i++;
 export const RenderMinimap = i++;
 /** 渲染CSS2D3D对象 */
 export const RenderCSS2D3D = i++;
+/** 加载音频遮罩 */
+export const LoadCircularAudioMask = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

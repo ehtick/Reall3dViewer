@@ -54,6 +54,7 @@ import {
     CaptureScreenshot,
     SetCursor,
     GetControls,
+    LoadCircularAudioMask,
 } from '../events/EventConstants';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
 import { XzReadableStream } from 'xz-decompress';
@@ -63,16 +64,28 @@ import { SplatTileNode } from '../modeldata/SplatTiles';
 import { globalEv } from '../events/GlobalEV';
 import { CameraControls } from '../controls/CameraControls';
 import { setupCustomUtils } from './CustomUtils';
+import CircularAudioMask, { CircularAudioMaskOptions } from '../media/CircularAudioMask';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
 
+    let circularAudioMask: CircularAudioMask;
+    on(LoadCircularAudioMask, (opt: CircularAudioMaskOptions) => (circularAudioMask = new CircularAudioMask(opt)));
+
     on(IsDebugMode, () => fire(GetOptions).debugMode);
 
     on(CommonUtilsDispose, () => (disposed = true));
-    on(OnViewerDispose, () => globalEv.fire(StopBgAudio), true);
+    on(
+        OnViewerDispose,
+        () => {
+            globalEv.fire(StopBgAudio);
+            circularAudioMask?.dispose();
+            circularAudioMask = null;
+        },
+        true,
+    );
 
     on(ComputeTextureWidthHeight, (splatCount: number) => {
         const maxTextureSize: number = (fire(GetRenderer) as WebGLRenderer).capabilities.maxTextureSize;

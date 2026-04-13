@@ -77,6 +77,7 @@ import {
     OnMetaDataLoaded,
     RenderCSS2D3D,
     RenderMinimap,
+    LoadCircularAudioMask,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -482,6 +483,8 @@ export class Reall3dViewer {
         meta.player?.trigerRunMp3 && (meta.player.trigerRunMp3 = getUrl(meta.player.trigerRunMp3, getUrl(sceneUrl, location.href)));
         meta.collisionUrl && (meta.collisionUrl = getUrl(meta.collisionUrl, getUrl(sceneUrl, location.href)));
         meta.minimap && (meta.minimap.url = getUrl(meta.minimap.url, getUrl(sceneUrl, location.href)));
+        meta.audioMask && (meta.audioMask.audioUrl = getUrl(meta.audioMask.audioUrl, getUrl(sceneUrl, location.href)));
+        meta.audioMask?.audioUrl && fire(LoadCircularAudioMask, meta.audioMask);
         on(GetMeta, () => meta);
         setupPlayer(that.events);
 
@@ -582,6 +585,8 @@ export class Reall3dViewer {
         meta.qualityLevel = meta.qualityLevel || opts.qualityLevel || QualityLevels.Default5;
         meta.sortType = meta.sortType || opts.sortType || SortTypes.Default1;
         meta.minimap && (meta.minimap.url = getUrl(meta.minimap.url, getUrl(metaUrl, location.href)));
+        meta.audioMask && (meta.audioMask.audioUrl = getUrl(meta.audioMask.audioUrl, getUrl(metaUrl, location.href)));
+        meta.audioMask?.audioUrl && fire(LoadCircularAudioMask, meta.audioMask);
 
         on(GetMeta, () => meta);
         fire(OnMetaDataLoaded);

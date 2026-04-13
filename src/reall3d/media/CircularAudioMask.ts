@@ -39,7 +39,7 @@ export class CircularAudioMask {
     constructor(options: CircularAudioMaskOptions = {}) {
         this.options = {
             container: options.container || document.body,
-            audioSrc: options.audioSrc || undefined,
+            audioUrl: options.audioUrl || undefined,
             volume: options.volume || 0.5,
             width: options.width || '100%',
             height: options.height || '100%',
@@ -71,8 +71,8 @@ export class CircularAudioMask {
         this.buildAngleCache();
         this.buildWeightTable();
 
-        if (this.options.audioSrc) {
-            this.play(this.options.audioSrc).catch(this.options.onError);
+        if (this.options.audioUrl) {
+            this.play(this.options.audioUrl).catch(this.options.onError);
         }
     }
 
@@ -552,8 +552,8 @@ interface FrequencyBand {
  * 控制音频可视化的外观、行为、音频分析参数
  */
 interface CircularAudioMaskOptions {
-    /** 音频源：支持URL、文件、Blob、媒体流 */
-    audioSrc?: string | File | Blob | MediaStream;
+    /** 音频源URL */
+    audioUrl?: string;
     /** 音量 */
     volume?: number;
     /** 渲染容器：支持DOM元素或CSS选择器 */

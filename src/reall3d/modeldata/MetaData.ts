@@ -2,6 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { CameraInfo } from '../controls/SetupCameraControls';
+import { CircularAudioMaskOptions } from '../media/CircularAudioMask';
 import { MinimapOptions } from '../scene/SetupMinimap';
 
 /**
@@ -136,6 +137,8 @@ export interface MetaData {
 
     // 小地图
     minimap?: MinimapOptions;
+    // 音频遮罩
+    audioMask?: CircularAudioMaskOptions;
 }
 
 /**
