@@ -175,12 +175,13 @@ export class SplatMesh extends Mesh {
         const thisOpts = that.opts;
 
         if (opts) {
-            opts.pointcloudMode !== undefined && fire(SplatUpdatePointMode, opts.pointcloudMode);
+            opts.pointcloudMode !== undefined && !fire(SplatUpdatePointMode, opts.pointcloudMode) && (thisOpts.pointcloudMode = opts.pointcloudMode);
             opts.lightFactor !== undefined && fire(SplatUpdateLightFactor, opts.lightFactor);
             opts.maxRenderCountOfMobile !== undefined && (thisOpts.maxRenderCountOfMobile = opts.maxRenderCountOfMobile);
             opts.maxRenderCountOfPc !== undefined && (thisOpts.maxRenderCountOfPc = opts.maxRenderCountOfPc);
             opts.qualityLevel !== undefined && (thisOpts.qualityLevel = opts.qualityLevel) && fire(OnQualityLevelChanged);
             !thisOpts.mapMode && opts.sortType !== undefined && (thisOpts.sortType = opts.sortType) && fire(WorkerUpdateParams);
+            opts.disableTransitionEffectOnLoad !== undefined && (thisOpts.disableTransitionEffectOnLoad = opts.disableTransitionEffectOnLoad);
 
             fire(NotifyViewerNeedUpdate);
         }

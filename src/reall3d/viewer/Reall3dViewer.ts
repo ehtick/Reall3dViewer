@@ -299,12 +299,12 @@ export class Reall3dViewer {
             const url = URL.createObjectURL(file);
             const opts: Reall3dViewerOptions = that.events.fire(GetOptions);
             opts.bigSceneMode = false;
-            opts.pointcloudMode = true;
             opts.debugMode = true;
             opts.autoRotate = false; // 本地拖拽大多是要看质量，默认不旋转
             opts.maxRenderCountOfPc = 10240 * 10000;
             opts.qualityLevel = 9; // 主要目的为确认模型质量，按最高级别设置
-            opts.disableTransitionEffectOnLoad = false;
+            opts.disableTransitionEffectOnLoad = true;
+            opts.pointcloudMode = false;
             opts.maxDistance = 10000;
             opts.disableRightClickFocus = false;
             opts.viewMode = undefined;
@@ -415,6 +415,10 @@ export class Reall3dViewer {
             }
             if (opts.disableRightClickFocus !== undefined) {
                 viewOpts.disableRightClickFocus = opts.disableRightClickFocus;
+            }
+            if (opts.disableTransitionEffectOnLoad !== undefined) {
+                viewOpts.disableTransitionEffectOnLoad = opts.disableTransitionEffectOnLoad;
+                this.splatMesh.options({ disableTransitionEffectOnLoad: opts.disableTransitionEffectOnLoad } as any);
             }
         }
 
@@ -587,6 +591,8 @@ export class Reall3dViewer {
         meta.minimap && (meta.minimap.url = getUrl(meta.minimap.url, getUrl(metaUrl, location.href)));
         meta.audioMask && (meta.audioMask.audioUrl = getUrl(meta.audioMask.audioUrl, getUrl(metaUrl, location.href)));
         meta.audioMask?.audioUrl && fire(LoadCircularAudioMask, meta.audioMask);
+        meta.disableTransitionEffectOnLoad && that.options({ disableTransitionEffectOnLoad: true, pointcloudMode: false });
+        meta.disableTransitionEffectOnLoad && that.splatMesh.options({ pointcloudMode: false } as any);
 
         on(GetMeta, () => meta);
         fire(OnMetaDataLoaded);

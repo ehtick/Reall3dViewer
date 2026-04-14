@@ -30,6 +30,8 @@ export interface MetaData {
     mobileDownloadLimitSplatCount?: number;
     /** Maximum download count for PC splats */
     pcDownloadLimitSplatCount?: number;
+    /** disable transition effect on load; defaults to false */
+    disableTransitionEffectOnLoad?: boolean;
 
     /** Meter scale factor */
     meterScale?: number;
