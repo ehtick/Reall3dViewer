@@ -25,3 +25,13 @@ export function setupAllEventsVerwer(events: Events) {
     setupFocusMarker(events);
     setupFlying(events);
 }
+
+export function setupAllEventsMapVerwer(events: Events) {
+    setupCommonUtils(events);
+    setupApi(events);
+    setupMapUtils(events);
+    setupRaycaster(events);
+    setupFlying(events);
+    setupMark(events);
+    setupMapEventListener(events);
+}

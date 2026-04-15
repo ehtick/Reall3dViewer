@@ -44,17 +44,12 @@ import {
     RenderCSS2D3D,
     OnMetaDataLoaded,
 } from '../events/EventConstants';
-import { initMapViewerOptions, initTileMap, setupMapUtils } from './utils/MapUtils';
-import { setupCommonUtils } from '../utils/CommonUtils';
-import { setupMapEventListener } from './events/MapEventListener';
-import { setupApi } from '../api/SetupApi';
-import { setupRaycaster } from '../scene/SetupRaycaster';
-import { setupMark } from '../meshs/mark/SetupMark';
+import { initMapViewerOptions, initTileMap } from './utils/MapUtils';
+import { setupAllEventsMapVerwer } from '../scene/SetupAllEvents';
 import { CSS2DRenderer, CSS3DRenderer } from 'three/examples/jsm/Addons.js';
 import { WarpSplatMesh } from './warpsplatmesh/WarpSplatMesh';
 import { isMobile, ViewerVersion } from '../utils/consts/GlobalConstants';
 import * as tt from '@gotoeasy/three-tile';
-import { setupFlying } from '../controls/SetupFlying';
 
 /**
  * Built-in Map viewer with Gaussian Splatting model support
@@ -87,16 +82,10 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         that.tileMap = initTileMap();
         const opts: Reall3dMapViewerOptions = initMapViewerOptions(options);
         on(GetOptions, () => opts);
-
-        setupCommonUtils(events);
-        setupApi(events);
-        setupMapUtils(events);
-        setupRaycaster(events);
-        setupFlying(events);
-        setupMark(events);
-
         that.camera = new PerspectiveCamera(60, 1, 0.01, 100);
         on(GetCamera, () => that.camera);
+
+        setupAllEventsMapVerwer(events);
 
         that.container = opts.root as HTMLElement;
         that.renderer = fire(MapCreateRenderer);
@@ -109,13 +98,10 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         that.scene.add(that.tileMap);
         that.container.appendChild(that.renderer.domElement);
 
-        setupMapEventListener(events);
-
         window.addEventListener('resize', that.resize.bind(that));
         that.resize();
         that.renderer.setAnimationLoop(that.animate.bind(that));
-        // @ts-ignore
-        isMobile && that.controls._dollyOut?.(0.7); // 手机适当缩小
+        isMobile && (that.controls as any)._dollyOut?.(0.7); // 手机适当缩小
 
         on(OnMetaDataLoaded, () => {}, true);
         on(ViewerDispose, () => that.dispose());

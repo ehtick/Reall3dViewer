@@ -650,7 +650,6 @@ export class Reall3dViewer {
             await fire(OnSetWaterMark, meta.watermark || meta.name);
         }
 
-        // @ts-ignore
         isMobile && fire(GetControls)._dollyOut?.(0.7); // 手机适当缩小
         ((isMobile && meta.mobileEnableJoystick) || (!isMobile && meta.pcEnableJoystick)) && fire(ShowJoystick);
     }

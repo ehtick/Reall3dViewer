@@ -49,7 +49,6 @@ class MouseState {
 export function setupMapEventListener(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
-    const canvas: HTMLCanvasElement = fire(GetCanvas);
     let keySet: Set<string> = new Set();
 
     let disposed: boolean;
@@ -442,13 +441,16 @@ export function setupMapEventListener(events: Events) {
     window.addEventListener('keyup', keyupEventListener);
     window.addEventListener('blur', blurEventListener);
     window.addEventListener('wheel', wheelEventListener, { passive: false });
-    canvas.addEventListener('contextmenu', canvasContextmenuEventListener);
-    canvas.addEventListener('mousedown', canvasMousedownEventListener);
-    canvas.addEventListener('mousemove', canvasMousemoveEventListener);
-    canvas.addEventListener('mouseup', canvasMouseupEventListener);
-    canvas.addEventListener('touchstart', canvasTouchstartEventListener, { passive: false });
-    canvas.addEventListener('touchmove', canvasTouchmoveEventListener, { passive: false });
-    canvas.addEventListener('touchend', canvasTouchendEventListener, { passive: false });
+    setTimeout(() => {
+        const canvas: HTMLCanvasElement = fire(GetCanvas);
+        canvas.addEventListener('contextmenu', canvasContextmenuEventListener);
+        canvas.addEventListener('mousedown', canvasMousedownEventListener);
+        canvas.addEventListener('mousemove', canvasMousemoveEventListener);
+        canvas.addEventListener('mouseup', canvasMouseupEventListener);
+        canvas.addEventListener('touchstart', canvasTouchstartEventListener, { passive: false });
+        canvas.addEventListener('touchmove', canvasTouchmoveEventListener, { passive: false });
+        canvas.addEventListener('touchend', canvasTouchendEventListener, { passive: false });
+    }, 10);
 
     on(
         OnViewerDispose,
@@ -458,6 +460,7 @@ export function setupMapEventListener(events: Events) {
             window.removeEventListener('keyup', keyupEventListener);
             window.removeEventListener('blur', blurEventListener);
             window.removeEventListener('wheel', wheelEventListener);
+            const canvas: HTMLCanvasElement = fire(GetCanvas);
             canvas.removeEventListener('contextmenu', canvasContextmenuEventListener);
             canvas.removeEventListener('mousedown', canvasMousedownEventListener);
             canvas.removeEventListener('mousemove', canvasMousemoveEventListener);
