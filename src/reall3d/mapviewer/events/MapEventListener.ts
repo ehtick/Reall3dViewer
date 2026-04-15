@@ -23,6 +23,7 @@ import {
     Flying,
     FlySavePositions,
     OnViewerDispose,
+    FlyingPause,
 } from '../../events/EventConstants';
 import { SplatMesh } from '../../meshs/splatmesh/SplatMesh';
 import { MarkDistanceLine } from '../../meshs/mark/MarkDistanceLine';
@@ -187,6 +188,7 @@ export function setupMapEventListener(events: Events) {
         parent && setTimeout(() => window.focus());
         e.preventDefault();
         if (disposed) return;
+        fire(FlyingPause);
         lastActionTome = Date.now();
     };
 
@@ -195,6 +197,7 @@ export function setupMapEventListener(events: Events) {
         if (disposed) return;
         // const ps: Vector3[] = await fire(SelectPointAndLookAt, e.offsetX, e.offsetY);
         // fire(MapSplatMeshSetPosition, ps[0]);
+        fire(FlyingPause);
         lastActionTome = Date.now();
     };
 
@@ -225,6 +228,7 @@ export function setupMapEventListener(events: Events) {
         mouseState.move = false;
         mouseState.isDbClick = Date.now() - mouseState.downTime < 300;
 
+        fire(FlyingPause);
         lastActionTome = Date.now();
         mouseState.downTime = Date.now();
     };

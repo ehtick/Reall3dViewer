@@ -86,22 +86,16 @@ import { setupControlPlane } from '../scene/SetupControlPlane';
 import { copyGsViewerOptions, initCamera, initGsViewerOptions, initRenderer, setupViewerUtils } from '../utils/ViewerUtils';
 import { CameraControls } from '../controls/CameraControls';
 import { Reall3dViewerOptions } from './Reall3dViewerOptions';
-import { setupEventListener } from '../events/EventListener';
-import { setupRaycaster } from '../scene/SetupRaycaster';
-import { setupCameraControls } from '../controls/SetupCameraControls';
-import { setupFocusMarker } from '../scene/SetupFocusMarker';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
-import { setupMark } from '../meshs/mark/SetupMark';
-import { setupApi } from '../api/SetupApi';
 import { MarkData } from '../meshs/mark/data/MarkData';
-import { computeCompressionRatio, getUrl, glbKhrGs2Splat, setupCommonUtils } from '../utils/CommonUtils';
-import { setupFlying } from '../controls/SetupFlying';
+import { computeCompressionRatio, getUrl, glbKhrGs2Splat } from '../utils/CommonUtils';
 import { DecoderPath, isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/MetaData';
 import { globalEv } from '../events/GlobalEV';
 import { setupPlayer } from '../scene/SetupPlayer';
 import { loadFile } from '../modeldata/loaders/FileLoader';
 import { MinimapOptions } from '../scene/SetupMinimap';
+import { setupAllEventsVerwer } from '../scene/SetupAllEvents';
 
 /**
  * Built-in Gaussian Splatting model viewer
@@ -175,15 +169,7 @@ export class Reall3dViewer {
             );
         });
 
-        setupCommonUtils(events);
-        setupViewerUtils(events);
-        setupApi(events);
-        setupCameraControls(events);
-        setupMark(events);
-        setupEventListener(events);
-        setupRaycaster(events);
-        setupFocusMarker(events);
-        setupFlying(events);
+        setupAllEventsVerwer(events);
 
         const splatMesh = new SplatMesh(copyGsViewerOptions(opts));
         that.splatMesh = splatMesh;
@@ -210,15 +196,19 @@ export class Reall3dViewer {
         });
 
         let minimapOpts: MinimapOptions;
-        on(OnMetaDataLoaded, () => {
-            minimapOpts = (fire(GetMeta) as MetaData).minimap;
-            if (minimapOpts && isMobile) {
-                minimapOpts.size = minimapOpts.mobileSize || minimapOpts.size;
-                minimapOpts.corner = minimapOpts.mobileCorner || minimapOpts.corner || 'bottom-right';
-                minimapOpts.marginX = minimapOpts.mobileMarginX || 0;
-                minimapOpts.marginY = minimapOpts.mobileMarginY || 0;
-            }
-        });
+        on(
+            OnMetaDataLoaded,
+            () => {
+                minimapOpts = (fire(GetMeta) as MetaData).minimap;
+                if (minimapOpts && isMobile) {
+                    minimapOpts.size = minimapOpts.mobileSize || minimapOpts.size;
+                    minimapOpts.corner = minimapOpts.mobileCorner || minimapOpts.corner || 'bottom-right';
+                    minimapOpts.marginX = minimapOpts.mobileMarginX || 0;
+                    minimapOpts.marginY = minimapOpts.mobileMarginY || 0;
+                }
+            },
+            true,
+        );
 
         scene.add(new AmbientLight('#ffffff', 2));
         renderer.setAnimationLoop(that.update.bind(that));
@@ -490,6 +480,7 @@ export class Reall3dViewer {
         meta.audioMask && (meta.audioMask.audioUrl = getUrl(meta.audioMask.audioUrl, getUrl(sceneUrl, location.href)));
         meta.audioMask?.audioUrl && fire(LoadCircularAudioMask, meta.audioMask);
         on(GetMeta, () => meta);
+        fire(OnMetaDataLoaded);
         setupPlayer(that.events);
 
         that.metaMatrix = meta.transform ? new Matrix4().fromArray(meta.transform) : null;

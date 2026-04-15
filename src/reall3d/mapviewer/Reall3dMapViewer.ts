@@ -41,6 +41,8 @@ import {
     OnSetFlyDuration,
     OnViewerDispose,
     GetCSS2DRenderer,
+    RenderCSS2D3D,
+    OnMetaDataLoaded,
 } from '../events/EventConstants';
 import { initMapViewerOptions, initTileMap, setupMapUtils } from './utils/MapUtils';
 import { setupCommonUtils } from '../utils/CommonUtils';
@@ -91,6 +93,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         setupMapUtils(events);
         setupRaycaster(events);
         setupFlying(events);
+        setupMark(events);
 
         that.camera = new PerspectiveCamera(60, 1, 0.01, 100);
         on(GetCamera, () => that.camera);
@@ -106,7 +109,6 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         that.scene.add(that.tileMap);
         that.container.appendChild(that.renderer.domElement);
 
-        setupMark(events);
         setupMapEventListener(events);
 
         window.addEventListener('resize', that.resize.bind(that));
@@ -115,6 +117,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
         // @ts-ignore
         isMobile && that.controls._dollyOut?.(0.7); // 手机适当缩小
 
+        on(OnMetaDataLoaded, () => {}, true);
         on(ViewerDispose, () => that.dispose());
 
         on(
@@ -134,6 +137,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
                 that.tileMap.update(that.camera);
                 try {
                     that.renderer.render(that.scene, that.camera);
+                    fire(RenderCSS2D3D);
                 } catch (e) {
                     console.warn(e.message);
                 }
@@ -180,6 +184,7 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
                 that.dirLight.target.position.copy(lookAt);
 
                 on(GetMeta, () => data);
+                fire(OnMetaDataLoaded);
                 fire(OnSetFlyPositions, data.flyPositions || []);
                 fire(OnSetFlyTargets, data.flyTargets || []);
                 fire(OnSetFlyDuration, data.flyDuration);
@@ -191,6 +196,8 @@ export class Reall3dMapViewer extends EventDispatcher<tt.plugin.GLViewerEventMap
                         set.add(url);
                     }
                 }
+
+                setTimeout(() => fire(Flying, true), 1000);
             })
             .catch(e => {
                 console.error(e.message);

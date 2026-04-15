@@ -66,33 +66,31 @@ export function setupMark(events: Events) {
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
     const markMap: Map<string, WeakRef<any>> = new Map();
 
-    const divMarkWarp3d: HTMLDivElement = document.createElement('div');
-    divMarkWarp3d.classList.add('mark-warp3d');
-    document.body.appendChild(divMarkWarp3d);
+    const divMarkWarp: HTMLDivElement = document.createElement('div');
+    divMarkWarp.classList.add('mark-warp');
+    document.body.appendChild(divMarkWarp);
 
     const css2DRenderer = new CSS2DRenderer();
     css2DRenderer.setSize(innerWidth, innerHeight);
     css2DRenderer.domElement.style.position = 'absolute';
     css2DRenderer.domElement.style.top = '0px';
     css2DRenderer.domElement.style.pointerEvents = 'none';
-    divMarkWarp3d.appendChild(css2DRenderer.domElement);
-
-    const divMarkWarp: HTMLDivElement = document.createElement('div');
-    divMarkWarp.classList.add('mark-warp');
-    document.body.appendChild(divMarkWarp);
+    css2DRenderer.domElement.classList.add('css2d');
+    divMarkWarp.appendChild(css2DRenderer.domElement);
 
     const css3DRenderer = new CSS3DRenderer();
     css3DRenderer.setSize(innerWidth, innerHeight);
     css3DRenderer.domElement.style.position = 'absolute';
     css3DRenderer.domElement.style.top = '0px';
     css3DRenderer.domElement.style.pointerEvents = 'none';
+    css3DRenderer.domElement.classList.add('css3d');
     divMarkWarp.appendChild(css3DRenderer.domElement);
 
     on(GetMarkWarpElement, () => divMarkWarp);
     on(GetCSS3DRenderer, () => css3DRenderer);
     on(GetCSS2DRenderer, () => css2DRenderer);
     on(RenderCSS2D3D, () => [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))));
-    on(OnViewerDispose, () => divMarkWarp.parentNode && document.body.removeChild(divMarkWarp), true);
+    on(OnViewerDispose, () => document.body.removeChild(divMarkWarp), true);
 
     on(GetMarkList, (intersectable = true) => {
         const ary = [];
