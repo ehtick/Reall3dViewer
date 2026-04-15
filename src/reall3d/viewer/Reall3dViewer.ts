@@ -282,6 +282,7 @@ export class Reall3dViewer {
                 isSceneJson = true;
             } else if (file.name.endsWith('.glb')) {
                 format = 'glb';
+                globalEv.on('Information-ver', () => `glb`);
             } else {
                 return console.error('unsupported format:', file.name);
             }
@@ -293,7 +294,7 @@ export class Reall3dViewer {
             opts.autoRotate = false; // 本地拖拽大多是要看质量，默认不旋转
             opts.maxRenderCountOfPc = 10240 * 10000;
             opts.qualityLevel = 9; // 主要目的为确认模型质量，按最高级别设置
-            opts.disableTransitionEffectOnLoad = true;
+            opts.disableTransitionEffectOnLoad = true; // 不要渐进过渡特效
             opts.pointcloudMode = false;
             opts.maxDistance = 10000;
             opts.disableRightClickFocus = false;
