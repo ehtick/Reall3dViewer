@@ -419,6 +419,7 @@ export function setupMapEventListener(events: Events) {
         event.preventDefault();
         if (disposed) return;
         // fire(StopAutoRotate);
+        fire(FlyingPause);
         mouseState.down = event.touches.length;
         if (mouseState.down === 1) {
             mouseState.move = false;
