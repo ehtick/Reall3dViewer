@@ -13,6 +13,7 @@ import { setupFocusMarker } from './SetupFocusMarker';
 import { setupRaycaster } from './SetupRaycaster';
 import { setupMapUtils } from '../mapviewer/utils/MapUtils';
 import { setupMapEventListener } from '../mapviewer/events/MapEventListener';
+import { setupControlPlane } from './SetupControlPlane';
 
 export function setupAllEventsVerwer(events: Events) {
     setupCommonUtils(events);
@@ -24,6 +25,7 @@ export function setupAllEventsVerwer(events: Events) {
     setupRaycaster(events);
     setupFocusMarker(events);
     setupFlying(events);
+    setupControlPlane(events);
 }
 
 export function setupAllEventsMapVerwer(events: Events) {

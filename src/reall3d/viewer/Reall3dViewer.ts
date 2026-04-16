@@ -82,7 +82,6 @@ import {
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
 import { Events } from '../events/Events';
-import { setupControlPlane } from '../scene/SetupControlPlane';
 import { copyGsViewerOptions, initCamera, initGsViewerOptions, initRenderer, setupViewerUtils } from '../utils/ViewerUtils';
 import { CameraControls } from '../controls/CameraControls';
 import { Reall3dViewerOptions } from './Reall3dViewerOptions';
@@ -169,13 +168,12 @@ export class Reall3dViewer {
             );
         });
 
-        setupAllEventsVerwer(events);
-
         const splatMesh = new SplatMesh(copyGsViewerOptions(opts));
         that.splatMesh = splatMesh;
         on(GetSplatMesh, () => splatMesh);
         scene.add(splatMesh);
-        setupControlPlane(events);
+
+        setupAllEventsVerwer(events);
 
         on(UpdateQualityLevel, (qualityLevel: number) => {
             opts.qualityLevel = qualityLevel;
