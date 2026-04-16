@@ -66,13 +66,12 @@ import {
     PcDownloadLimitSplatCount,
 } from '../utils/consts/GlobalConstants';
 import { loadSog } from './loaders/SogLoader';
-import { setupLodDownloadManager, todoDownload } from './LodDownloadManager';
+import { todoDownload } from './LodDownloadManager';
 import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
 import { hashString } from 'three/src/nodes/core/NodeUtils.js';
 import { MetaData } from './MetaData';
 import { globalEv } from '../events/GlobalEV';
 import { loadFile } from './loaders/FileLoader';
-import { setupFetcher } from './worker/SetupFetcher';
 
 /**
  * 纹理数据管理
@@ -80,7 +79,6 @@ import { setupFetcher } from './worker/SetupFetcher';
 export function setupSplatTextureManager(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
-    setupFetcher(events);
 
     let disposed: boolean;
     let lastPostDataTime: number = Date.now() + 60 * 60 * 1000;
@@ -1085,6 +1083,4 @@ export function setupSplatTextureManager(events: Events) {
         () => !disposed,
         isMobile ? 10 : 6,
     );
-
-    setupLodDownloadManager(events);
 }

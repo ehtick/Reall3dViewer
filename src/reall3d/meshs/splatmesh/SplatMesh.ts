@@ -46,19 +46,15 @@ import {
     SplatMeshSwitchDisplayMode,
     GetMeta,
 } from '../../events/EventConstants';
-import { setupSplatTextureManager } from '../../modeldata/SplatTexdataManager';
 import { SplatMeshOptions } from './SplatMeshOptions';
 import { ModelOptions } from '../../modeldata/ModelOptions';
-import { setupSplatMesh } from './SetupSplatMesh';
-import { setupGaussianText } from '../../modeldata/text/SetupGaussianText';
-import { setupApi } from '../../api/SetupApi';
 import { initSplatMeshOptions } from '../../utils/ViewerUtils';
-import { isInFrustum, setupCommonUtils } from '../../utils/CommonUtils';
+import { isInFrustum } from '../../utils/CommonUtils';
 import { MetaData } from '../../modeldata/MetaData';
-import { setupSorter } from '../../sorter/SetupSorter';
 import { BoundBox } from '../boundbox/BoundBox';
 import { QualityLevels, SortTypes } from '../../utils/consts/GlobalConstants';
 import { AudioText, AudioTextOptions } from '../../media/AudioText';
+import { setupAllEventsSplatMesh } from '../../scene/SetupAllEvents';
 
 /**
  * Gaussian splatting mesh
@@ -115,12 +111,7 @@ export class SplatMesh extends Mesh {
         on(OnSmallSceneShowDone, () => (isSmallSceneShowDone = true), true);
         on(OnSmallSceneShowDone, () => setTimeout(() => that.audioText?.opts.autoPlay && !that.audioText?.opts.position && that.audioText?.play(), 5000), true);
 
-        setupCommonUtils(events);
-        setupApi(events);
-        setupSplatTextureManager(events);
-        setupSorter(events);
-        setupSplatMesh(events);
-        setupGaussianText(events);
+        setupAllEventsSplatMesh(events);
 
         that.name = `${opts.name || that.id}`;
 

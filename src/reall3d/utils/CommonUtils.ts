@@ -14,14 +14,11 @@ import {
     Object3D,
     PerspectiveCamera,
     Plane,
-    Renderer,
-    Scene,
     ShaderChunk,
     Vector3,
     WebGLRenderer,
     WebGLRenderTarget,
 } from 'three';
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { Events } from '../events/Events';
 import {
     Vector3ToString,
@@ -53,7 +50,6 @@ import {
     GetScene,
     CaptureScreenshot,
     SetCursor,
-    GetControls,
     LoadCircularAudioMask,
 } from '../events/EventConstants';
 import { QualityLevels, ViewerVersion } from './consts/GlobalConstants';
@@ -62,8 +58,6 @@ import { unzipSync } from 'fflate';
 import { SpxHeader } from '../modeldata/ModelData';
 import { SplatTileNode } from '../modeldata/SplatTiles';
 import { globalEv } from '../events/GlobalEV';
-import { CameraControls } from '../controls/CameraControls';
-import { setupCustomUtils } from './CustomUtils';
 import CircularAudioMask, { CircularAudioMaskOptions } from '../media/CircularAudioMask';
 
 export function setupCommonUtils(events: Events) {
@@ -388,8 +382,6 @@ export function setupCommonUtils(events: Events) {
         const canvas: HTMLCanvasElement = fire(GetCanvas);
         canvas && (canvas.style.cursor = cursor);
     });
-
-    setupCustomUtils(events);
 }
 
 export const shaderChunk = ShaderChunk;
