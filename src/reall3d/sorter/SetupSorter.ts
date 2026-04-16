@@ -45,7 +45,7 @@ export function setupSorter(events: Events) {
             [WkCameraPosition]: (fire(GetCameraPosition) as Vector3).toArray(),
         }),
     );
-    on(WorkerDispose, () => worker.terminate());
+    on(WorkerDispose, () => worker.terminate(), true);
     on(WorkerUpdateParams, () =>
         worker.postMessage({
             [WkUpdateParams]: true,
