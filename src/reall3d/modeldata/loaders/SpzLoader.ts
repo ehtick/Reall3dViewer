@@ -144,7 +144,7 @@ export async function loadSpz(model: SplatModel) {
                     wxyz.push(decodeSpzRotations(rx, ry, rz));
                 }
             } else {
-                // spz version 3
+                // spz version 3 or 4
                 for (let j = 0, b0 = 0, b1 = 0, b2 = 0, b3 = 0; j < splatCnt; j++) {
                     datas[n++] = value[offsetAlphas + (i * maxProcessCnt + j)];
 
@@ -164,14 +164,16 @@ export async function loadSpz(model: SplatModel) {
                             rotation[k] = Math.SQRT1_2 * (magnitude / CMask);
                             isNeg && (rotation[k] = -rotation[k]);
                             sumSquares += rotation[k] * rotation[k];
-                            remaining = remaining >> 10;
+                            remaining = remaining >>> 10;
                         }
                     }
                     rotation[index] = Math.sqrt(Math.max(1.0 - sumSquares, 0));
-                    for (let k = 0; k < 4; k++) {
-                        rotation[k] = clipUint8(rotation[k] * 128.0 + 128.0);
-                    }
-                    wxyz.push(rotation);
+                    const rot = [];
+                    rot[0] = clipUint8(rotation[3] * 128.0 + 128.0);
+                    rot[1] = clipUint8(rotation[0] * 128.0 + 128.0);
+                    rot[2] = clipUint8(rotation[1] * 128.0 + 128.0);
+                    rot[3] = clipUint8(rotation[2] * 128.0 + 128.0);
+                    wxyz.push(rot);
                 }
             }
             for (let j = 0; j < splatCnt; j++) {
@@ -293,7 +295,7 @@ export async function loadSpz(model: SplatModel) {
         header.reserved = value[15];
 
         if (header.magic !== 1347635022) throw new Error('[SPZ ERROR] header not found');
-        if (header.version < 2 || header.version > 3) throw new Error('[SPZ ERROR] version not supported:' + header.version);
+        if (header.version < 2 || header.version > 4) throw new Error('[SPZ ERROR] version not supported:' + header.version);
         if (header.shDegree > 3) throw new Error('[SPZ ERROR] unsupported SH degree:' + header.shDegree);
         if (header.fractionalBits !== 12) throw new Error('[SPZ ERROR] unsupported FractionalBits:' + header.fractionalBits); // 仅支持这一种编码方式（坐标24位整数编码）
         const size = header.version == 2 ? 19 : 20;
