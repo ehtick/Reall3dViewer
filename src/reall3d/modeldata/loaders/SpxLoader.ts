@@ -247,7 +247,7 @@ export async function loadSpx(model: SplatModel) {
         }
     } catch (e) {
         if (e.name === 'AbortError') {
-            console.warn('Fetch Abort', model.opts.url);
+            console.log('Fetch Abort', model.opts.url);
             model.status === ModelStatus.Fetching && (model.status = ModelStatus.FetchAborted);
         } else {
             console.error(e);
