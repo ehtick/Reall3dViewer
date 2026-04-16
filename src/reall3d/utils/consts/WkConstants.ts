@@ -79,3 +79,19 @@ export const WkSortType = `$${n++}`;
 export const WkDepthNearRate = `$${n++}`;
 /** 深度远近分段值（设定时优先） */
 export const WkDepthNearValue = `$${n++}`;
+/** 销毁 */
+export const WkWorkerDispose = `$${n++}`;
+/** 下载指定链接数据 */
+export const WkFetcherUrl = `$${n++}`;
+/** 下载结束 */
+export const WkFetcherDone = `$${n++}`;
+/** 下载状态 */
+export const WkFetcherStatus = `$${n++}`;
+/** 下载数据 */
+export const WkFetcherSplatData = `$${n++}`;
+/** 下载数量 */
+export const WkFetcherDownloadSplatCount = `$${n++}`;
+/** 下载数据的球谐系数级别 */
+export const WkFetcherDataShDegree = `$${n++}`;
+/** 下载数据的球谐系数调色板 */
+export const WkFetcherPalettes = `$${n++}`;

@@ -47,6 +47,7 @@ import {
     MarkUpdateVisible,
     GetMeta,
     IsPlayerMode,
+    SplatDataFetcher,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, ModelStatus, SplatModel } from './ModelData';
@@ -68,10 +69,10 @@ import { loadSog } from './loaders/SogLoader';
 import { setupLodDownloadManager, todoDownload } from './LodDownloadManager';
 import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
 import { hashString } from 'three/src/nodes/core/NodeUtils.js';
-import { loadLodSplatFile } from './loaders/LodSplatFileLoader';
 import { MetaData } from './MetaData';
 import { globalEv } from '../events/GlobalEV';
 import { loadFile } from './loaders/FileLoader';
+import { setupFetcher } from './worker/SetupFetcher';
 
 /**
  * 纹理数据管理
@@ -79,6 +80,7 @@ import { loadFile } from './loaders/FileLoader';
 export function setupSplatTextureManager(events: Events) {
     const on = (key: number, fn?: Function, multiFn?: boolean): Function | Function[] => events.on(key, fn, multiFn);
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
+    setupFetcher(events);
 
     let disposed: boolean;
     let lastPostDataTime: number = Date.now() + 60 * 60 * 1000;
@@ -1035,6 +1037,41 @@ export function setupSplatTextureManager(events: Events) {
         fnResolveModelSplatCount(splatTiles.totalCount);
 
         loadLodSplatFile(splatModel, splatTiles, splatFile);
+    }
+
+    async function loadLodSplatFile(splatModel: SplatModel, splatTiles: SplatTiles, splatFile: SplatFile) {
+        const isSpx = splatFile.url.endsWith('.spx');
+        const isSpz = splatFile.url.endsWith('.spz');
+        const isSog = splatFile.url.endsWith('.sog') || splatFile.url.endsWith('meta.json');
+        if (!isSpx && !isSpz && !isSog) {
+            splatFile.status |= DataStatus.Fetching | DataStatus.FetchDone | DataStatus.Invalid;
+            return;
+        }
+
+        splatFile.status |= DataStatus.Fetching;
+        splatFile.abortController = new AbortController();
+        splatTiles.fetchSet.add(splatFile.url);
+
+        const warpModel = new SplatModel({ url: splatFile.url });
+        warpModel.fetchLimit = 300_0000;
+        warpModel.abortController = splatFile.abortController;
+
+        await fire(SplatDataFetcher, warpModel);
+
+        if (warpModel.status == ModelStatus.FetchDone && warpModel.downloadSplatCount) {
+            splatFile.downloadData = warpModel.splatData;
+            splatFile.downloadCount = warpModel.downloadSplatCount;
+            splatFile.status |= DataStatus.FetchDone;
+
+            splatModel.downloadSplatCount += warpModel.downloadSplatCount;
+            splatModel.dataShDegree = Math.max(splatModel.dataShDegree, warpModel.dataShDegree);
+            !splatModel.palettes && warpModel.palettes && (splatModel.palettes = warpModel.palettes);
+        } else {
+            splatFile.status |= DataStatus.FetchDone | DataStatus.FetchFailed;
+        }
+
+        splatTiles.fetchSet.delete(splatFile.url);
+        splatFile.abortController = null;
     }
 
     on(SplatTexdataManagerAddModel, (opts: ModelOptions, meta: MetaData) => add(opts, meta));

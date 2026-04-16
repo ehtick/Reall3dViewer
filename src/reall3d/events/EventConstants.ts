@@ -557,6 +557,8 @@ export const RenderMinimap = i++;
 export const RenderCSS2D3D = i++;
 /** 加载音频遮罩 */
 export const LoadCircularAudioMask = i++;
+/** 下载解析高斯数据 */
+export const SplatDataFetcher = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */
