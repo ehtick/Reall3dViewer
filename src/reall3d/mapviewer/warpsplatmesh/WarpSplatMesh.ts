@@ -3,7 +3,7 @@
 // ==============================================
 import { Matrix4, Mesh, Vector3 } from 'three';
 import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
-import { GetOptions, SetGaussianText } from '../../events/EventConstants';
+import { FlyingPause, GetOptions, SetGaussianText } from '../../events/EventConstants';
 import { CSS3DSprite } from 'three/examples/jsm/Addons.js';
 import { Easing, Tween } from '@tweenjs/tween.js';
 import { SplatMesh } from '../../meshs/splatmesh/SplatMesh';
@@ -80,6 +80,7 @@ export class WarpSplatMesh extends Mesh {
         tagWarp.style.cursor = 'pointer';
         let tween: Tween = null;
         tagWarp.onclick = () => {
+            that.mapViewer.events.fire(FlyingPause);
             if (tween) return;
 
             const oldTarget = controls.target.clone(); // 原始视点
