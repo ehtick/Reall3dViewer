@@ -84,7 +84,6 @@ export function setupSplatTextureManager(events: Events) {
     let disposed: boolean;
     let lastPostDataTime: number = Date.now() + 60 * 60 * 1000;
 
-    let runCounter = 0;
     let flyOnceDone = false;
     let lastLodHash: number = 0;
 
@@ -831,37 +830,6 @@ export function setupSplatTextureManager(events: Events) {
         }
     }
 
-    function checkLodCache() {
-        // 缓存整理
-        if (!splatModel?.splatTiles) return;
-
-        const maxCacheCount = isMobile ? splatModel.splatTiles.mobileLodCacheCount || 600_0000 : splatModel.splatTiles.pcLodCacheCount || 3000_0000;
-        if (splatModel.downloadSplatCount < maxCacheCount) return;
-
-        if (runCounter++ % 3 == 0 && splatModel.downloadSplatCount > maxCacheCount) {
-            const downloadFiles: SplatFile[] = [];
-            for (let key of Object.keys(splatModel.splatTiles.files)) {
-                let file = splatModel.splatTiles.files[key];
-                if (file.downloadCount) downloadFiles.push(file);
-            }
-            downloadFiles.sort((a, b) => b.lastTime - a.lastTime); // 降序
-            let cacheCnt = splatModel.downloadSplatCount;
-            let removeCnt = 0;
-            while (downloadFiles.length && cacheCnt > maxCacheCount) {
-                const file = downloadFiles.pop();
-                removeCnt += file.downloadCount;
-                cacheCnt -= removeCnt;
-                file.downloadCount = 0;
-                file.downloadData = null;
-                file.abortController = null;
-                file.lastTime = 0;
-                file.spxHeader = null;
-                file.status = DataStatus.None;
-            }
-            splatModel.downloadSplatCount -= removeCnt;
-        }
-    }
-
     function allocatePoints(cuts: CutData[], maxPoints: number): void {
         const weights = cuts.map(cut => 1 / (cut.distance + 1e-6));
         const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
@@ -1040,6 +1008,39 @@ export function setupSplatTextureManager(events: Events) {
         fnResolveModelSplatCount(splatTiles.totalCount);
 
         loadLodSplatFile(splatModel, splatTiles, splatFile);
+    }
+
+    function checkLodCache() {
+        // 缓存整理
+        if (!splatModel?.splatTiles) return;
+
+        const maxCacheCount = isMobile ? splatModel.splatTiles.mobileLodCacheCount || 600_0000 : splatModel.splatTiles.pcLodCacheCount || 3000_0000;
+        if (splatModel.downloadSplatCount < maxCacheCount) return;
+
+        const downloadFiles: SplatFile[] = [];
+        let cacheCnt = 0;
+        for (let key of Object.keys(splatModel.splatTiles.files)) {
+            let file = splatModel.splatTiles.files[key];
+            if (file.downloadCount) {
+                file.lod < splatModel.splatTiles.lodLevels - 1 && downloadFiles.push(file); // 粗层保留
+                cacheCnt += file.downloadCount;
+            }
+        }
+        downloadFiles.sort((a, b) => b.lastTime - a.lastTime); // 降序
+
+        let removeCnt = 0;
+        while (downloadFiles.length && cacheCnt > maxCacheCount) {
+            const file = downloadFiles.pop();
+            removeCnt += file.downloadCount;
+            cacheCnt -= file.downloadCount;
+            file.downloadCount = 0;
+            file.downloadData = null;
+            file.abortController = null;
+            file.lastTime = 0;
+            file.spxHeader = null;
+            file.status = DataStatus.None;
+        }
+        splatModel.downloadSplatCount -= removeCnt;
     }
 
     async function loadLodSplatFile(splatModel: SplatModel, splatTiles: SplatTiles, splatFile: SplatFile) {
