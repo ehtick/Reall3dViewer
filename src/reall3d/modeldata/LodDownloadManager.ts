@@ -10,7 +10,7 @@ import { MetaData } from './MetaData';
 import { ModelOptions } from './ModelOptions';
 import { DataStatus, SplatFile, SplatLodJsonMagic, SplatTiles, traveSplatTree } from './SplatTiles';
 
-const MaxDownloadCount = 7;
+const MaxDownloadCount = isMobile ? 3 : 7;
 const splatFileSet = new Set<SplatFile>();
 
 export function todoDownload(splatFile: SplatFile) {
