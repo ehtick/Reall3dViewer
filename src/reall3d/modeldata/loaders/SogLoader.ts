@@ -151,7 +151,6 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
         } else {
             const dim = width == 96 ? 3 : 8;
             const cnt = meta.shN.count || centroids.length / 4 / dim;
-            console.info('cnt', cnt, 'dim', dim);
             const palettes = new Uint8Array(cnt * 15 * 4);
             palettes.fill(128);
             for (let i = 0, n = 0; i < cnt; i++) {

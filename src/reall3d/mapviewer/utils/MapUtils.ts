@@ -143,7 +143,6 @@ export function setupMapUtils(events: Events) {
     on(MapSplatMeshSetPosition, (v3: Vector3) => {
         const splatMesh: SplatMesh = fire(MapGetSplatMesh);
         splatMesh && splatMesh.visible && v3 && splatMesh.position.copy(v3);
-        console.info(splatMesh, v3);
     });
     on(MapSplatMeshScale, (step: number = 0.01) => {
         const splatMesh: SplatMesh = fire(MapGetSplatMesh);
