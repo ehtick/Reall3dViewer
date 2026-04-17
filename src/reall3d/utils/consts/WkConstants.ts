@@ -95,3 +95,5 @@ export const WkFetcherDownloadSplatCount = `$${n++}`;
 export const WkFetcherDataShDegree = `$${n++}`;
 /** 下载数据的球谐系数调色板 */
 export const WkFetcherPalettes = `$${n++}`;
+/** 排序处理中释放 */
+export const WkSorterXyzDone = `$${n++}`;

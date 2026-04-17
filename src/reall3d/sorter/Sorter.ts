@@ -9,6 +9,7 @@ import {
     WkDepthNearValue,
     WkInit,
     WkQualityLevel,
+    WkSorterXyzDone,
     WkSortType,
     WkSplatIndexDone,
     WkUpdateParams,
@@ -404,6 +405,7 @@ worker.onmessage = (e: any) => {
         texture.maxY = data[WkMaxY];
         texture.minZ = data[WkMinZ];
         texture.maxZ = data[WkMaxZ];
+        texture.xyz && worker.postMessage({ [WkSorterXyzDone]: texture.xyz }, [texture.xyz.buffer]);
         texture.xyz = new Float32Array(data[WkXyz].buffer);
         texture.watermarkCount = data[WkWatermarkCount];
         texture.version = data[WkVersion];

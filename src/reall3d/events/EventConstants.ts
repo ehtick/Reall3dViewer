@@ -559,6 +559,8 @@ export const RenderCSS2D3D = i++;
 export const LoadCircularAudioMask = i++;
 /** 下载解析高斯数据 */
 export const SplatDataFetcher = i++;
+/** 回放缓存 */
+export const PushCacheXyzs = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

@@ -88,6 +88,7 @@ import {
     ComputeTextureWidthHeight,
     GetSplatShaderDefines,
     SplatUpdateUseLod,
+    PushCacheXyzs,
 } from '../../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from './SplatMeshOptions';
 import {
@@ -150,6 +151,7 @@ import {
     WkSplatIndexDone,
     isMobile,
     QualityLevels,
+    WkSorterXyzDone,
 } from '../../utils/consts/Index';
 import vertexShader from './shaders/SplatVertex.glsl';
 import fragmentShader from './shaders/SplatFragment.glsl';
@@ -754,6 +756,8 @@ export function setupSplatMesh(events: Events) {
             const ui32s: Uint32Array = data[WkSplatIndex];
             fire(SplatUpdateSplatIndex, ui32s, data[WkIndex], data[WkSortTime], data[WkSortStartTime], data[WkRenderSplatCount]);
             ui32s.length && worker.postMessage({ [WkSplatIndexDone]: ui32s }, [ui32s.buffer]);
+        } else if (data[WkSorterXyzDone]) {
+            fire(PushCacheXyzs, new Float32Array(data[WkSorterXyzDone].buffer));
         }
     };
 

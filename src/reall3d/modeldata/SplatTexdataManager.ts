@@ -48,6 +48,7 @@ import {
     GetMeta,
     IsPlayerMode,
     SplatDataFetcher,
+    PushCacheXyzs,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, ModelStatus, SplatModel } from './ModelData';
@@ -98,6 +99,10 @@ export function setupSplatTextureManager(events: Events) {
     let palettesUpdated = false;
     let largeSceneStartFly = false;
     const frustumPlanes = new Array(6).fill(null).map(() => new Plane());
+
+    let ui32sLodTxdataCache: Uint32Array = null;
+    const xyzsLodCache: Float32Array[] = [];
+    on(PushCacheXyzs, (f32s: Float32Array) => f32s && xyzsLodCache.push(f32s));
 
     on(GetAabbCenter, () => splatModel?.aabbCenter || new Vector3());
 
@@ -303,7 +308,7 @@ export function setupSplatTextureManager(events: Events) {
         watermarkCount && mergeSplatData.set(splatModel.watermarkData.subarray(0, watermarkCount * 32), dataSplatCount * 32);
         textWatermarkCount && mergeSplatData.set(txtWatermarkData.subarray(0, textWatermarkCount * 32), (dataSplatCount + watermarkCount) * 32);
 
-        const xyz = new Float32Array(splatModel.renderSplatCount * 3);
+        const xyz = xyzsLodCache.pop() || new Float32Array(maxRenderCount * 3);
         for (let i = 0, n = 0; i < splatModel.renderSplatCount; i++) {
             xyz[i * 3] = f32s[i * 8];
             xyz[i * 3 + 1] = f32s[i * 8 + 1];
@@ -745,7 +750,7 @@ export function setupSplatTextureManager(events: Events) {
         texture.version = sysTime;
         texture.active = false;
 
-        const ui32s = new Uint32Array(texwidth * texheight * 4);
+        const ui32s = ui32sLodTxdataCache || (ui32sLodTxdataCache = new Uint32Array(texwidth * texheight * 4));
         const f32s = new Float32Array(ui32s.buffer);
         const mergeSplatData = new Uint8Array(ui32s.buffer);
         let mergeDataCount = 0;
@@ -779,7 +784,7 @@ export function setupSplatTextureManager(events: Events) {
 
         // 保险起见以最终数据数量为准
         const totalRenderSplatCount = mergeDataCount; // + watermarkCount + textWatermarkCount;
-        const xyz = new Float32Array(totalRenderSplatCount * 3);
+        const xyz = xyzsLodCache.pop() || new Float32Array(maxRenderCount * 3);
         const mins: number[] = [f32s[0], f32s[1], f32s[2]];
         const maxs: number[] = [f32s[0], f32s[1], f32s[2]];
         for (let i = 0, x = 0, y = 0, z = 0; i < totalRenderSplatCount; i++) {
