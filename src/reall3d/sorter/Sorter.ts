@@ -187,21 +187,33 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
     let nearCnt = 0;
     const subMinDepth1 = -minDepth1;
     const dotPosSubMinDepth1 = dotPos - minDepth1;
-    for (let i = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
-        offset = i * 3;
-        depths[i] = dotPosSubMinDepth1 - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
+    for (let i = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
+        const offset = i * 3;
+        const x = xyz[offset];
+        const y = xyz[offset + 1];
+        const z = xyz[offset + 2];
+        const d = dotPosSubMinDepth1 - dx * x - dy * y - dz * z;
+        depths[i] = d;
         dataIdx1[nearCnt] = i;
-        nearCnt += ((depths[i] <= subMinDepth1 && depths[i] >= 0) as any) | 0;
+        const idx = ((d <= subMinDepth1 && d >= 0) as any) | 0;
+        nearCnt += idx;
     }
     const renderCount = nearCnt + watermarkCount;
     const { bucketBits, bucketCnt } = getBucketCount(nearCnt);
     const depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    for (let i = 0, idx = 0; i < nearCnt; ++i) {
-        idx = (depths[dataIdx1[i]] * depthInv) | 0;
-        counters[(distances[i] = idx)]++;
+    for (let i = 0; i < nearCnt; ++i) {
+        const index = dataIdx1[i];
+        const d = depths[index];
+        const idx = (d * depthInv) | 0;
+        distances[i] = idx;
+        counters[idx]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < nearCnt; ++i) depthIndex[--counters[distances[i]]] = dataIdx1[i];
+    for (let i = 0; i < nearCnt; ++i) {
+        const d = distances[i];
+        const pos = --counters[d];
+        depthIndex[pos] = dataIdx1[i];
+    }
     return { renderCount, bucketBits };
 }
 
@@ -212,21 +224,34 @@ function sortDirWithPrune2011(oArg: any) {
     let frontCnt = 0;
     const subMinDepth = -minDepth;
     const dotPosSubMinDepth = dotPos - minDepth;
-    for (let i = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
-        offset = i * 3;
-        depths[i] = dotPosSubMinDepth - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
+    for (let i = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
+        const offset = i * 3;
+        const x = xyz[offset];
+        const y = xyz[offset + 1];
+        const z = xyz[offset + 2];
+        const d = dotPosSubMinDepth - dx * x - dy * y - dz * z;
+        depths[i] = d;
         dataIdx1[frontCnt] = i;
-        frontCnt += ((depths[i] <= subMinDepth) as any) | 0;
+        const idx = ((d <= subMinDepth) as any) | 0;
+        frontCnt += idx;
     }
+
     const renderCount = frontCnt + watermarkCount;
     const { bucketBits, bucketCnt } = getBucketCount(frontCnt);
     const depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth);
-    for (let i = 0, idx = 0; i < frontCnt; ++i) {
-        idx = (depths[dataIdx1[i]] * depthInv) | 0;
-        counters[(distances[i] = idx)]++;
+    for (let i = 0; i < frontCnt; ++i) {
+        const index = dataIdx1[i];
+        const d = depths[index];
+        const idx = (d * depthInv) | 0;
+        distances[i] = idx;
+        counters[idx]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < frontCnt; ++i) depthIndex[--counters[distances[i]]] = dataIdx1[i];
+    for (let i = 0; i < frontCnt; ++i) {
+        const d = distances[i];
+        const pos = --counters[d];
+        depthIndex[pos] = dataIdx1[i];
+    }
     return { renderCount, bucketBits };
 }
 
@@ -238,34 +263,52 @@ function sortDirWithPruneTwoSort2012(oArg: any) {
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
     let cnt1 = 0;
     let cnt2 = 0;
-    for (let i = 0, tag1 = 0, tag2 = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
-        offset = i * 3;
-        depths[i] = dotPos - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
+    for (let i = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
+        const offset = i * 3;
+        const x = xyz[offset];
+        const y = xyz[offset + 1];
+        const z = xyz[offset + 2];
+        const d = dotPos - dx * x - dy * y - dz * z;
+        depths[i] = d;
         dataIdx1[cnt1] = i;
         dataIdx2[cnt2] = i;
-        tag1 = ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
-        tag2 = ((depths[i] < minDepth1) as any) | 0;
+        const tag1 = ((d <= 0 && d >= minDepth1) as any) | 0;
+        const tag2 = ((d < minDepth1) as any) | 0;
         cnt1 += tag1;
         cnt2 += tag2;
     }
     const renderCount = cnt1 + cnt2 + watermarkCount;
     let { bucketBits, bucketCnt } = getBucketCount(cnt2);
     let depthInv: number = (bucketCnt - 1) / (minDepth1 - minDepth);
-    for (let i = 0, idx = 0; i < cnt2; ++i) {
-        idx = ((depths[dataIdx2[i]] - minDepth) * depthInv) | 0;
-        counters[(distances[i] = idx)]++;
+    for (let i = 0; i < cnt2; ++i) {
+        const index = dataIdx2[i];
+        const d = depths[index];
+        const idx = ((d - minDepth) * depthInv) | 0;
+        distances[i] = idx;
+        counters[idx]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < cnt2; ++i) depthIndex[--counters[distances[i]]] = dataIdx2[i];
+    for (let i = 0; i < cnt2; ++i) {
+        const d = distances[i];
+        const pos = --counters[d];
+        depthIndex[pos] = dataIdx2[i];
+    }
     counters.fill(0);
     bucketCnt = getBucketCount(cnt1).bucketCnt;
     depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    for (let i = 0, idx = 0; i < cnt1; ++i) {
-        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
-        counters[(distances[i] = idx)]++;
+    for (let i = 0; i < cnt1; ++i) {
+        const index = dataIdx1[i];
+        const d = depths[index];
+        const idx = ((d - minDepth1) * depthInv) | 0;
+        distances[i] = idx;
+        counters[idx]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < cnt1; ++i) depthIndex[--counters[distances[i]] + cnt2] = dataIdx1[i];
+    for (let i = 0; i < cnt1; ++i) {
+        const d = distances[i];
+        const pos = --counters[d];
+        depthIndex[pos + cnt2] = dataIdx1[i];
+    }
     return { renderCount, bucketBits };
 }
 
@@ -277,33 +320,51 @@ function sortDirWithTwoSort2112(oArg: any) {
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
     let cnt1 = 0;
     let cnt2 = 0;
-    for (let i = 0, tag1 = 0, offset = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
-        offset = i * 3;
-        depths[i] = dotPos - dx * xyz[offset] - dy * xyz[offset + 1] - dz * xyz[offset + 2];
+    for (let i = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
+        const offset = i * 3;
+        const x = xyz[offset];
+        const y = xyz[offset + 1];
+        const z = xyz[offset + 2];
+        const d = dotPos - dx * x - dy * y - dz * z;
+        depths[i] = d;
         dataIdx1[cnt1] = i;
         dataIdx2[cnt2] = i;
-        tag1 = ((depths[i] <= 0 && depths[i] >= minDepth1) as any) | 0;
+        const tag1 = ((d <= 0 && d >= minDepth1) as any) | 0;
         cnt1 += tag1;
         cnt2 += tag1 ^ 1;
     }
     const renderCount = cnt1 + cnt2 + watermarkCount;
     let { bucketBits, bucketCnt } = getBucketCount(cnt2);
     let depthInv: number = (bucketCnt - 1) / (minDepth1 - minDepth);
-    for (let i = 0, idx = 0; i < cnt2; ++i) {
-        idx = ((depths[dataIdx2[i]] - minDepth) * depthInv) | 0;
-        counters[(distances[i] = idx)]++;
+    for (let i = 0; i < cnt2; ++i) {
+        const index = dataIdx2[i];
+        const d = depths[index];
+        const idx = ((d - minDepth) * depthInv) | 0;
+        distances[i] = idx;
+        counters[idx]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < cnt2; ++i) depthIndex[--counters[distances[i]]] = dataIdx2[i];
+    for (let i = 0; i < cnt2; ++i) {
+        const d = distances[i];
+        const pos = --counters[d];
+        depthIndex[pos] = dataIdx2[i];
+    }
     counters.fill(0);
     bucketCnt = getBucketCount(cnt1).bucketCnt;
     depthInv = (bucketCnt - 1) / (maxDepth1 - minDepth1);
-    for (let i = 0, idx = 0; i < cnt1; ++i) {
-        idx = ((depths[dataIdx1[i]] - minDepth1) * depthInv) | 0;
-        counters[(distances[i] = idx)]++;
+    for (let i = 0; i < cnt1; ++i) {
+        const index = dataIdx1[i];
+        const d = depths[index];
+        const idx = ((d - minDepth1) * depthInv) | 0;
+        distances[i] = idx;
+        counters[idx]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < cnt1; ++i) depthIndex[--counters[distances[i]] + cnt2] = dataIdx1[i];
+    for (let i = 0; i < cnt1; ++i) {
+        const d = distances[i];
+        const pos = --counters[d];
+        depthIndex[pos + cnt2] = dataIdx1[i];
+    }
     return { renderCount, bucketBits };
 }
 
@@ -314,13 +375,22 @@ function sortByViewProjDefault(oArg: any) {
     let { bucketBits, bucketCnt } = getBucketCount(dataCount);
     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
     const minBase = -minDepth - sortViewProj[14];
-    for (let i = 0, idx = 0, offset = 0, vp2 = sortViewProj[2], vp6 = sortViewProj[6], vp10 = sortViewProj[10]; i < dataCount; ++i) {
-        offset = 3 * i;
-        idx = ((minBase - vp2 * xyz[offset] - vp6 * xyz[offset + 1] - vp10 * xyz[offset + 2]) * depthInv) | 0; // 同 calcDepthByViewProj
-        counters[(distances[i] = idx)]++;
+
+    for (let i = 0, vp2 = sortViewProj[2], vp6 = sortViewProj[6], vp10 = sortViewProj[10]; i < dataCount; ++i) {
+        const offset = 3 * i;
+        const x = xyz[offset];
+        const y = xyz[offset + 1];
+        const z = xyz[offset + 2];
+        const idx = ((minBase - vp2 * x - vp6 * y - vp10 * z) * depthInv) | 0; // 同 calcDepthByViewProj
+        distances[i] = idx;
+        counters[idx]++;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
-    for (let i = 0; i < dataCount; ++i) depthIndex[--counters[distances[i]]] = i;
+    for (let i = 0; i < dataCount; ++i) {
+        const d = distances[i];
+        const pos = --counters[d];
+        depthIndex[pos] = i;
+    }
     return { renderCount, bucketBits };
 }
 
