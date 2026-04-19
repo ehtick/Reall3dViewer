@@ -561,6 +561,10 @@ export const LoadCircularAudioMask = i++;
 export const SplatDataFetcher = i++;
 /** 回放缓存 */
 export const PushCacheXyzs = i++;
+/** 待下载 */
+export const TodoDownloadLod = i++;
+/** 销毁 */
+export const LodDownloadManagerDispose = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

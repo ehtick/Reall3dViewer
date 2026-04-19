@@ -45,6 +45,7 @@ import {
     LodDownloadManagerAddLodMeta,
     SplatMeshSwitchDisplayMode,
     GetMeta,
+    LodDownloadManagerDispose,
 } from '../../events/EventConstants';
 import { SplatMeshOptions } from './SplatMeshOptions';
 import { ModelOptions } from '../../modeldata/ModelOptions';
@@ -260,9 +261,10 @@ export class SplatMesh extends Mesh {
         that.boundBox.removeFromParent();
         that.audioText?.dispose();
 
+        fire(LodDownloadManagerDispose);
         fire(CommonUtilsDispose);
-        fire(SplatTexdataManagerDispose);
         fire(WorkerDispose);
+        fire(SplatTexdataManagerDispose);
         fire(SplatMeshDispose);
 
         that.events.clear();

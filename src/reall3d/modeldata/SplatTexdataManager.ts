@@ -49,6 +49,7 @@ import {
     IsPlayerMode,
     SplatDataFetcher,
     PushCacheXyzs,
+    TodoDownloadLod,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, ModelStatus, SplatModel } from './ModelData';
@@ -67,7 +68,6 @@ import {
     PcDownloadLimitSplatCount,
 } from '../utils/consts/GlobalConstants';
 import { loadSog } from './loaders/SogLoader';
-import { todoDownload } from './LodDownloadManager';
 import { SplatFile, SplatTiles, SplatTileNode, DataStatus, traveSplatTree } from './SplatTiles';
 import { hashString } from 'three/src/nodes/core/NodeUtils.js';
 import { MetaData } from './MetaData';
@@ -204,7 +204,6 @@ export function setupSplatTextureManager(events: Events) {
             mergeRunning = true;
             setTimeout(async () => {
                 await mergeAndUploadLodLargeSceneData();
-                checkLodCache();
                 mergeRunning = false;
             });
             return;
@@ -567,7 +566,7 @@ export function setupSplatTextureManager(events: Events) {
                 return splatTile.currentRenderLod;
             }
 
-            !isFallback && todoDownload(splatTiles.files[splatTile.lods[requireLevel]?.fileKey]);
+            !isFallback && fire(TodoDownloadLod, splatTiles.files[splatTile.lods[requireLevel]?.fileKey]);
 
             const tileMapping = splatTile.lods[requireLevel];
             if (!tileMapping) {
@@ -1012,7 +1011,7 @@ export function setupSplatTextureManager(events: Events) {
 
     function checkLodCache() {
         // 缓存整理
-        if (!splatModel?.splatTiles) return;
+        if (disposed || !splatModel?.splatTiles) return;
 
         const maxCacheCount = isMobile ? splatModel.splatTiles.mobileLodCacheCount || 600_0000 : splatModel.splatTiles.pcLodCacheCount || 3000_0000;
         if (splatModel.downloadSplatCount < maxCacheCount) return;
@@ -1044,6 +1043,8 @@ export function setupSplatTextureManager(events: Events) {
     }
 
     async function loadLodSplatFile(splatModel: SplatModel, splatTiles: SplatTiles, splatFile: SplatFile) {
+        if (disposed) return;
+
         const isSpx = splatFile.url.endsWith('.spx');
         const isSpz = splatFile.url.endsWith('.spz');
         const isSog = splatFile.url.endsWith('.sog') || splatFile.url.endsWith('meta.json');
@@ -1070,6 +1071,7 @@ export function setupSplatTextureManager(events: Events) {
             splatModel.downloadSplatCount += warpModel.downloadSplatCount;
             splatModel.dataShDegree = Math.max(splatModel.dataShDegree, warpModel.dataShDegree);
             !splatModel.palettes && warpModel.palettes && (splatModel.palettes = warpModel.palettes);
+            checkLodCache(); // 有下载完成时，才触发缓存检查
         } else {
             splatFile.status |= DataStatus.FetchDone | DataStatus.FetchFailed;
         }

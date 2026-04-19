@@ -1,7 +1,15 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { RunLoopByFrame, SplatTexdataManagerAddSplatLod, LodDownloadManagerAddLodMeta, GetOptions, SplatUpdateBoundBox } from '../events/EventConstants';
+import {
+    RunLoopByFrame,
+    SplatTexdataManagerAddSplatLod,
+    LodDownloadManagerAddLodMeta,
+    GetOptions,
+    SplatUpdateBoundBox,
+    LodDownloadManagerDispose,
+    TodoDownloadLod,
+} from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { getUrl } from '../utils/CommonUtils';
@@ -11,11 +19,6 @@ import { ModelOptions } from './ModelOptions';
 import { DataStatus, SplatFile, SplatLodJsonMagic, SplatTiles, traveSplatTree } from './SplatTiles';
 
 const MaxDownloadCount = isMobile ? 3 : 7;
-const splatFileSet = new Set<SplatFile>();
-
-export function todoDownload(splatFile: SplatFile) {
-    splatFile && !splatFile.status && splatFileSet.add(splatFile);
-}
 
 export function setupLodDownloadManager(events: Events) {
     let disposed: boolean;
@@ -23,6 +26,10 @@ export function setupLodDownloadManager(events: Events) {
     const fire = (key: number, ...args: any): any => events.fire(key, ...args);
 
     let splatTiles: SplatTiles;
+
+    const splatFileSet = new Set<SplatFile>();
+    on(TodoDownloadLod, (splatFile: SplatFile) => splatFile && !splatFile.status && splatFileSet.add(splatFile));
+    on(LodDownloadManagerDispose, () => (disposed = true), true);
 
     fire(
         RunLoopByFrame,
