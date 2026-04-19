@@ -29,7 +29,6 @@ import {
     GetPlayer,
     GetScene,
     IntersectsPhysicsObjects,
-    IsPlayerMode,
     OnViewerDispose,
     PhysicsGetEnvCollision,
     PhysicsGetGroundCollision,

@@ -50,7 +50,6 @@ import { setupPhysics } from './SetupPhysics';
 import { globalEv } from '../events/GlobalEV';
 import { loadFile } from '../modeldata/loaders/FileLoader';
 import { DecoderPath } from '../utils/consts/GlobalConstants';
-import { CameraControls } from '../controls/CameraControls';
 import { sleep } from '../utils/CommonUtils';
 
 export function setupPlayer(events: Events) {
