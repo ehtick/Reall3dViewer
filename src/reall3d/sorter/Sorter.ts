@@ -73,10 +73,12 @@ function runSort(sortViewProj: number[], sortCameraDir: number[], sortCameraPos:
 
     if (lastSortVersion === version) {
         let diff =
-            Math.abs(lastViewProj[2] - sortViewProj[2]) +
-            Math.abs(lastViewProj[6] - sortViewProj[6]) +
-            Math.abs(lastViewProj[10] - sortViewProj[10]) +
-            Math.abs(lastViewProj[14] - sortViewProj[14]);
+            Math.abs(lastViewProj[2] - sortViewProj[2]) + // 相机前方向 X
+            Math.abs(lastViewProj[6] - sortViewProj[6]) + // 相机前方向 Y
+            Math.abs(lastViewProj[10] - sortViewProj[10]) + // 相机前方向 Z
+            Math.abs(lastViewProj[12] - sortViewProj[12]) + // 相机位置 X
+            Math.abs(lastViewProj[13] - sortViewProj[13]) + // 相机位置 Y
+            Math.abs(lastViewProj[14] - sortViewProj[14]); // 相机位置 Z
         if (diff < Epsilon) {
             return;
         }
@@ -184,11 +186,14 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
     const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, xyz, dataCount, watermarkCount, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(oArg.maxDepth, 0);
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
+    const dx = sortCameraDir[0];
+    const dy = sortCameraDir[1];
+    const dz = sortCameraDir[2];
+    let offset = 0;
     let nearCnt = 0;
     const subMinDepth1 = -minDepth1;
     const dotPosSubMinDepth1 = dotPos - minDepth1;
-    for (let i = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
-        const offset = i * 3;
+    for (let i = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
@@ -197,6 +202,7 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
         dataIdx1[nearCnt] = i;
         const idx = ((d <= subMinDepth1 && d >= 0) as any) | 0;
         nearCnt += idx;
+        offset += 3;
     }
     const renderCount = nearCnt + watermarkCount;
     const { bucketBits, bucketCnt } = getBucketCount(nearCnt);
@@ -221,11 +227,14 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
 function sortDirWithPrune2011(oArg: any) {
     const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, xyz, dataCount, watermarkCount, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(oArg.maxDepth, 0);
+    const dx = sortCameraDir[0];
+    const dy = sortCameraDir[1];
+    const dz = sortCameraDir[2];
+    let offset = 0;
     let frontCnt = 0;
     const subMinDepth = -minDepth;
     const dotPosSubMinDepth = dotPos - minDepth;
-    for (let i = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
-        const offset = i * 3;
+    for (let i = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
@@ -234,6 +243,7 @@ function sortDirWithPrune2011(oArg: any) {
         dataIdx1[frontCnt] = i;
         const idx = ((d <= subMinDepth) as any) | 0;
         frontCnt += idx;
+        offset += 3;
     }
 
     const renderCount = frontCnt + watermarkCount;
@@ -261,10 +271,13 @@ function sortDirWithPruneTwoSort2012(oArg: any) {
     const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, int32Tmp2: dataIdx2, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(maxDepth, 0);
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
+    const dx = sortCameraDir[0];
+    const dy = sortCameraDir[1];
+    const dz = sortCameraDir[2];
+    let offset = 0;
     let cnt1 = 0;
     let cnt2 = 0;
-    for (let i = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
-        const offset = i * 3;
+    for (let i = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
@@ -276,6 +289,7 @@ function sortDirWithPruneTwoSort2012(oArg: any) {
         const tag2 = ((d < minDepth1) as any) | 0;
         cnt1 += tag1;
         cnt2 += tag2;
+        offset += 3;
     }
     const renderCount = cnt1 + cnt2 + watermarkCount;
     let { bucketBits, bucketCnt } = getBucketCount(cnt2);
@@ -318,10 +332,13 @@ function sortDirWithTwoSort2112(oArg: any) {
     const { depthIndex, depths, distances, counters, int32Tmp1: dataIdx1, int32Tmp2: dataIdx2, xyz, dataCount, watermarkCount, maxDepth, minDepth, dotPos, sortCameraDir } = oArg;
     const maxDepth1 = Math.min(maxDepth, 0);
     const minDepth1 = oArg.depthNearValue ? maxDepth1 - Math.abs(oArg.depthNearValue) : maxDepth1 - (maxDepth1 - minDepth) * oArg.depthNearRate;
+    const dx = sortCameraDir[0];
+    const dy = sortCameraDir[1];
+    const dz = sortCameraDir[2];
+    let offset = 0;
     let cnt1 = 0;
     let cnt2 = 0;
-    for (let i = 0, dx = sortCameraDir[0], dy = sortCameraDir[1], dz = sortCameraDir[2]; i < dataCount; ++i) {
-        const offset = i * 3;
+    for (let i = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
@@ -332,6 +349,7 @@ function sortDirWithTwoSort2112(oArg: any) {
         const tag1 = ((d <= 0 && d >= minDepth1) as any) | 0;
         cnt1 += tag1;
         cnt2 += tag1 ^ 1;
+        offset += 3;
     }
     const renderCount = cnt1 + cnt2 + watermarkCount;
     let { bucketBits, bucketCnt } = getBucketCount(cnt2);
@@ -376,14 +394,18 @@ function sortByViewProjDefault(oArg: any) {
     let depthInv: number = (bucketCnt - 1) / (maxDepth - minDepth);
     const minBase = -minDepth - sortViewProj[14];
 
-    for (let i = 0, vp2 = sortViewProj[2], vp6 = sortViewProj[6], vp10 = sortViewProj[10]; i < dataCount; ++i) {
-        const offset = 3 * i;
+    const vp2 = sortViewProj[2];
+    const vp6 = sortViewProj[6];
+    const vp10 = sortViewProj[10];
+    let offset = 0;
+    for (let i = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
         const idx = ((minBase - vp2 * x - vp6 * y - vp10 * z) * depthInv) | 0; // 同 calcDepthByViewProj
         distances[i] = idx;
         counters[idx]++;
+        offset += 3;
     }
     for (let i = 1; i < bucketCnt; ++i) counters[i] += counters[i - 1];
     for (let i = 0; i < dataCount; ++i) {
