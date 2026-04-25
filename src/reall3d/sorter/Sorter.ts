@@ -189,11 +189,10 @@ function sortDirWithPruneOnlyNear2010(oArg: any) {
     const dx = sortCameraDir[0];
     const dy = sortCameraDir[1];
     const dz = sortCameraDir[2];
-    let offset = 0;
     let nearCnt = 0;
     const subMinDepth1 = -minDepth1;
     const dotPosSubMinDepth1 = dotPos - minDepth1;
-    for (let i = 0; i < dataCount; ++i) {
+    for (let i = 0, offset = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
@@ -230,11 +229,10 @@ function sortDirWithPrune2011(oArg: any) {
     const dx = sortCameraDir[0];
     const dy = sortCameraDir[1];
     const dz = sortCameraDir[2];
-    let offset = 0;
     let frontCnt = 0;
     const subMinDepth = -minDepth;
     const dotPosSubMinDepth = dotPos - minDepth;
-    for (let i = 0; i < dataCount; ++i) {
+    for (let i = 0, offset = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
@@ -274,10 +272,9 @@ function sortDirWithPruneTwoSort2012(oArg: any) {
     const dx = sortCameraDir[0];
     const dy = sortCameraDir[1];
     const dz = sortCameraDir[2];
-    let offset = 0;
     let cnt1 = 0;
     let cnt2 = 0;
-    for (let i = 0; i < dataCount; ++i) {
+    for (let i = 0, offset = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
@@ -335,10 +332,9 @@ function sortDirWithTwoSort2112(oArg: any) {
     const dx = sortCameraDir[0];
     const dy = sortCameraDir[1];
     const dz = sortCameraDir[2];
-    let offset = 0;
     let cnt1 = 0;
     let cnt2 = 0;
-    for (let i = 0; i < dataCount; ++i) {
+    for (let i = 0, offset = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
@@ -397,8 +393,7 @@ function sortByViewProjDefault(oArg: any) {
     const vp2 = sortViewProj[2];
     const vp6 = sortViewProj[6];
     const vp10 = sortViewProj[10];
-    let offset = 0;
-    for (let i = 0; i < dataCount; ++i) {
+    for (let i = 0, offset = 0; i < dataCount; ++i) {
         const x = xyz[offset];
         const y = xyz[offset + 1];
         const z = xyz[offset + 2];
