@@ -193,10 +193,12 @@ export function setupCommonUtils(events: Events) {
         return !loading && renderSplatCount && textureReadySplatCount >= renderSplatCount;
     });
 
-    on(GetCanvasSize, () => {
+    let oSize = null;
+    on(GetCanvasSize, (force = false) => {
+        if (!force && oSize) return oSize;
         const root: HTMLElement = (fire(GetCanvas) as HTMLCanvasElement).parentElement;
         const rect = root.getBoundingClientRect();
-        return { width: rect.width, height: rect.height, left: rect.left, top: rect.top };
+        return (oSize = { width: rect.width, height: rect.height, left: rect.left, top: rect.top });
     });
 
     on(Vector3ToString, (v: Vector3): string => {

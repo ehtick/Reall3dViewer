@@ -679,7 +679,7 @@ export function setupEventListener(events: Events) {
     window.addEventListener('resize', resize);
     resize();
     function resize() {
-        const { width, height, top, left } = fire(GetCanvasSize);
+        const { width, height, top, left } = fire(GetCanvasSize, true);
         const camera: PerspectiveCamera = fire(GetCamera);
         camera.aspect = width / height;
         camera.updateProjectionMatrix();

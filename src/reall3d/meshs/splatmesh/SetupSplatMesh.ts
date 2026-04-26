@@ -381,7 +381,7 @@ export function setupSplatMesh(events: Events) {
             SplatUpdateFocal,
             () => {
                 const camera: PerspectiveCamera = fire(GetCamera);
-                const { width, height } = fire(GetCanvasSize);
+                const { width, height } = fire(GetCanvasSize, true);
                 const fx = Math.abs(camera.projectionMatrix.elements[0]) * 0.5 * width;
                 const fy = Math.abs(camera.projectionMatrix.elements[5]) * 0.5 * height;
                 const material: ShaderMaterial = fire(GetSplatMaterial);
@@ -394,7 +394,7 @@ export function setupSplatMesh(events: Events) {
         on(
             SplatUpdateViewport,
             () => {
-                const { width, height } = fire(GetCanvasSize);
+                const { width, height } = fire(GetCanvasSize, true);
                 material.uniforms[VarViewport].value.set(width, height);
                 material.uniformsNeedUpdate = true;
                 fire(NotifyViewerNeedUpdate);
