@@ -89,10 +89,10 @@ export function setupCommonUtils(events: Events) {
             texwidth *= 2;
         }
         texwidth = Math.min(texwidth, maxTextureSize / 2);
-        let texheight = Math.min(Math.ceil(totalPixels / texwidth), maxTextureSize);
+        let texheight = Math.ceil(totalPixels / texwidth);
         const texdepth = 2;
-        texheight = Math.ceil(texheight / texdepth) * texdepth;
         const texheightary = Math.ceil(texheight / texdepth);
+        texheight = texheightary * texdepth;
         return { texwidth, texheight, texdepth, texheightary };
     });
 
