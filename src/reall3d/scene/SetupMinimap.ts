@@ -132,7 +132,7 @@ export function setupMinimap(events: Events) {
     }
 
     function caclMiniMapViewport() {
-        const { width, height } = fire(GetCanvasSize);
+        const { width, height } = fire(GetCanvasSize, true);
         const { size, marginX, marginY, corner } = Object.assign({ marginX: 20, marginY: 20 }, minimapOpts);
 
         // 计算小地图视口
