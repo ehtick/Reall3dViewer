@@ -500,7 +500,6 @@ export class Reall3dViewer {
         // 加载模型
         that.splatMesh.addModel({ url: meta.url, baseUrl: getUrl(sceneUrl, location.href) }, meta);
         await fire(OnSetWaterMark, meta.watermark || meta.name);
-        fire(OnMetaDataLoaded);
         fire(GetControls).updateRotateAxis();
 
         ((isMobile && meta.mobileEnableJoystick) || (!isMobile && meta.pcEnableJoystick)) && fire(ShowJoystick);
