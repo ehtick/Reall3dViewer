@@ -128,7 +128,7 @@ export class Reall3dViewer {
         controls.updateByOptions(opts);
         const camera = controls.object as Camera;
 
-        let renterTime = performance.now();
+        let renterTime = 0;
         const events = new Events();
         opts.viewerEvents = events;
         that.events = events;
@@ -148,8 +148,8 @@ export class Reall3dViewer {
         let lastTimeNeedUpdate = 0;
         const aryUpdaters: any[] = [];
         on(ViewerNeedUpdate, () => {
-            if (performance.now() - lastTimeNeedUpdate < 1000) return;
-            lastTimeNeedUpdate = performance.now();
+            if (Date.now() - lastTimeNeedUpdate < 1000) return;
+            lastTimeNeedUpdate = Date.now();
 
             that.needUpdate = true;
             // 稍微多点更新
