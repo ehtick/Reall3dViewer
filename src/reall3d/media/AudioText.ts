@@ -9,6 +9,7 @@ import { Events } from '../events/Events';
 export class AudioText {
     private audio: Audio;
     public opts: AudioTextOptions;
+    private disposed = false;
 
     public constructor(options: AudioTextOptions = {}) {
         const opts = { ...options };
@@ -22,28 +23,30 @@ export class AudioText {
     }
 
     public play(force: boolean = false): void {
+        const that = this;
         if (!force && !this.opts.autoPlay) return;
-        if (this.audio) return;
+        if (that.disposed || that.audio) return;
 
         const audio = new Audio(new AudioListener());
-        this.audio = audio;
+        that.audio = audio;
         const audioLoader = new AudioLoader();
-        audioLoader.load(this.opts.mp3, (buf: AudioBuffer) => {
+        audioLoader.load(that.opts.mp3, (buf: AudioBuffer) => {
             globalEv.fire(SetBgAudioVolumeDown);
             setTimeout(async () => {
+                if (that.disposed) return;
                 audio.setBuffer(buf);
                 audio.setLoop(false);
                 audio.setVolume(1.0);
                 audio.play();
 
-                for (const textDuration of this.opts.textDurations) {
+                for (const textDuration of that.opts.textDurations) {
                     const text: string = textDuration[0];
                     const duration: number = textDuration[1];
-                    const rs = await this.showAudioText(text, duration);
+                    const rs = await that.showAudioText(text, duration);
                     if (!rs) break;
                 }
                 globalEv.fire(SetBgAudioVolumeUp);
-                setTimeout(() => (this.audio = null), this.opts.position ? 60_000 : 0);
+                setTimeout(() => (that.audio = null), that.opts?.position ? 60_000 : 0);
             }, 500);
         });
     }
@@ -77,9 +80,13 @@ export class AudioText {
     }
 
     public dispose(): void {
-        this.audio?.stop();
-        this.audio = null;
-        this.opts = null;
+        const that = this;
+        if (that.disposed) return;
+        that.disposed = true;
+
+        that.audio?.stop();
+        that.audio = null;
+        that.opts = null;
     }
 }
 
