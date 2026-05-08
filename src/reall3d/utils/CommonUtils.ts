@@ -59,6 +59,7 @@ import { SpxHeader } from '../modeldata/ModelData';
 import { SplatTileNode } from '../modeldata/SplatTiles';
 import { globalEv } from '../events/GlobalEV';
 import CircularAudioMask, { CircularAudioMaskOptions } from '../media/CircularAudioMask';
+import { ZstdInit } from '@oneidentity/zstd-js/wasm/decompress';
 
 export function setupCommonUtils(events: Events) {
     let disposed: boolean = false;
@@ -1028,4 +1029,22 @@ export function createTriangleMesh(points: number[], options = {}): Mesh {
     const mesh = new Mesh(geometry, material);
 
     return mesh;
+}
+
+let zstdSimple: any;
+let initPromise: Promise<void> | null = null;
+
+function ensureInit(): Promise<void> {
+    if (zstdSimple) return Promise.resolve();
+    if (initPromise) return initPromise;
+
+    initPromise = ZstdInit().then(({ ZstdSimple }) => {
+        zstdSimple = ZstdSimple;
+    });
+    return initPromise;
+}
+
+export async function decompressZstd(zstdBytes: Uint8Array): Promise<Uint8Array> {
+    await ensureInit();
+    return zstdSimple.decompress(zstdBytes);
 }
