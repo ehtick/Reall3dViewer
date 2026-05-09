@@ -262,14 +262,12 @@ export async function loadSpz(model: SplatModel) {
 
     async function parseSpzV4AndSetSplatData(header: SpzHeader, model: SplatModel, value: Uint8Array) {
         let datas = new Uint8Array(value.subarray(header.tocByteOffset));
-        const tocSlice = datas.subarray(0, header.numStreams * 16);
-        let ui64s = new BigUint64Array(tocSlice.buffer, tocSlice.byteOffset, tocSlice.byteLength / 8);
+        let ui64s = new BigUint64Array(datas.slice(0, header.numStreams * 16).buffer);
         const zstdSizes: number[] = [];
         for (let i = 0; i < header.numStreams; i++) {
             zstdSizes.push(Number(ui64s[i * 2]));
         }
         datas = new Uint8Array(datas.subarray(header.numStreams * 16));
-        console.info('zstdSizes', zstdSizes);
 
         let n = 0;
         const positions = await decompressZstd(new Uint8Array(datas.subarray(0, zstdSizes[n])));
@@ -279,23 +277,15 @@ export async function loadSpz(model: SplatModel) {
         datas = new Uint8Array(datas.subarray(zstdSizes[n]));
         n++;
 
-        const colorsBytes = new Uint8Array(datas.subarray(0, zstdSizes[n]));
-        console.log('Colors compressed size:', colorsBytes.length);
-        console.log('Colors magic:', colorsBytes[0].toString(16), colorsBytes[1].toString(16), colorsBytes[2].toString(16), colorsBytes[3].toString(16));
-
         const colors = await decompressZstd(new Uint8Array(datas.subarray(0, zstdSizes[n])));
-        console.info('colors end', zstdSizes[n], datas.byteLength);
         datas = new Uint8Array(datas.subarray(zstdSizes[n]));
         n++;
-        console.info('scales start');
         const scales = await decompressZstd(new Uint8Array(datas.subarray(0, zstdSizes[n])));
         datas = new Uint8Array(datas.subarray(zstdSizes[n]));
         n++;
-        console.info('rotations start');
         const rotations = await decompressZstd(new Uint8Array(datas.subarray(0, zstdSizes[n])));
         datas = new Uint8Array(datas.subarray(zstdSizes[n]));
         n++;
-        console.info('shs start');
         const shs: Uint8Array = header.shDegree ? await decompressZstd(new Uint8Array(datas.subarray(0, zstdSizes[n]))) : null;
 
         const limitCnt = Math.min(header.numPoints, model.fetchLimit);
