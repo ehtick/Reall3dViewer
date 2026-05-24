@@ -91,7 +91,7 @@ export function setupCommonUtils(events: Events) {
         }
         texwidth = Math.min(texwidth, maxTextureSize / 2);
         let texheight = Math.ceil(totalPixels / texwidth);
-        const texdepth = 2;
+        const texdepth = 4;
         const texheightary = Math.ceil(texheight / texdepth);
         texheight = texheightary * texdepth;
         return { texwidth, texheight, texdepth, texheightary };

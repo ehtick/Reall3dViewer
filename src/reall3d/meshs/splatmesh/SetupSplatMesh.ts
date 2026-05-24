@@ -307,8 +307,9 @@ export function setupSplatMesh(events: Events) {
             const dataTexture = texture.index ? dataTexture1 : dataTexture0;
             dataTexture.image.data.set(dataArray);
 
-            for (let i = 0; i < texdepth; i++) {
-                i && (await sleep(40));
+            const maxLayer = Math.ceil((texture.renderSplatCount * 32) / (texwidth * texheightary * 16));
+            for (let i = 0; i < maxLayer; i++) {
+                await sleep(10);
                 await new Promise(resolve => {
                     dataTexture.addLayerUpdate(i);
                     dataTexture.onUpdate = () => resolve(1);
