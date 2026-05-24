@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { data190To19, data10190To10019, sh123To1, sh123To2, sh123To3, webpToRgba, data220Decode, decodeWebpBlockDatas } from '../../utils/CommonUtils';
+import { data190To19, data10190To10019, sh123To1, sh123To2, sh123To3, webpToRgba, data220Decode, decodeWebpBlockDatas, sleep } from '../../utils/CommonUtils';
 import {
     SplatDataSize16,
     SplatDataSize32,
@@ -169,7 +169,14 @@ async function parseBlockData(splatCount: number, blockFormat: number, data: Uin
     return { splatCount, blockFormat, success: true, datas: wasmMemory.slice(0, resultByteLength), isSplat, isSh, isSh1, isSh2, isSh3 };
 }
 
+let running = false;
 export async function parseSplatToTexdata(data: Uint8Array, splatCount: number): Promise<Uint8Array> {
+    if (running) {
+        while (running) await sleep(1);
+        return parseSplatToTexdata(data, splatCount);
+    }
+    running = true;
+
     if (!splatDataParser) {
         const wasmModule = WebAssembly.compile(Uint8Array.from(atob(WasmOpen), c => c.charCodeAt(0)).buffer);
         const blockCnt = Math.ceil((MaxProcessCnt * 32) / WasmBlockSize) + 1;
@@ -186,10 +193,13 @@ export async function parseSplatToTexdata(data: Uint8Array, splatCount: number):
     const code: number = splatDataParser(0, splatCount);
     if (code) {
         console.error('splat data parser failed:', code);
+        running = false;
         return new Uint8Array(0);
     }
 
-    return splatWasmMemory.slice(0, splatCount * 32);
+    const rs = splatWasmMemory.slice(0, splatCount * 32);
+    running = false;
+    return rs;
 }
 
 export async function parseWordToTexdata(x: number, y0z: number, isY: boolean = true, isNgativeY: boolean = true): Promise<Uint8Array> {
