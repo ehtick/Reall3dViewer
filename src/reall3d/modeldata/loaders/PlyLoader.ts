@@ -3,11 +3,18 @@
 // ==============================================
 import { Vector3 } from 'three';
 import { clipUint8, encodeSplatSH } from '../../utils/CommonUtils';
-import { DataSize32, isMobile, SH_C0, SplatDataSize32, SpxBlockFormatSH1, SpxBlockFormatSH2, SpxBlockFormatSH3 } from '../../utils/consts/GlobalConstants';
+import {
+    DataSize32,
+    isMobile,
+    MaxProcessCnt,
+    SH_C0,
+    SplatDataSize32,
+    SpxBlockFormatSH1,
+    SpxBlockFormatSH2,
+    SpxBlockFormatSH3,
+} from '../../utils/consts/GlobalConstants';
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata, parseSpxBlockData } from '../wasm/WasmParser';
-
-const maxProcessCnt = isMobile ? 20480 : 512000;
 
 /**
  * PLY加载器（注：仅支持3DGS标准格式的PLY）
@@ -111,12 +118,12 @@ export async function loadPly(model: SplatModel) {
             }
 
             const fnParsePly = async () => {
-                if (cntSplat > maxProcessCnt) {
-                    const data: Uint8Array = await parsePlyToTexdata(header, value, maxProcessCnt);
+                if (cntSplat > MaxProcessCnt) {
+                    const data: Uint8Array = await parsePlyToTexdata(header, value, MaxProcessCnt);
                     setSplatData(model, data);
-                    model.downloadSplatCount += maxProcessCnt;
-                    cntSplat -= maxProcessCnt;
-                    value = value.slice(maxProcessCnt * model.rowLength);
+                    model.downloadSplatCount += MaxProcessCnt;
+                    cntSplat -= MaxProcessCnt;
+                    value = value.slice(MaxProcessCnt * model.rowLength);
                     setTimeout(fnParsePly);
                 } else {
                     const data: Uint8Array = await parsePlyToTexdata(header, value, cntSplat);

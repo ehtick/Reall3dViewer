@@ -3,12 +3,11 @@
 // ==============================================
 import { Vector3 } from 'three';
 import { clipUint8, computeCompressionRatio, uint8ArrayToString, unzipToMap, webpToRgba } from '../../utils/CommonUtils';
-import { DataSize32, isMobile, SH_C0, SplatDataSize32, SpxBlockFormatSH2, SpxBlockFormatSH3 } from '../../utils/consts/GlobalConstants';
+import { DataSize32, isMobile, MaxProcessCnt, SH_C0, SplatDataSize32, SpxBlockFormatSH2, SpxBlockFormatSH3 } from '../../utils/consts/GlobalConstants';
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata, parseSpxBlockData } from '../wasm/WasmParser';
 import { loadFile } from './FileLoader';
 
-const maxProcessCnt = isMobile ? 20480 : 512000;
 const SQRT2 = Math.sqrt(2.0);
 
 export async function loadSog(model: SplatModel) {
@@ -176,7 +175,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
     }
 
     async function parseSogV2(startCnt: number): Promise<Uint8Array> {
-        const maxCnt = Math.min(startCnt + maxProcessCnt, limitCnt);
+        const maxCnt = Math.min(startCnt + MaxProcessCnt, limitCnt);
         const processCnt = maxCnt - startCnt;
 
         const ui8sData = new Uint8Array(processCnt * DataSize32);
@@ -288,7 +287,7 @@ async function parseSog(model: SplatModel, mapFile: Map<string, Uint8Array>, met
 
     // 此版本已淘汰，不再维护
     async function parseSogV1(startCnt: number): Promise<Uint8Array> {
-        const maxCnt = Math.min(startCnt + maxProcessCnt, limitCnt);
+        const maxCnt = Math.min(startCnt + MaxProcessCnt, limitCnt);
         const processCnt = maxCnt - startCnt;
 
         const ui8sData = new Uint8Array(processCnt * DataSize32);

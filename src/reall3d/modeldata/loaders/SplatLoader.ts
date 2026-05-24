@@ -2,11 +2,9 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { Vector3 } from 'three';
-import { isMobile, SplatDataSize32 } from '../../utils/consts/GlobalConstants';
+import { isMobile, MaxProcessCnt, SplatDataSize32 } from '../../utils/consts/GlobalConstants';
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata } from '../wasm/WasmParser';
-
-const maxProcessCnt = isMobile ? 20480 : 512000;
 
 export async function loadSplat(model: SplatModel) {
     let bytesRead = 0;
@@ -93,15 +91,15 @@ export async function loadSplat(model: SplatModel) {
             }
 
             const fnParseSplat = async () => {
-                if (cntSplat > maxProcessCnt) {
-                    const data: Uint8Array = await parseSplatToTexdata(value, maxProcessCnt);
+                if (cntSplat > MaxProcessCnt) {
+                    const data: Uint8Array = await parseSplatToTexdata(value, MaxProcessCnt);
                     setSplatData(model, data);
-                    model.downloadSplatCount += maxProcessCnt;
-                    bytesRead += maxProcessCnt * model.rowLength;
+                    model.downloadSplatCount += MaxProcessCnt;
+                    bytesRead += MaxProcessCnt * model.rowLength;
                     model.downloadSize = bytesRead;
 
-                    cntSplat -= maxProcessCnt;
-                    value = value.slice(maxProcessCnt * model.rowLength);
+                    cntSplat -= MaxProcessCnt;
+                    value = value.slice(MaxProcessCnt * model.rowLength);
                     setTimeout(fnParseSplat);
                 } else {
                     const data: Uint8Array = await parseSplatToTexdata(value, cntSplat);

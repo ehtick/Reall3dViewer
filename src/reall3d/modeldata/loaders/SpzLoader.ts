@@ -5,6 +5,7 @@ import { Vector3 } from 'three';
 import { clipUint8, computeCompressionRatio, DecompressGzip, decompressZstd } from '../../utils/CommonUtils';
 import {
     isMobile,
+    MaxProcessCnt,
     SH_C0,
     SplatDataSize32,
     SpxBlockFormatData20,
@@ -15,7 +16,6 @@ import {
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSpxBlockData } from '../wasm/WasmParser';
 
-const maxProcessCnt = isMobile ? 20480 : 512000;
 const SpxHeaderLength = 16;
 const CMask = (1 << 9) - 1;
 
@@ -98,9 +98,9 @@ export async function loadSpz(model: SplatModel) {
         const offsetShs = offsetRotations + rotationSize;
 
         const limitCnt = Math.min(header.numPoints, model.fetchLimit);
-        const count = Math.ceil(limitCnt / maxProcessCnt);
+        const count = Math.ceil(limitCnt / MaxProcessCnt);
         for (let i = 0; i < count; i++) {
-            let splatCnt = i < count - 1 ? maxProcessCnt : limitCnt - i * maxProcessCnt;
+            let splatCnt = i < count - 1 ? MaxProcessCnt : limitCnt - i * MaxProcessCnt;
             if (model.dataSplatCount + splatCnt > model.fetchLimit) {
                 splatCnt = model.fetchLimit - model.dataSplatCount;
             }
@@ -111,59 +111,59 @@ export async function loadSpz(model: SplatModel) {
             datas.set(new Uint8Array(u32s.buffer), 0);
             let n = 8;
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 0];
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 1];
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 2];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 0];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 1];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 2];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 3];
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 4];
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 5];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 3];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 4];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 5];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 6];
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 7];
-                datas[n++] = value[offsetpositions + (i * maxProcessCnt + j) * 9 + 8];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 6];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 7];
+                datas[n++] = value[offsetpositions + (i * MaxProcessCnt + j) * 9 + 8];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = value[offsetScales + (i * maxProcessCnt + j) * 3];
+                datas[n++] = value[offsetScales + (i * MaxProcessCnt + j) * 3];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = value[offsetScales + (i * maxProcessCnt + j) * 3 + 1];
+                datas[n++] = value[offsetScales + (i * MaxProcessCnt + j) * 3 + 1];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = value[offsetScales + (i * maxProcessCnt + j) * 3 + 2];
+                datas[n++] = value[offsetScales + (i * MaxProcessCnt + j) * 3 + 2];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = decodeSpzColor(value[offsetColors + (i * maxProcessCnt + j) * 3]);
+                datas[n++] = decodeSpzColor(value[offsetColors + (i * MaxProcessCnt + j) * 3]);
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = decodeSpzColor(value[offsetColors + (i * maxProcessCnt + j) * 3 + 1]);
+                datas[n++] = decodeSpzColor(value[offsetColors + (i * MaxProcessCnt + j) * 3 + 1]);
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = decodeSpzColor(value[offsetColors + (i * maxProcessCnt + j) * 3 + 2]);
+                datas[n++] = decodeSpzColor(value[offsetColors + (i * MaxProcessCnt + j) * 3 + 2]);
             }
 
             const wxyz = [];
             if (header.version == 2) {
                 // spz version 2
                 for (let j = 0, rx = 0, ry = 0, rz = 0; j < splatCnt; j++) {
-                    datas[n++] = value[offsetAlphas + (i * maxProcessCnt + j)];
+                    datas[n++] = value[offsetAlphas + (i * MaxProcessCnt + j)];
 
-                    rx = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 0];
-                    ry = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 1];
-                    rz = value[offsetRotations + (i * maxProcessCnt + j) * 3 + 2];
+                    rx = value[offsetRotations + (i * MaxProcessCnt + j) * 3 + 0];
+                    ry = value[offsetRotations + (i * MaxProcessCnt + j) * 3 + 1];
+                    rz = value[offsetRotations + (i * MaxProcessCnt + j) * 3 + 2];
                     wxyz.push(decodeSpzRotations(rx, ry, rz));
                 }
             } else {
                 // spz version 3 or 4
                 for (let j = 0, b0 = 0, b1 = 0, b2 = 0, b3 = 0; j < splatCnt; j++) {
-                    datas[n++] = value[offsetAlphas + (i * maxProcessCnt + j)];
+                    datas[n++] = value[offsetAlphas + (i * MaxProcessCnt + j)];
 
-                    b0 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 0];
-                    b1 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 1];
-                    b2 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 2];
-                    b3 = value[offsetRotations + (i * maxProcessCnt + j) * 4 + 3];
+                    b0 = value[offsetRotations + (i * MaxProcessCnt + j) * 4 + 0];
+                    b1 = value[offsetRotations + (i * MaxProcessCnt + j) * 4 + 1];
+                    b2 = value[offsetRotations + (i * MaxProcessCnt + j) * 4 + 2];
+                    b3 = value[offsetRotations + (i * MaxProcessCnt + j) * 4 + 3];
                     const comp = b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
                     const index = comp >>> 30;
                     let remaining = comp;
@@ -211,7 +211,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH1;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(value.subarray(offsetShs + (i * maxProcessCnt + j) * 9, offsetShs + (i * maxProcessCnt + j) * 9 + 9), offset);
+                    sh2.set(value.subarray(offsetShs + (i * MaxProcessCnt + j) * 9, offsetShs + (i * MaxProcessCnt + j) * 9 + 9), offset);
                     offset += 9;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -223,7 +223,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH2;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(value.subarray(offsetShs + (i * maxProcessCnt + j) * 24, offsetShs + (i * maxProcessCnt + j) * 24 + 24), offset);
+                    sh2.set(value.subarray(offsetShs + (i * MaxProcessCnt + j) * 24, offsetShs + (i * MaxProcessCnt + j) * 24 + 24), offset);
                     offset += 24;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -235,7 +235,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH2;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(value.subarray(offsetShs + (i * maxProcessCnt + j) * 45, offsetShs + (i * maxProcessCnt + j) * 45 + 24), offset);
+                    sh2.set(value.subarray(offsetShs + (i * MaxProcessCnt + j) * 45, offsetShs + (i * MaxProcessCnt + j) * 45 + 24), offset);
                     offset += 24;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -247,7 +247,7 @@ export async function loadSpz(model: SplatModel) {
                 u3s[1] = SpxBlockFormatSH3;
                 sh3.set(new Uint8Array(u3s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh3.set(value.subarray(offsetShs + (i * maxProcessCnt + j) * 45 + 24, offsetShs + (i * maxProcessCnt + j) * 45 + 45), offset);
+                    sh3.set(value.subarray(offsetShs + (i * MaxProcessCnt + j) * 45 + 24, offsetShs + (i * MaxProcessCnt + j) * 45 + 45), offset);
                     offset += 21;
                 }
                 const sh3Block = await parseSpxBlockData(sh3);
@@ -289,9 +289,9 @@ export async function loadSpz(model: SplatModel) {
         const shs: Uint8Array = header.shDegree ? await decompressZstd(new Uint8Array(datas.subarray(0, zstdSizes[n]))) : null;
 
         const limitCnt = Math.min(header.numPoints, model.fetchLimit);
-        const count = Math.ceil(limitCnt / maxProcessCnt);
+        const count = Math.ceil(limitCnt / MaxProcessCnt);
         for (let i = 0; i < count; i++) {
-            let splatCnt = i < count - 1 ? maxProcessCnt : limitCnt - i * maxProcessCnt;
+            let splatCnt = i < count - 1 ? MaxProcessCnt : limitCnt - i * MaxProcessCnt;
             if (model.dataSplatCount + splatCnt > model.fetchLimit) {
                 splatCnt = model.fetchLimit - model.dataSplatCount;
             }
@@ -302,48 +302,48 @@ export async function loadSpz(model: SplatModel) {
             datas.set(new Uint8Array(u32s.buffer), 0);
             let n = 8;
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 0];
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 1];
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 2];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 0];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 1];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 2];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 3];
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 4];
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 5];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 3];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 4];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 5];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 6];
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 7];
-                datas[n++] = positions[(i * maxProcessCnt + j) * 9 + 8];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 6];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 7];
+                datas[n++] = positions[(i * MaxProcessCnt + j) * 9 + 8];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = scales[(i * maxProcessCnt + j) * 3];
+                datas[n++] = scales[(i * MaxProcessCnt + j) * 3];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = scales[(i * maxProcessCnt + j) * 3 + 1];
+                datas[n++] = scales[(i * MaxProcessCnt + j) * 3 + 1];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = scales[(i * maxProcessCnt + j) * 3 + 2];
+                datas[n++] = scales[(i * MaxProcessCnt + j) * 3 + 2];
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = decodeSpzColor(colors[(i * maxProcessCnt + j) * 3]);
+                datas[n++] = decodeSpzColor(colors[(i * MaxProcessCnt + j) * 3]);
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = decodeSpzColor(colors[(i * maxProcessCnt + j) * 3 + 1]);
+                datas[n++] = decodeSpzColor(colors[(i * MaxProcessCnt + j) * 3 + 1]);
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = decodeSpzColor(colors[(i * maxProcessCnt + j) * 3 + 2]);
+                datas[n++] = decodeSpzColor(colors[(i * MaxProcessCnt + j) * 3 + 2]);
             }
             for (let j = 0; j < splatCnt; j++) {
-                datas[n++] = alphas[i * maxProcessCnt + j];
+                datas[n++] = alphas[i * MaxProcessCnt + j];
             }
 
             const wxyz = [];
             for (let j = 0, b0 = 0, b1 = 0, b2 = 0, b3 = 0; j < splatCnt; j++) {
-                b0 = rotations[(i * maxProcessCnt + j) * 4 + 0];
-                b1 = rotations[(i * maxProcessCnt + j) * 4 + 1];
-                b2 = rotations[(i * maxProcessCnt + j) * 4 + 2];
-                b3 = rotations[(i * maxProcessCnt + j) * 4 + 3];
+                b0 = rotations[(i * MaxProcessCnt + j) * 4 + 0];
+                b1 = rotations[(i * MaxProcessCnt + j) * 4 + 1];
+                b2 = rotations[(i * MaxProcessCnt + j) * 4 + 2];
+                b3 = rotations[(i * MaxProcessCnt + j) * 4 + 3];
                 const comp = b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
                 const index = comp >>> 30;
                 let remaining = comp;
@@ -390,7 +390,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH1;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(shs.subarray((i * maxProcessCnt + j) * 9, (i * maxProcessCnt + j) * 9 + 9), offset);
+                    sh2.set(shs.subarray((i * MaxProcessCnt + j) * 9, (i * MaxProcessCnt + j) * 9 + 9), offset);
                     offset += 9;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -402,7 +402,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH2;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(shs.subarray((i * maxProcessCnt + j) * 24, (i * maxProcessCnt + j) * 24 + 24), offset);
+                    sh2.set(shs.subarray((i * MaxProcessCnt + j) * 24, (i * MaxProcessCnt + j) * 24 + 24), offset);
                     offset += 24;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -414,7 +414,7 @@ export async function loadSpz(model: SplatModel) {
                 u2s[1] = SpxBlockFormatSH2;
                 sh2.set(new Uint8Array(u2s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh2.set(shs.subarray((i * maxProcessCnt + j) * 45, (i * maxProcessCnt + j) * 45 + 24), offset);
+                    sh2.set(shs.subarray((i * MaxProcessCnt + j) * 45, (i * MaxProcessCnt + j) * 45 + 24), offset);
                     offset += 24;
                 }
                 const sh2Block = await parseSpxBlockData(sh2);
@@ -426,7 +426,7 @@ export async function loadSpz(model: SplatModel) {
                 u3s[1] = SpxBlockFormatSH3;
                 sh3.set(new Uint8Array(u3s.buffer), 0);
                 for (let j = 0, offset = 8; j < splatCnt; j++) {
-                    sh3.set(shs.subarray((i * maxProcessCnt + j) * 45 + 24, (i * maxProcessCnt + j) * 45 + 45), offset);
+                    sh3.set(shs.subarray((i * MaxProcessCnt + j) * 45 + 24, (i * MaxProcessCnt + j) * 45 + 45), offset);
                     offset += 21;
                 }
                 const sh3Block = await parseSpxBlockData(sh3);
