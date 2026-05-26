@@ -1,38 +1,41 @@
 # Core Features
+
 ## Key Advantages
-### 1. 亿级3DGS点云原生支持
-- 内置自适应 LOD，支持亿级以上大场景流式加载
 
-### 2. 自研 SPX 高压缩格式
-- 相比 PLY，文件体积减少 **95%+**，加载速度显著提升
-- 原生支持流式渲染与 LOD 分块瓦片
-- 配套跨平台转换工具：**gsbox**
+### 1. Native Support for 100‑Million‑Scale 3DGS Point Clouds
+- Built‑in adaptive LOD enables streaming loading of massive scenes with **100+ million points**.
 
-### 3. 跨平台深度优化（1.5 亿点场景实测）
-| 设备类型 | 渲染性能 |
-|---|---|
-| 桌面端（独显） | 稳定 **60 FPS** |
-| 轻薄本（集显） | 稳定 **30 FPS** |
-| 主流手机 | **25–40 FPS**，温控优秀 |
-| 老旧手机 | **7–15 FPS+**，稳定无崩溃 |
+### 2. Proprietary SPX Format – High Compression
+- **>95% size reduction** compared to PLY, significantly faster loading.
+- Natively supports streaming rendering and LOD‑aware tiling.
+- Cross‑platform conversion tool: **gsbox**.
 
-缓存可配，内存占用稳定无泄漏
+### 3. Deep Cross‑Platform Optimization (Benchmarked with 150‑Million‑Point Scene)
+| Device Type | Performance |
+|-------------|-------------|
+| Desktop (discrete GPU) | Stable **60 FPS** |
+| Thin‑and‑light laptop (iGPU) | Stable **30 FPS** |
+| Modern smartphone | **25–40 FPS**, excellent thermal control |
+| Older smartphone | **7–15 FPS+**, stable, no crashes |
 
-### 4. 全格式兼容
-- 原生支持：`.ply`、`.splat`、`.spx`、`.spz`、`.sog`
-- 扩展支持：带 `KHR_gaussian_splatting` 扩展的 `.glb` 文件
+- Configurable cache and stable memory usage, no leaks.
 
-### 5. 开箱即用商用工具
-- 标注、距离/角度测量
-- 自定义水印
-- GIS 底图集成
-- 单模型独立配置（`.meta.json`）
+### 4. Extensive Format Compatibility
+- **Native**: `.ply`, `.splat`, `.spx`, `.spz`, `.sog`
+- **Extended**: `.glb` files with `KHR_gaussian_splatting` extension
 
-## 产品优势
-| 功能点 | Reall3dViewer |
-|---|---|
-| 大场景加载能力 | 内置自适应 LOD，原生支持亿级大场景流式渲染 |
-| 高效压缩格式 | 自研 **SPX** 高压缩格式，配套 **gsbox** 跨平台转换工具 |
-| 跨端性能表现 | 深度移动端适配，经过严格温控与性能实测验证 |
-| 开箱即用能力 | 内置测量、标注、GIS 集成等生产级商用工具 |
-| 社区与支持 | 持续迭代，Issue 响应迅速，示例完善 |
+### 5. Production‑Ready Commercial Tools – Out of the Box
+- Annotation, distance & angle measurement
+- Custom watermarking
+- GIS basemap integration
+- Per‑model independent configuration (`.meta.json`)
+
+## Key Strengths
+| Feature | Reall3dViewer |
+|---------|---------------|
+| Large‑scene loading | Built‑in adaptive LOD, native streaming for 100M+ points |
+| Efficient compression | Proprietary **SPX** format + cross‑platform `gsbox` tool |
+| Cross‑device performance | Deep mobile optimization, validated by rigorous thermal & performance tests |
+| Out‑of‑box tooling | Measurement, annotation, GIS integration – production ready |
+| Community & support | Continuously updated, fast issue responses, comprehensive examples |
+
