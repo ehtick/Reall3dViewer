@@ -1,10 +1,10 @@
-<p align=center>
-<img style="width:128px;height:128px" src="https://gotoeasy.github.io/reall3d/logo.png"/>
+<p align="center">
+  <img style="width:128px;height:128px" src="https://gotoeasy.github.io/reall3d/logo.png"/>
 </p>
 
 # Reall3dViewer
 
-`Reall3dViewer`是一个基于`Three.js`的`3D Gaussian Splatting`渲染器。打造卓越的`3DGS`渲染器并非易事，我们选择开源，希望能集思广益，群策群力，共同为推动`3DGS`应用发展助一臂之力！
+**Reall3dViewer** 是一款基于 `Three.js` 的 **3D 高斯泼溅 (3DGS)** Web 渲染器，专注于大规模场景流式渲染、自适应 LOD 及跨平台高性能优化，为企业级 3DGS 应用提供高性能 Web 渲染支持。
 
 <br>
 
@@ -15,47 +15,72 @@
     <a href="https://github.com/reall3d-com/Reall3dViewer/releases/latest"><img src="https://img.shields.io/github/release/reall3d-com/Reall3dViewer.svg"></a>
     <a href="https://github.com/reall3d-com/Reall3dViewer/blob/master/LICENSE"><img src="https://img.shields.io/github/license/reall3d-com/Reall3dViewer"></a>
 <p>
-
 <br>
 
-## 特点
-- [x] 支持格式: `.ply`、`.splat`、`.spx`、`.spz(v2+)`, `.sog(v1,v2)`, `.glb`(with KHR_gaussian_splatting extension)
-- [x] 支持标注测量
-- [x] 支持1~3级球谐系数
-- [x] 支持地图场景渲染
-- [x] 支持通过`*.meta.json`文件设置具体模型的专用参数
-- [x] 内置渲染质量级别策略供选用，自适应优化参数不同需求 (v2.0.0+ 🌟)
-- [x] 内置多种优化的排序类型供选用，提高个性化场景的性能 (v2.0.0+ 🌟)
-- [x] 支持基于预设LOD的大场景流式渲染 (v2.4.0+ 🌟)
+
+## 📋 目录
+
+- [特点](#特点)
+- [在线演示](#在线演示)
+- [关键配置参数](#关键配置参数)
+- [SPX 高压缩格式](#spx-高压缩格式)
+- [快速开始](#快速开始)
+- [更新日志](#更新日志)
+- [鸣谢](#鸣谢)
+- [联系与支持](#联系与支持)
+
+---
+
+## ✨ 特点
+
+- ✅ **多格式支持**：`.ply`、`.splat`、`.spx`、`.spz`、`.sog`、`.glb`（支持 `KHR_gaussian_splatting` 扩展）
+- ✅ **内置测量与标注**：距离、面积等测量，灵活的标注
+- ✅ **球谐系数**：支持 1~3 级 SH
+- ✅ **地图场景渲染**：支持 GIS 底图融合
+- ✅ **单模型独立配置**：通过 `.meta.json` 文件设置专用参数
+- ✅ **渲染质量自适应**：内置多种质量级别，根据设备自动优化
+- ✅ **多种排序算法**：针对不同场景选择最优排序策略
+- ✅ **大场景流式渲染**：基于预设 LOD，支持亿级点云流畅加载
+
+## 🚀 实测性能
+
+> 实测 1.5 亿点例子场景：桌面独显 **60 FPS**，核显轻薄本 **30 FPS**，主流手机 **25-40+ FPS**，老旧手机 **7-15+ FPS** 稳定无发烫不崩溃。
+
+## 🌐 在线演示
+
+- [带调试面板的 LOD 大场景](https://reall3d.com/reall3dviewer/examples/index.html?url=hgd-lod-meta.scene.json&debug=true)
+- [完整的室内展厅 LOD 大场景](https://reall3d.com/reall3dviewer/examples/index.html?url=kcczt.scene.json)
+
+> 你也可以通过 URL 参数直接加载自己的模型：  
+> `https://reall3d.com/reall3dviewer/examples/index.html?url=你的模型地址.sog&debug=true`
+
+
+## ⚙️ 关键配置参数
+
+| 参数名称 | 推荐默认值（移动端/PC） | 说明 |
+|---------|----------------------|------|
+| `maxRenderCountOfMobile` | 200万 | 移动端最大渲染点数，可按设备调整 |
+| `maxRenderCountOfPc` | 300万 | PC 端最大渲染点数 |
+| `qualityLevel` | 自动 | 质量级别（1~9），影响渲染精度与性能 |
+| `sortType` | 自动 | 排序算法类型，不同场景可选不同策略 |
+
+## 📦 SPX 高压缩格式
+
+- **体积优势**：相比 PLY 格式，文件体积可减少 **95%+**，加载速度显著提升。
+- **流式渲染**：原生支持 LOD 分块与流式加载。
+- **转换工具**：跨平台命令行工具 `gsbox`（无需安装，开箱即用）。
+
+```bash
+# PLY 转 SPX
+gsbox ply2spx -i input.ply -o output.spx
+```
+
+- [SPX 格式详细说明](https://github.com/reall3d-com/Reall3dViewer/blob/main/SPX_ZH.md)
+- [gsbox 工具仓库](https://github.com/gotoeasy/gsbox)
 
 
 
-#### 在线演示
-- https://reall3d.com/reall3dviewer/index.html
-
-
-#### 文档(By Zread AI)
-- https://zread.ai/reall3d-com/Reall3dViewer
-
-
-
-## 重要选项参数
-
-| 名称                         | 说明                               |
-|------------------------------|------------------------------------|
-| `maxRenderCountOfMobile`     | 低端设备的渲染能力有限，默认值不合适时可以调整，建议关注    |
-| `maxRenderCountOfPc`         | 再高端设备也有渲染能力上限，默认值不合适时可以调整，建议关注    |
-| `qualityLevel`               | 性能和渲染质量的影响因素很多，针对具体模型和目标设备选择合适的级别，可以自适应调整，建议关注    |
-| `sortType`                   | 没有一种最优算法可以应对所有场景，但具体场景就会有更合适的，这里内置多种类型供选择优化，建议关注    |
-
-
-## `.spx`
-
-- 格式说明： https://github.com/reall3d-com/Reall3dViewer/blob/main/SPX_ZH.md
-- 转换工具： https://github.com/gotoeasy/gsbox
-
-
-## 用法
+## 🛠️ 快速开始
 
 使用源码方式
 ```shell
@@ -78,36 +103,44 @@ gsbox sog2spx -i /path/to/input.ply -o /path/to/output.spx
 ```shell
 # install
 npm install @reall3d/reall3dviewer
+```
 
-# use built-in viewer
+```js
+// use built-in viewer
 const viewer = new Reall3dViewer({ root: '#gsviewer' });
 viewer.addModel(`https://reall3d.com/demo-models/yz.spx`);
+```
 
-# preset-lod rendering
+```js
+// preset-lod rendering
 const viewer = new Reall3dViewer({ root: '#gsviewer' });
 viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
+```
 
-# use splat mesh
+```js
+// use splat mesh
 const splatMesh = new SplatMesh({ renderer, scene, controls});
 splatMesh.addModel({ url: 'https://reall3d.com/demo-models/yz.spx' });
 scene.add(splatMesh);
 ```
 
+## 📜 更新日志
 
+查看 [Releases](https://github.com/reall3d-com/Reall3dViewer/releases) 获取版本历史。
 
-## 履历
-https://github.com/reall3d-com/Reall3dViewer/releases
+## 🙏 鸣谢
 
+感谢以下开源项目提供的参考实现：
 
-## 鸣谢
-感谢以下项目提供的参考实现
-- https://github.com/antimatter15/splat
-- https://github.com/mkkellogg/GaussianSplats3D
-- https://github.com/huggingface/gsplat.js
-- https://github.com/playcanvas/supersplat
-- https://github.com/sxguojf/three-tile
+- [antimatter15/splat](https://github.com/antimatter15/splat)
+- [mkkellogg/GaussianSplats3D](https://github.com/mkkellogg/GaussianSplats3D)
+- [huggingface/gsplat.js](https://github.com/huggingface/gsplat.js)
+- [playcanvas/supersplat](https://github.com/playcanvas/supersplat)
+- [sxguojf/three-tile](https://github.com/sxguojf/three-tile)
 
+## 📬 联系与支持
 
-## 联系
-欢迎在项目页面上提交`issue`，商业版提供模型格式优化工具，支持嵌入水印保护模型产权，请随时与我们联系。
-- Site: https://reall3d.com
+- **Issues**：欢迎在 GitHub 项目页提交问题和建议
+- **商业服务**：提供模型格式优化、产权保护、定制化等商业服务
+- **官网**：[https://reall3d.com](https://reall3d.com)
+

@@ -1,10 +1,10 @@
-<p align=center>
-<img style="width:128px;height:128px" src="https://gotoeasy.github.io/reall3d/logo.png"/>
+<p align="center">
+  <img style="width:128px;height:128px" src="https://gotoeasy.github.io/reall3d/logo.png"/>
 </p>
 
 # Reall3dViewer
 
-`Reall3dViewer` is a 3D Gaussian Splatting viewer built on Three.js. Crafting an exceptional 3DGS viewer is no small feat, which is why we've chosen to open-source our project. We hope to harness the collective wisdom and efforts of the community to drive the advancement of 3DGS applications together!
+**Reall3dViewer** is a `Three.js`-based Web renderer for **3D Gaussian Splatting (3DGS)**. It focuses on large‑scene streaming rendering, adaptive LOD, and cross‑platform high‑performance optimization, providing high‑performance Web rendering support for enterprise‑grade 3DGS applications.
 
 <br>
 
@@ -15,46 +15,77 @@
     <a href="https://github.com/reall3d-com/Reall3dViewer/releases/latest"><img src="https://img.shields.io/github/release/reall3d-com/Reall3dViewer.svg"></a>
     <a href="https://github.com/reall3d-com/Reall3dViewer/blob/master/LICENSE"><img src="https://img.shields.io/github/license/reall3d-com/Reall3dViewer"></a>
 <p>
-
 <br>
 
-## Features
-- [x] Support formats: `.ply`, `.splat`, `.spx`, `.spz(v2+)`, `.sog(v1,v2)`, `.glb`(with KHR_gaussian_splatting extension)
-- [x] Support mark and measurement tools
-- [x] Support 1st to 3rd degree spherical harmonics
-- [x] Support map-integrated model rendering
-- [x] Support per-model settings via `*.meta.json` file
-- [x] Built-in rendering quality levels with adaptive optimization (v2.0.0+ 🌟)
-- [x] Built-in optimized sorting types to fine-tune performance for diverse scenarios (v2.0.0+ 🌟)
-- [x] Support streaming rendering of large scenes using preset LOD (v2.4.0+ 🌟)
+
+## 📋 Table of Contents
+
+- [Features](#features)
+- [Live Demos](#live-demos)
+- [Key Configuration Parameters](#key-configuration-parameters)
+- [SPX High‑Compression Format](#spx-high‑compression-format)
+- [Quick Start](#quick-start)
+- [Changelog](#changelog)
+- [Acknowledgements](#acknowledgements)
+- [Contact & Support](#contact--support)
+
+---
+
+## ✨ Features
+
+- ✅ **Multi‑format support**: `.ply`, `.splat`, `.spx`, `.spz`, `.sog`, `.glb` (with `KHR_gaussian_splatting` extension)
+- ✅ **Built‑in measurement & annotation**: distance, area, flexible labeling
+- ✅ **Spherical harmonics**: supports SH degree 1–3
+- ✅ **Map scene rendering**: GIS basemap integration
+- ✅ **Per‑model independent configuration**: via `.meta.json` files
+- ✅ **Adaptive rendering quality**: multiple quality levels, auto‑optimized per device
+- ✅ **Multiple sorting algorithms**: choose optimal strategy for different scenes
+- ✅ **Large‑scene streaming**: preset‑based LOD, smooth loading for 100M+ points
 
 
-#### Live demo
-- https://reall3d.com/reall3dviewer/index.html
+## 🚀 Benchmarked Performance
+
+> Tested on a 150‑million‑point scene: Desktop (discrete GPU) **60 FPS**, iGPU laptop **30 FPS**, modern smartphone **25‑40+ FPS**, older smartphone **7‑15+ FPS** – stable, no overheating, no crashes.
 
 
-#### Docs(By Zread AI)
-- https://zread.ai/reall3d-com/Reall3dViewer
+## 🌐 Live Demos
+
+- [LOD large scene with debug panel](https://reall3d.com/reall3dviewer/examples/index.html?url=hgd-lod-meta.scene.json&debug=true)
+- [Complete indoor exhibition LOD large scene](https://reall3d.com/reall3dviewer/examples/index.html?url=kcczt.scene.json)
+
+> You can also load your own model via URL parameter:  
+> `https://reall3d.com/reall3dviewer/examples/index.html?url=your-model.sog&debug=true`
 
 
-## Key Configuration Parameters
+## ⚙️ Key Configuration Parameters
 
-| Name                         | Note                               |
-|------------------------------|------------------------------------|
-| `maxRenderCountOfMobile`     | Low-end devices have rendering limits. Adjust from default if needed. Recommended.    |
-| `maxRenderCountOfPc`         | High-end devices also have rendering limits. Adjust from default if needed. Recommended.   |
-| `qualityLevel`               | Choose based on target device and model for optimal performance/quality. Adaptive adjustment supported. Recommended.    |
-| `sortType`                   | No single algorithm is optimal for all scenarios. Choose the most suitable one from built-in types for your case. Recommended.  |
+| Parameter | Recommended Default (Mobile/PC) | Description |
+|-----------|--------------------------------|-------------|
+| `maxRenderCountOfMobile` | 2 million | Max rendered points on mobile, adjustable per device |
+| `maxRenderCountOfPc` | 3 million | Max rendered points on PC |
+| `qualityLevel` | auto | Quality level (1–9), affects rendering precision & performance |
+| `sortType` | auto | Sorting algorithm type, choose different strategy per scene |
 
 
-## `.spx`
+## 📦 SPX High‑Compression Format
 
-- Format Specification: https://github.com/reall3d-com/Reall3dViewer/blob/main/SPX_EN.md
-- Conversion Tool: https://github.com/gotoeasy/gsbox
+- **Size advantage**: reduces file size by **>95%** compared to PLY, significantly faster loading.
+- **Streaming rendering**: native support for LOD tiling and streaming.
+- **Conversion tool**: cross‑platform CLI tool `gsbox` (portable, no installation required).
 
-## Basic Usage
+```bash
+# Convert PLY to SPX
+gsbox ply2spx -i input.ply -o output.spx
+```
 
-use source code
+- [SPX format specification](https://github.com/reall3d-com/Reall3dViewer/blob/main/SPX_ZH.md)
+- [gsbox repository](https://github.com/gotoeasy/gsbox)
+
+
+
+## 🛠️ Quick Start
+
+Using the source code
 ```shell
 # develop
 npm run dev
@@ -65,44 +96,54 @@ npm run build
 # open a web browser to render your 3dgs model
 # http://hostname:port/index.html?url=your-model-link-address
 
-# .spx or .sog file can be obtained through conversion using the gsbox
+# .sog or .spx file can be obtained through conversion using the gsbox
 gsbox ply2sog -i /path/to/input.ply -o /path/to/output.sog
 gsbox sog2spx -i /path/to/input.ply -o /path/to/output.spx
 ```
 
-use npm package [sample project here](https://github.com/reall3d-com/reall3dviewer-samples-use-npm-package)
+
+Using the npm package [example project](https://github.com/reall3d-com/reall3dviewer-samples-use-npm-package)
 ```shell
 # install
 npm install @reall3d/reall3dviewer
+```
 
-# use built-in viewer
+```js
+// use built-in viewer
 const viewer = new Reall3dViewer({ root: '#gsviewer' });
 viewer.addModel(`https://reall3d.com/demo-models/yz.spx`);
+```
 
-# preset-lod rendering
+```js
+// preset-lod rendering
 const viewer = new Reall3dViewer({ root: '#gsviewer' });
 viewer.addScene(`https://reall3d.com/demo-models/lod-v1/hgd/hgd-lod.scene.json`);
+```
 
-# use splat mesh
+```js
+// use splat mesh
 const splatMesh = new SplatMesh({ renderer, scene, controls});
 splatMesh.addModel({ url: 'https://reall3d.com/demo-models/yz.spx' });
 scene.add(splatMesh);
 ```
 
+## 📜 Changelog
 
-## Release History
-https://github.com/reall3d-com/Reall3dViewer/releases
+See [Releases](https://github.com/reall3d-com/Reall3dViewer/releases) for version history.
 
+## 🙏 Acknowledgements
 
-## Acknowledgments
-We would like to express our gratitude to the following projects for their valuable reference implementations
-- https://github.com/antimatter15/splat
-- https://github.com/mkkellogg/GaussianSplats3D
-- https://github.com/huggingface/gsplat.js
-- https://github.com/playcanvas/supersplat
-- https://github.com/sxguojf/three-tile
+Thanks to the following open‑source projects for reference implementations:
 
+- [antimatter15/splat](https://github.com/antimatter15/splat)
+- [mkkellogg/GaussianSplats3D](https://github.com/mkkellogg/GaussianSplats3D)
+- [huggingface/gsplat.js](https://github.com/huggingface/gsplat.js)
+- [playcanvas/supersplat](https://github.com/playcanvas/supersplat)
+- [sxguojf/three-tile](https://github.com/sxguojf/three-tile)
 
-## Contact
-Feel free to submit an issue on the project page. Our commercial version offers a 3DGS model format optimization tool and supports embedding watermarks to protect model ownership. Please don't hesitate to contact us.
-- Site: https://reall3d.com
+## 📬 Contact & Support
+
+- **Issues**：Please submit questions and suggestions on the GitHub project page
+- **Services**：Model format optimization, IP protection, customization, and other enterprise services
+- **Website**：[https://reall3d.com](https://reall3d.com)
+
