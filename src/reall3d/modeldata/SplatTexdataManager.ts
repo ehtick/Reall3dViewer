@@ -50,6 +50,7 @@ import {
     SplatDataFetcher,
     PushCacheXyzs,
     TodoDownloadLod,
+    OnLoadAndRenderPointCloudPly,
 } from '../events/EventConstants';
 import { Events } from '../events/Events';
 import { CutData, ModelStatus, SplatModel } from './ModelData';
@@ -903,7 +904,11 @@ export function setupSplatTextureManager(events: Events) {
         } else if (model.opts.format === 'splat') {
             loadSplat(model);
         } else if (model.opts.format === 'ply') {
-            loadPly(model);
+            loadPly(model).then(() => {
+                if (model.isPointCloudPly) {
+                    (fire(GetOptions) as SplatMeshOptions).viewerEvents?.fire(OnLoadAndRenderPointCloudPly, model.opts.url);
+                }
+            });
         } else if (model.opts.format === 'spz') {
             loadSpz(model);
         } else if (model.opts.format === 'sog') {

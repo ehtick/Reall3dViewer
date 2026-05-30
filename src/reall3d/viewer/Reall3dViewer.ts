@@ -78,6 +78,7 @@ import {
     RenderCSS2D3D,
     RenderMinimap,
     LoadCircularAudioMask,
+    OnLoadAndRenderPointCloudPly,
 } from '../events/EventConstants';
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
@@ -87,7 +88,7 @@ import { CameraControls } from '../controls/CameraControls';
 import { Reall3dViewerOptions } from './Reall3dViewerOptions';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { MarkData } from '../meshs/mark/data/MarkData';
-import { computeCompressionRatio, getUrl, glbKhrGs2Splat } from '../utils/CommonUtils';
+import { computeCompressionRatio, getUrl, glbKhrGs2Splat, isPointCloudPly } from '../utils/CommonUtils';
 import { DecoderPath, isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/MetaData';
 import { globalEv } from '../events/GlobalEV';
@@ -642,6 +643,24 @@ export class Reall3dViewer {
         } else if (modelOpts.format === 'obj') {
             this.options({ autoRotate: false });
             await fire(OnLoadAndRenderObj, modelOpts.url);
+        } else if (modelOpts.format === 'ply' && modelOpts.url.startsWith('blob:')) {
+            const fileBytes: Uint8Array = await loadFile(modelOpts.url, that.events);
+            fire(OnFetchStop, 100);
+
+            let header = new TextDecoder().decode(fileBytes.slice(0, 1024 * 2));
+            const header_end = 'end_header\n';
+            const header_end_index = header.indexOf(header_end);
+            if (header_end_index < 0) {
+                if (fileBytes.byteLength > 1024 * 2) throw new Error('Unable to read .ply file header');
+                return;
+            }
+            header = header.substring(0, header_end_index);
+            if (isPointCloudPly(header)) {
+                await fire(OnLoadAndRenderPointCloudPly, modelOpts.url);
+            } else {
+                this.splatMesh.addModel(modelOpts, meta);
+                await fire(OnSetWaterMark, meta.watermark || meta.name);
+            }
         } else {
             this.splatMesh.addModel(modelOpts, meta);
             await fire(OnSetWaterMark, meta.watermark || meta.name);

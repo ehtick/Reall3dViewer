@@ -65,6 +65,15 @@ export async function loadPly(model: SplatModel) {
                     headChunks = [headData];
                     continue;
                 }
+
+                if (header.isPointCloudPly) {
+                    model.downloadSize = 0;
+                    model.downloadSplatCount = 0;
+                    model.isPointCloudPly = true;
+                    model.abortController.abort();
+                    break;
+                }
+
                 headChunks = null;
                 value = headData.slice(header.headerLength);
                 model.rowLength = header.rowLength;
@@ -269,6 +278,10 @@ export async function loadPly(model: SplatModel) {
             types[name] = arrayType;
             offsets[name] = row_offset;
             row_offset += parseInt(arrayType.replace(/[^\d]/g, '')) / 8;
+        }
+
+        if (types['red'] && types['green'] && types['blue']) {
+            return { isPointCloudPly: true }; // 点云ply
         }
 
         let shDegree = 0;

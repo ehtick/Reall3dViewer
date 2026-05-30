@@ -124,6 +124,8 @@ export class SplatModel {
     /** sh palettes */
     public palettes?: Uint8Array;
 
+    public isPointCloudPly?: boolean;
+
     // ---------- LOD ----------
     public splatTiles: SplatTiles;
     // -------------------------

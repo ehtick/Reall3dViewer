@@ -1048,3 +1048,15 @@ export async function decompressZstd(zstdBytes: Uint8Array): Promise<Uint8Array>
     await ensureInit();
     return zstdSimple.decompress(zstdBytes);
 }
+
+// 不含header_end
+export function isPointCloudPly(header: string) {
+    const props = ['x', 'y', 'z', 'red', 'green', 'blue'];
+    for (let prop of header.split('\n').filter(k => k.startsWith('property '))) {
+        const [p, type, name] = prop.split(' ');
+        if (!props.includes(name)) {
+            return false;
+        }
+    }
+    return true;
+}

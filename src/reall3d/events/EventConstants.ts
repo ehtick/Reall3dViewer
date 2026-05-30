@@ -565,6 +565,8 @@ export const PushCacheXyzs = i++;
 export const TodoDownloadLod = i++;
 /** 销毁 */
 export const LodDownloadManagerDispose = i++;
+/** 渲染ply点云模型 */
+export const OnLoadAndRenderPointCloudPly = i++;
 
 // ---------- 以下全局单例事件对象使用 ----------
 /** 取背景音乐对象 */

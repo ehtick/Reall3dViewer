@@ -1,7 +1,7 @@
 // ==============================================
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
-import { PerspectiveCamera, Vector3, WebGLRenderer } from 'three';
+import { PerspectiveCamera, Points, PointsMaterial, Vector3, WebGLRenderer } from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { Events } from '../events/Events';
 import {
@@ -26,11 +26,13 @@ import {
     Flying,
     OnFetchStop,
     OnLoadAndRenderObj,
+    OnLoadAndRenderPointCloudPly,
 } from '../events/EventConstants';
 import { SplatMeshOptions, TransitionEffects } from '../meshs/splatmesh/SplatMeshOptions';
 import { Reall3dViewerOptions } from '../viewer/Reall3dViewerOptions';
 import { loadFile } from '../modeldata/loaders/FileLoader';
 import { QualityLevels, SortTypes } from './consts/GlobalConstants';
+import { PLYLoader } from 'three/examples/jsm/Addons.js';
 
 export function setupViewerUtils(events: Events) {
     let disposed: boolean = false;
@@ -90,6 +92,23 @@ export function setupViewerUtils(events: Events) {
             fire(ViewerNeedUpdate, true);
             fire(Flying, true);
         }
+        fire(OnFetchStop, 0);
+    });
+
+    on(OnLoadAndRenderPointCloudPly, async (url: string) => {
+        fire(Information, { scene: `small (ply)` });
+        const datas = await loadFile(url, events);
+        if (datas) {
+            const url = URL.createObjectURL(new Blob([datas as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
+            new PLYLoader().load(url, geometry => {
+                const material = new PointsMaterial({ size: 0.05, vertexColors: true });
+                const pointCloud = new Points(geometry, material);
+                fire(GetScene).add(pointCloud);
+
+                fire(ViewerNeedUpdate);
+            });
+        }
+
         fire(OnFetchStop, 0);
     });
 }
