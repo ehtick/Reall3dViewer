@@ -1057,3 +1057,92 @@ export function isPointCloudPly(header: string) {
     }
     return !oSet.size;
 }
+
+export interface RgbPly {
+    count: number;
+    plyBytes: Uint8Array;
+    xyzs: Float32Array;
+}
+
+export async function parseRgbPly(webpBts: Uint8Array): Promise<RgbPly> {
+    const { rgba } = await webpToRgba(webpBts);
+    const count = new Uint32Array(rgba.slice(0, 4).buffer)[0] & 0xffffff;
+    const xyzrgbBts = rgba.subarray(4);
+
+    const head = [
+        'ply',
+        'format binary_little_endian 1.0',
+        `element vertex ${count}`,
+        'property float x',
+        'property float y',
+        'property float z',
+        'property uchar red',
+        'property uchar green',
+        'property uchar blue',
+        'end_header\n',
+    ];
+    const ui8sHead = new TextEncoder().encode(head.join('\n'));
+    const headLen = ui8sHead.length;
+
+    const totalLen = headLen + count * 15;
+    const plyBytes = new Uint8Array(totalLen);
+    plyBytes.set(ui8sHead, 0);
+
+    const tempBuf = new ArrayBuffer(4);
+    const tempF32 = new Float32Array(tempBuf);
+    const tempU8 = new Uint8Array(tempBuf);
+
+    const c4 = count * 4;
+    const c8 = count * 8;
+    const c12 = count * 12;
+
+    const xyzs = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+        const i4 = i * 4;
+        const base = headLen + i * 15;
+
+        const x0 = xyzrgbBts[i4];
+        const x1 = xyzrgbBts[c4 + i4];
+        const x2 = xyzrgbBts[c8 + i4];
+        const y0 = xyzrgbBts[i4 + 1];
+        const y1 = xyzrgbBts[c4 + i4 + 1];
+        const y2 = xyzrgbBts[c8 + i4 + 1];
+        const z0 = xyzrgbBts[i4 + 2];
+        const z1 = xyzrgbBts[c4 + i4 + 2];
+        const z2 = xyzrgbBts[c8 + i4 + 2];
+
+        let fx = x0 | (x1 << 8) | (x2 << 16);
+        let fy = y0 | (y1 << 8) | (y2 << 16);
+        let fz = z0 | (z1 << 8) | (z2 << 16);
+        fx = fx & 0x800000 ? fx | 0xff000000 : fx;
+        fy = fy & 0x800000 ? fy | 0xff000000 : fy;
+        fz = fz & 0x800000 ? fz | 0xff000000 : fz;
+
+        // XYZ
+        tempF32[0] = fx / 4096;
+        xyzs[i * 3] = tempF32[0];
+        plyBytes.set(tempU8, base);
+        tempF32[0] = fy / 4096;
+        xyzs[i * 3 + 1] = tempF32[0];
+        plyBytes.set(tempU8, base + 4);
+        tempF32[0] = fz / 4096;
+        xyzs[i * 3 + 2] = tempF32[0];
+        plyBytes.set(tempU8, base + 8);
+        // RGB
+        plyBytes[base + 12] = xyzrgbBts[c12 + i4];
+        plyBytes[base + 13] = xyzrgbBts[c12 + i4 + 1];
+        plyBytes[base + 14] = xyzrgbBts[c12 + i4 + 2];
+    }
+
+    return { count, plyBytes, xyzs };
+}
+
+export function downloadUint8ArrayFile(uint8Array, fileName = 'data.bin') {
+    const blob = new Blob([uint8Array], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+}

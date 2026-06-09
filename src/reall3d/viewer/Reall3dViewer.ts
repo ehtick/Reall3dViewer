@@ -88,7 +88,7 @@ import { CameraControls } from '../controls/CameraControls';
 import { Reall3dViewerOptions } from './Reall3dViewerOptions';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { MarkData } from '../meshs/mark/data/MarkData';
-import { computeCompressionRatio, getUrl, glbKhrGs2Splat, isPointCloudPly } from '../utils/CommonUtils';
+import { computeCompressionRatio, getUrl, glbKhrGs2Splat, isPointCloudPly, parseRgbPly } from '../utils/CommonUtils';
 import { DecoderPath, isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/MetaData';
 import { globalEv } from '../events/GlobalEV';
@@ -635,6 +635,20 @@ export class Reall3dViewer {
                 await fire(OnSetWaterMark, meta.watermark || meta.name);
                 URL.revokeObjectURL(modelOpts.url);
                 modelOpts.url = glburl;
+            } else if (/com_github_gotoeasy_gsbox_webp_rgb_ply/.test(sJson)) {
+                const oJson = JSON.parse(sJson);
+                const buffersOffset = 20 + jsonLength4 + 8;
+                const dataBytes = fileBytes
+                    .subarray(buffersOffset, buffersOffset + oJson.buffers[0].byteLength)
+                    .subarray(oJson.bufferViews[0].byteOffset || 0, oJson.bufferViews[0].byteLength);
+
+                const { count, plyBytes, xyzs } = await parseRgbPly(dataBytes);
+                const urlBlob = URL.createObjectURL(new Blob([plyBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
+                modelOpts.format = 'ply';
+
+                await fire(OnLoadAndRenderPointCloudPly, urlBlob);
+                fire(Information, { renderSplatCount: count, visibleSplatCount: count, modelSplatCount: count, scene: 'small (glb-ply)' });
+                URL.revokeObjectURL(urlBlob);
             } else {
                 const urlBlob = URL.createObjectURL(new Blob([fileBytes as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }));
                 await this.loadGlb(urlBlob, meta);
