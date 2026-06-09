@@ -20,14 +20,14 @@
 
 ## 📋 Table of Contents
 
-- [Features](#features)
-- [Live Demos](#live-demos)
-- [Key Configuration Parameters](#key-configuration-parameters)
-- [SPX High‑Compression Format](#spx-high‑compression-format)
-- [Quick Start](#quick-start)
-- [Changelog](#changelog)
-- [Acknowledgements](#acknowledgements)
-- [Contact & Support](#contact--support)
+- [Features](##features)
+- [Live Demos](##live-demos)
+- [Key Configuration Parameters](##key-configuration-parameters)
+- [SPX High‑Compression Format](##spx-high‑compression-format)
+- [Quick Start](##quick-start)
+- [Changelog](##changelog)
+- [Acknowledgements](##acknowledgements)
+- [Contact & Support](##contact--support)
 
 ---
 
