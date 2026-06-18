@@ -43,11 +43,12 @@ import {
     OnInitMarks,
     GetMarkList,
     RenderCSS2D3D,
+    GetRenderer,
 } from './../../events/EventConstants';
 import { MarkMultiLines } from './MarkMultiLines';
 import { CSS2DRenderer, CSS3DRenderer } from 'three/examples/jsm/Addons.js';
 import { Events } from '../../events/Events';
-import { Group, Object3D, Vector3 } from 'three';
+import { Group, Object3D, Vector3, WebGLRenderer } from 'three';
 import { Reall3dViewerOptions } from '../../viewer/Reall3dViewerOptions';
 import { MarkDistanceLine } from './MarkDistanceLine';
 import { MarkData } from './data/MarkData';
@@ -68,7 +69,7 @@ export function setupMark(events: Events) {
 
     const divMarkWarp: HTMLDivElement = document.createElement('div');
     divMarkWarp.classList.add('mark-warp');
-    document.body.appendChild(divMarkWarp);
+    fire(GetRenderer).domElement.parentElement.appendChild(divMarkWarp);
 
     const css2DRenderer = new CSS2DRenderer();
     css2DRenderer.setSize(innerWidth, innerHeight);
@@ -90,7 +91,7 @@ export function setupMark(events: Events) {
     on(GetCSS3DRenderer, () => css3DRenderer);
     on(GetCSS2DRenderer, () => css2DRenderer);
     on(RenderCSS2D3D, () => [css3DRenderer, css2DRenderer].forEach(item => item.render(fire(GetScene), fire(GetCamera))));
-    on(OnViewerDispose, () => document.body.removeChild(divMarkWarp), true);
+    on(OnViewerDispose, () => divMarkWarp.parentElement.removeChild(divMarkWarp), true);
 
     on(GetMarkList, (intersectable = true) => {
         const ary = [];
