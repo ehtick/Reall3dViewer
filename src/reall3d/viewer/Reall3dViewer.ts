@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import '../style/style.less';
-import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4, Camera } from 'three';
+import { Scene, AmbientLight, WebGLRenderer, Color, Matrix4, Camera, Mesh, MeshStandardMaterial, DirectionalLight } from 'three';
 import { DRACOLoader, GLTFLoader } from 'three/examples/jsm/Addons.js';
 import {
     GetCurrentDisplayShDegree,
@@ -83,7 +83,7 @@ import {
 import { SplatMesh } from '../meshs/splatmesh/SplatMesh';
 import { ModelOptions } from '../modeldata/ModelOptions';
 import { Events } from '../events/Events';
-import { copyGsViewerOptions, initCamera, initGsViewerOptions, initRenderer, setupViewerUtils } from '../utils/ViewerUtils';
+import { copyGsViewerOptions, initCamera, initGsViewerOptions, initRenderer } from '../utils/ViewerUtils';
 import { CameraControls } from '../controls/CameraControls';
 import { Reall3dViewerOptions } from './Reall3dViewerOptions';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
@@ -209,6 +209,9 @@ export class Reall3dViewer {
             true,
         );
 
+        const dirLight = new DirectionalLight(0xffffff, 1);
+        dirLight.position.set(0, 2e3, 1e3);
+        scene.add(dirLight);
         scene.add(new AmbientLight('#ffffff', 2));
         renderer.setAnimationLoop(that.update.bind(that));
 
@@ -696,6 +699,14 @@ export class Reall3dViewer {
             urlBlob,
             gltf => {
                 const model = gltf.scene;
+
+                // 对 MeshStandardMaterial 的极端参数进行修复，改为非金属，保证漫反射
+                model.traverse(obj => {
+                    if (!(obj as Mesh).isMesh) return;
+                    const mat = (obj as Mesh).material;
+                    if (mat instanceof MeshStandardMaterial && mat.metalness >= 1 && mat.roughness >= 1) mat.metalness = 0;
+                });
+
                 (fire(GetScene) as Scene).add(model);
                 fire(LoadSmallSceneMetaData, meta);
                 fire(MarkUpdateVisible, true);
