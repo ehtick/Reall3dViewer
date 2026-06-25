@@ -1146,3 +1146,7 @@ export function downloadUint8ArrayFile(uint8Array, fileName = 'data.bin') {
     a.click();
     URL.revokeObjectURL(url);
 }
+
+export function isString(val: any): boolean {
+    return Object.prototype.toString.call(val) === '[object String]';
+}

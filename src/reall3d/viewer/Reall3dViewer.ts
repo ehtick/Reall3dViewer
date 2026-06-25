@@ -88,7 +88,7 @@ import { CameraControls } from '../controls/CameraControls';
 import { Reall3dViewerOptions } from './Reall3dViewerOptions';
 import { SplatMeshOptions } from '../meshs/splatmesh/SplatMeshOptions';
 import { MarkData } from '../meshs/mark/data/MarkData';
-import { computeCompressionRatio, getUrl, glbKhrGs2Splat, isPointCloudPly, parseRgbPly } from '../utils/CommonUtils';
+import { computeCompressionRatio, getUrl, glbKhrGs2Splat, isPointCloudPly, isString, parseRgbPly } from '../utils/CommonUtils';
 import { DecoderPath, isMobile, QualityLevels, SortTypes, ViewerVersion } from '../utils/consts/GlobalConstants';
 import { MetaData } from '../modeldata/MetaData';
 import { globalEv } from '../events/GlobalEV';
@@ -522,7 +522,7 @@ export class Reall3dViewer {
         // 参数整理
         let metaUrl = '';
         let modelOpts: ModelOptions = { url: '' };
-        if (Object.prototype.toString.call(urlOpts) === '[object String]') {
+        if (isString(urlOpts)) {
             if ((urlOpts as string).endsWith('.meta.json')) {
                 metaUrl = urlOpts as string;
             } else {
