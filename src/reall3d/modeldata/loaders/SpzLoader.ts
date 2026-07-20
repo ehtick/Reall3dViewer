@@ -4,7 +4,6 @@
 import { Vector3 } from 'three';
 import { clipUint8, computeCompressionRatio, DecompressGzip, decompressZstd } from '../../utils/CommonUtils';
 import {
-    isMobile,
     MaxProcessCnt,
     SH_C0,
     SplatDataSize32,

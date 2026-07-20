@@ -121,7 +121,6 @@ export function setupVirtualGround(events: Events) {
         const mouse = new Vector2();
         const raycaster: Raycaster = new Raycaster();
         const normal = new Vector3();
-        const rotationEuler = new Euler();
         function onMouseMove(event: MouseEvent) {
             if ((fire(GetOptions) as Reall3dViewerOptions).markMode) return;
 

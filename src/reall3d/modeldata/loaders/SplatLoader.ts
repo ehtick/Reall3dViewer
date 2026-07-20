@@ -2,7 +2,7 @@
 // Copyright (c) 2025 reall3d.com, MIT license
 // ==============================================
 import { Vector3 } from 'three';
-import { isMobile, MaxProcessCnt, SplatDataSize32 } from '../../utils/consts/GlobalConstants';
+import { MaxProcessCnt } from '../../utils/consts/GlobalConstants';
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata } from '../wasm/WasmParser';
 
@@ -118,13 +118,13 @@ export async function loadSplat(model: SplatModel) {
 }
 
 function setSplatData(model: SplatModel, data: Uint8Array) {
-    let dataCnt = data.byteLength / SplatDataSize32;
+    let dataCnt = data.byteLength / 32;
     const maxSplatDataCnt = Math.min(model.fetchLimit, model.modelSplatCount);
     if (model.dataSplatCount + dataCnt > maxSplatDataCnt) {
         dataCnt = maxSplatDataCnt - model.dataSplatCount; // 丢弃超出限制的部分
-        model.splatData.set(data.subarray(0, dataCnt * SplatDataSize32), model.dataSplatCount * SplatDataSize32);
+        model.splatData.set(data.subarray(0, dataCnt * 32), model.dataSplatCount * 32);
     } else {
-        model.splatData.set(data, model.dataSplatCount * SplatDataSize32);
+        model.splatData.set(data, model.dataSplatCount * 32);
     }
 
     const f32s: Float32Array = new Float32Array(data.buffer);

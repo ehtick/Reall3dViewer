@@ -3,16 +3,7 @@
 // ==============================================
 import { Vector3 } from 'three';
 import { clipUint8, encodeSplatSH } from '../../utils/CommonUtils';
-import {
-    DataSize32,
-    isMobile,
-    MaxProcessCnt,
-    SH_C0,
-    SplatDataSize32,
-    SpxBlockFormatSH1,
-    SpxBlockFormatSH2,
-    SpxBlockFormatSH3,
-} from '../../utils/consts/GlobalConstants';
+import { DataSize32, MaxProcessCnt, SH_C0, SpxBlockFormatSH1, SpxBlockFormatSH2, SpxBlockFormatSH3 } from '../../utils/consts/GlobalConstants';
 import { ModelStatus, SplatModel } from '../ModelData';
 import { parseSplatToTexdata, parseSpxBlockData } from '../wasm/WasmParser';
 
@@ -305,13 +296,13 @@ export async function loadPly(model: SplatModel) {
 }
 
 function setSplatData(model: SplatModel, data: Uint8Array) {
-    let dataCnt = data.byteLength / SplatDataSize32;
+    let dataCnt = data.byteLength / 32;
     const maxSplatDataCnt = Math.min(model.fetchLimit, model.modelSplatCount);
     if (model.dataSplatCount + dataCnt > maxSplatDataCnt) {
         dataCnt = maxSplatDataCnt - model.dataSplatCount; // 丢弃超出限制的部分
-        model.splatData.set(data.subarray(0, dataCnt * SplatDataSize32), model.dataSplatCount * SplatDataSize32);
+        model.splatData.set(data.subarray(0, dataCnt * 32), model.dataSplatCount * 32);
     } else {
-        model.splatData.set(data, model.dataSplatCount * SplatDataSize32);
+        model.splatData.set(data, model.dataSplatCount * 32);
     }
 
     const f32s: Float32Array = new Float32Array(data.buffer);
