@@ -8,9 +8,7 @@ export const isMobile =
 export const HalfChars = 'QWERTYUIOPLKJHGFDSAZXCVBNM1234567890qwertyuioplkjhgfdsazxcvbnm`~!@#$%^&*()-_=+\\|]}[{\'";::,<.>//? \t';
 export const BlankingTimeOfSmallScene = isMobile ? 600 : 300;
 export const BlankingTimeOfLargeScene = isMobile ? 300 : 100;
-export const BinHeaderSize = 140;
 export const SpxHeaderSize = 128;
-export const DataSize36 = 36;
 export const DataSize32 = 32;
 export const SplatDataSize32 = 32;
 export const SplatDataSize20 = 20;
