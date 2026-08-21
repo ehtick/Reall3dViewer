@@ -8,10 +8,9 @@ import { Reall3dViewer } from './reall3d/viewer/Reall3dViewer';
 import { Reall3dViewerOptions } from './reall3d/viewer/Reall3dViewerOptions';
 import { Reall3dMapViewer } from './reall3d/mapviewer/Reall3dMapViewer';
 import { globalEv } from './reall3d/events/GlobalEV';
-import { OnViewerDispose, PlaytBgAudio, StopBgAudio } from './reall3d/events/EventConstants';
+import { StopBgAudio } from './reall3d/events/EventConstants';
 import { TransitionEffects } from './reall3d/meshs/splatmesh/SplatMeshOptions';
 import { isMobile } from './reall3d/utils/consts/GlobalConstants';
-import CircularAudioMask from './reall3d/media/CircularAudioMask';
 
 const params: URLSearchParams = new URLSearchParams(location.search);
 let url = params.get('url');
