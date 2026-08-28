@@ -57,6 +57,7 @@ export class AudioText {
             const divContainer = document.createElement('div');
             divContainer.style.cssText = `position:fixed;bottom:30px;left:0;right:0;display:flex;justify-content:center;z-index:99;pointer-events:none;`;
             div = document.createElement('div');
+            div.classList.add('tv-text');
             div.style.cssText = `background-color:#333;opacity:0.8;color:white;font-size:32px;padding:2px 10px;border-radius:4px;max-width:90%;text-align:center;user-select:none;`;
             divContainer.append(div);
             document.body.append(divContainer);
