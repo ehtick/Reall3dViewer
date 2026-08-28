@@ -67,6 +67,7 @@ export class AudioText {
             if (div) {
                 div.innerText = txt;
                 div.style.display = 'block';
+                div.classList.remove('hide');
             }
             setTimeout(() => {
                 div.style.display = 'none';
