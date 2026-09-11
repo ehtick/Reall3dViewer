@@ -165,6 +165,7 @@ export function setupMapEventListener(events: Events) {
         if (e.target['type'] === 'text') return;
 
         if (disposed || e.code === 'F5') return;
+        if (e.code === 'AudioVolumeDown' || e.code === 'AudioVolumeUp') return;
         e.preventDefault();
         keySet.add(e.code);
         lastActionTome = Date.now();
